@@ -5,7 +5,7 @@ import { applyFollowUpOption, getDish, scaleNutrition, searchDishes, swapDish } 
 import { dishTypicalGrams, withGrams } from "@/lib/nutrition";
 import { fmtKcal, fmtMacro } from "./format";
 
-const SOURCE_LABEL: Record<Source, string> = { hpb: "HPB", usda: "USDA FoodData Central", off: "Open Food Facts", ai_estimate: "AI estimate" };
+const SOURCE_LABEL: Record<Source, string> = { hpb: "HPB", usda: "USDA FoodData Central", off: "Open Food Facts", label: "Nutrition label", ai_estimate: "AI estimate" };
 
 /** Curated dishes are typed "hpb", but only verified ones are HPB; otherwise name the real publisher. */
 function sourceLabel(item: AnalysedItem, dish: Dish | undefined): { text: string; title: string } {

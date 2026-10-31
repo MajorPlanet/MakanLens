@@ -1,5 +1,6 @@
 // Typed, SSR-safe localStorage helpers.
-import type { AnalysedItem, LogEntry, Profile } from "./types";
+import type { AnalysedItem, ExerciseEntry, LogEntry, MealSlot, Profile, SavedMeal } from "./types";
+import { normaliseProfile } from "./targets";
 
 const PROFILE_KEY = "makanlens:v1:profile";
 const ENTRIES_KEY = "makanlens:v1:entries";
@@ -24,7 +25,8 @@ function write(key: string, value: unknown): void {
 }
 
 export function getProfile(): Profile | null {
-  return read<Profile>(PROFILE_KEY);
+  const p = read<Profile>(PROFILE_KEY);
+  return p ? normaliseProfile(p) : null;
 }
 export function saveProfile(profile: Profile): void {
   write(PROFILE_KEY, profile);
@@ -114,6 +116,8 @@ export function clearAll(): void {
     window.localStorage.removeItem(RATIOS_KEY);
     window.localStorage.removeItem(PROFILE_KEY);
     window.localStorage.removeItem(ENTRIES_KEY);
+    window.localStorage.removeItem(SAVED_MEALS_KEY);
+    window.localStorage.removeItem(EXERCISE_KEY);
   } catch {
     /* ignore */
   }
@@ -124,4 +128,103 @@ export function localDateString(d: Date = new Date()): string {
   const m = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");
   return `${d.getFullYear()}-${m}-${day}`;
+}
+
+// ---- Phase 9: saved meals (recent + favourites) and exercise ----
+
+const SAVED_MEALS_KEY = "makanlens:v1:saved-meals";
+/** Same key and shape as components/ExerciseStore.ts, so both read the same data. */
+const EXERCISE_KEY = "makanlens:v1:exercise";
+/** Non-favourite recents kept; favourites are never pruned. */
+export const RECENT_KEEP = 30;
+
+/** Identity of a meal for de-duplication: the dishes (or labels) and rounded grams of its items. */
+export function mealSignature(items: AnalysedItem[]): string {
+  return items
+    .map((i) => `${i.dishId ?? i.label.toLowerCase()}@${Math.round((i.grams || i.portion * 100) / 25) * 25}`)
+    .sort()
+    .join("+");
+}
+
+export function mealName(items: AnalysedItem[]): string {
+  return items.map((i) => i.label).join(" + ") || "Meal";
+}
+
+export function getSavedMeals(): SavedMeal[] {
+  const v = read<unknown>(SAVED_MEALS_KEY);
+  if (!Array.isArray(v)) return [];
+  return v
+    .filter((m): m is SavedMeal => !!m && typeof m === "object" && Array.isArray((m as SavedMeal).items) && typeof (m as SavedMeal).id === "string")
+    .map((m) => ({ ...m, items: m.items.map((i) => normaliseItem(i)) }));
+}
+export function saveSavedMeals(meals: SavedMeal[]): void {
+  write(SAVED_MEALS_KEY, meals);
+}
+export function deleteSavedMeal(id: string): void {
+  saveSavedMeals(getSavedMeals().filter((m) => m.id !== id));
+}
+export function setFavourite(id: string, favourite: boolean): void {
+  saveSavedMeals(getSavedMeals().map((m) => (m.id === id ? { ...m, favourite } : m)));
+}
+/** Most recently used first. */
+export function getRecentMeals(limit = 5): SavedMeal[] {
+  return [...getSavedMeals()].sort((a, b) => b.lastUsed - a.lastUsed).slice(0, limit);
+}
+export function getFavouriteMeals(): SavedMeal[] {
+  return getSavedMeals().filter((m) => m.favourite).sort((a, b) => b.lastUsed - a.lastUsed);
+}
+
+/** Record a logged meal as a recent SavedMeal (merging with an identical one), pruning old non-favourites. */
+export function recordRecentMeal(items: AnalysedItem[], now = Date.now()): SavedMeal | null {
+  if (items.length === 0) return null;
+  const clean = items.map(({ followUp: _f, ...rest }) => { void _f; return rest; });
+  const sig = mealSignature(clean);
+  const meals = getSavedMeals();
+  const existing = meals.find((m) => mealSignature(m.items) === sig);
+  let saved: SavedMeal;
+  if (existing) {
+    saved = { ...existing, items: clean, lastUsed: now, uses: existing.uses + 1 };
+  } else {
+    saved = { id: crypto.randomUUID(), name: mealName(clean), items: clean, lastUsed: now, uses: 1, favourite: false };
+  }
+  const others = meals.filter((m) => m.id !== saved.id);
+  const favourites = others.filter((m) => m.favourite);
+  const recents = others.filter((m) => !m.favourite).sort((a, b) => b.lastUsed - a.lastUsed).slice(0, RECENT_KEEP - 1);
+  saveSavedMeals([saved, ...favourites, ...recents]);
+  return saved;
+}
+
+/** Log items to a slot today AND record them as a recent meal. Every "add to today" flow should use this. */
+export function logItems(items: AnalysedItem[], slot: MealSlot, date = localDateString()): LogEntry[] {
+  const now = Date.now();
+  const added = items.map((item, i) => ({ id: crypto.randomUUID(), date, slot, createdAt: now + i, item }));
+  saveEntries([...getEntries(), ...added]);
+  recordRecentMeal(items, now);
+  return added;
+}
+
+/** Log a saved meal again (one tap). */
+export function logSavedMeal(meal: SavedMeal, slot: MealSlot): LogEntry[] {
+  return logItems(meal.items, slot);
+}
+
+export function getExercises(): ExerciseEntry[] {
+  const v = read<unknown>(EXERCISE_KEY);
+  if (!Array.isArray(v)) return [];
+  return v.filter(
+    (e): e is ExerciseEntry =>
+      !!e && typeof e === "object" && typeof (e as ExerciseEntry).id === "string" && typeof (e as ExerciseEntry).date === "string" && Number.isFinite((e as ExerciseEntry).kcal),
+  );
+}
+export function saveExercises(list: ExerciseEntry[]): void {
+  write(EXERCISE_KEY, list);
+}
+export function addExerciseEntry(e: ExerciseEntry): void {
+  saveExercises([...getExercises(), e]);
+}
+export function deleteExerciseEntry(id: string): void {
+  saveExercises(getExercises().filter((e) => e.id !== id));
+}
+export function exerciseKcalFor(date: string): number {
+  return getExercises().filter((e) => e.date === date).reduce((sum, e) => sum + e.kcal, 0);
 }

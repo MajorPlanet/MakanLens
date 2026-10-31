@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { AnalysedItem, LogEntry, MealSlot, Profile } from "@/lib/types";
-import { addEntry, deleteEntry, getEntries, getProfile, localDateString, updateEntry } from "@/lib/storage";
+import { deleteEntry, getEntries, getProfile, localDateString, logItems, updateEntry } from "@/lib/storage";
 import { analyse, ApiClientError, getHealth } from "@/lib/client";
 import { resizeImage } from "@/lib/image";
 import CalorieRing from "@/components/CalorieRing";
@@ -92,11 +92,7 @@ export default function Home() {
   }, []);
 
   function confirmAdd(items: AnalysedItem[], slot: MealSlot) {
-    const now = Date.now();
-    const date = localDateString();
-    items.forEach((item, i) =>
-      addEntry({ id: crypto.randomUUID(), date, slot, createdAt: now + i, item }),
-    );
+    logItems(items, slot);
     setEntries(getEntries());
     setFound(null);
     const tips = items.flatMap((i) => {

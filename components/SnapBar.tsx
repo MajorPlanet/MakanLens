@@ -149,6 +149,14 @@ export default function SnapBar({
             Scan barcode
           </Link>
         </div>
+        <div className="grid grid-cols-2 gap-2">
+          <Link href="/search" className="flex h-11 items-center justify-center rounded-xl border border-neutral-300 text-sm font-medium dark:border-neutral-700">
+            🔍 Search food
+          </Link>
+          <Link href="/label" className="flex h-11 items-center justify-center rounded-xl border border-neutral-300 text-sm font-medium dark:border-neutral-700">
+            🏷️ Scan label
+          </Link>
+        </div>
       </div>
     </div>
   );

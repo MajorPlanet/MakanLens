@@ -3,7 +3,7 @@ import Fuse from "fuse.js";
 import hawker from "@/data/hawker.json";
 import type { AnalysedItem, Candidate, CookingMethod, Dish, FollowUp, Nutrition, ReferenceObject, Source } from "./types";
 import type { ModelItem } from "./schemas";
-import { dishPer100g, dishTypicalGrams, nutritionForGrams, roundNutrition, withGrams } from "./nutrition";
+import { dishPer100g, dishTypicalGrams, nutritionForGrams, roundNutrition, scaleAll, withGrams } from "./nutrition";
 
 type RawDish = Omit<Dish, "per_100g" | "typical_grams" | "method"> & Partial<Pick<Dish, "per_100g" | "typical_grams" | "method">>;
 
@@ -37,9 +37,8 @@ function getFuse() {
 export function getDishes(): Dish[] { return dishes; }
 export function getDish(id: string): Dish | undefined { return dishes.find((d) => d.id === id); }
 
-const r1 = (x: number) => Math.round(x * 10) / 10;
 export function scaleNutrition(n: Nutrition, portion: number): Nutrition {
-  return { kcal: Math.round(n.kcal * portion), protein_g: r1(n.protein_g * portion), carbs_g: r1(n.carbs_g * portion), fat_g: r1(n.fat_g * portion) };
+  return roundNutrition(scaleAll(n, portion));
 }
 
 const MODIFIERS = new Set(["o", "c", "kosong", "peng", "siewdai", "gao", "po", "halia", "tarik"]);

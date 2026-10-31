@@ -1,4 +1,4 @@
-export type Source = "hpb" | "usda" | "off" | "ai_estimate";
+export type Source = "hpb" | "usda" | "off" | "label" | "ai_estimate";
 
 export type CookingMethod =
   | "steamed" | "boiled" | "soup" | "grilled" | "roasted"
@@ -7,7 +7,11 @@ export type CookingMethod =
 export type ReferenceObject = "card" | "fork" | "spoon" | "chopsticks" | "none";
 export type MealSlot = "breakfast" | "lunch" | "dinner" | "snack";
 
-export interface Nutrition { kcal: number; protein_g: number; carbs_g: number; fat_g: number; }
+export interface Nutrition {
+  kcal: number; protein_g: number; carbs_g: number; fat_g: number;
+  // Optional micronutrients: present only when the source lists them (never estimated).
+  sodium_mg?: number; fibre_g?: number; satfat_g?: number;
+}
 
 export interface Dish {
   id: string;                          // "chicken-rice-steamed"
@@ -67,7 +71,21 @@ export interface Profile {
   activity: "sedentary" | "light" | "moderate" | "active";
   goal: "lose" | "maintain" | "gain";
   targetKcal: number; macroTargets: { protein_g: number; carbs_g: number; fat_g: number };
+  /** "split": macro grams come from macroSplit % of the day's kcal target. "grams": fixed macroGrams. */
+  macroMode: "split" | "grams";
+  /** Percent of kcal from protein/carbs/fat; integers summing to 100. Default 30/40/30. */
+  macroSplit?: { protein: number; carbs: number; fat: number };
+  macroGrams?: { protein_g: number; carbs_g: number; fat_g: number };
+  /** Add the day's logged exercise kcal to the target. Default true. */
+  addBackExercise: boolean;
 }
+
+// ---- Phase 9 additions ----
+
+/** A meal that can be logged again in one tap. Every logged meal is recorded as a recent one automatically. */
+export interface SavedMeal { id: string; name: string; items: AnalysedItem[]; lastUsed: number; uses: number; favourite: boolean; }
+
+export interface ExerciseEntry { id: string; date: string; label: string; kcal: number; }
 
 // ---- Manager additions (API wire contract, beyond CLAUDE.md §4) ----
 
@@ -105,4 +123,31 @@ export interface EvalResults {
   generatedAt: string | null; provider: string | null; runs: number | null;
   meals: EvalMealResult[];
   summary: { n: number; makanlens_mape: number | null; calai_mape: number | null; hit_rate: number | null } | null;
+}
+
+/** GET /api/search?q=… → 200 { results }. hawker.json matches first, then USDA (when USDA_API_KEY is set). Max 15. Mirrors lib/search.ts. */
+export interface SearchResult {
+  id: string;                          // dish id, or "usda:<fdcId>"
+  name: string;
+  source: Source;                      // "hpb" for local dishes, "usda" otherwise
+  sourceUrl: string;
+  per_100g: Nutrition | null;          // null for a local dish with no serving weight
+  per_serving: Nutrition | null;       // local dishes only
+  servingLabel: string | null;
+  typical_grams: number | null;        // default for the grams input
+  dishId: string | null;               // set for local dishes
+  tip?: string;
+}
+export interface SearchResponse { results: SearchResult[]; }
+
+/** POST /api/label { image } → 200. Values are exactly what is printed; unprinted fields are left out (never guessed). Mirrors lib/label.ts. */
+export interface LabelResponse {
+  productName: string;
+  servingLabel: string;                // "1 serving (250 ml)" or "100 g"
+  servingsPerPack: number | null;
+  /** "serving": item.nutrition is exactly the printed per-serving values. "100g": only per-100 g printed, no serving size. */
+  basis: "serving" | "100g";
+  item: AnalysedItem;                  // source "label", portion 1, candidates []
+  provider: string;
+  ms: number;
 }

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import type { AnalysedItem, BarcodeResponse, MealSlot, Nutrition } from "@/lib/types";
-import { addEntry, localDateString } from "@/lib/storage";
+import { logItems } from "@/lib/storage";
 import { ApiClientError, lookupBarcode } from "@/lib/client";
 import ItemCard from "@/components/ItemCard";
 import { ACCENT_BTN, SLOTS, defaultSlot, fmtKcal, fmtMacro } from "@/components/format";
@@ -152,7 +152,7 @@ export default function ScanPage() {
 
   function add() {
     if (!finalItem) return;
-    addEntry({ id: crypto.randomUUID(), date: localDateString(), slot, createdAt: Date.now(), item: finalItem });
+    logItems([finalItem], slot);
     router.push("/");
   }
 

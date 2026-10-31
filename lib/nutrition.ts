@@ -5,14 +5,26 @@ import type { AnalysedItem, Dish, Nutrition } from "./types";
 
 const r1 = (x: number) => Math.round(x * 10) / 10;
 
+const MICROS = ["sodium_mg", "fibre_g", "satfat_g"] as const;
+
+/** Multiply every field by k, keeping optional micronutrients only when present (never invented). Not rounded. */
+export function scaleAll(n: Nutrition, k: number): Nutrition {
+  const out: Nutrition = { kcal: n.kcal * k, protein_g: n.protein_g * k, carbs_g: n.carbs_g * k, fat_g: n.fat_g * k };
+  for (const m of MICROS) if (typeof n[m] === "number") out[m] = (n[m] as number) * k;
+  return out;
+}
+
 export function roundNutrition(n: Nutrition): Nutrition {
-  return { kcal: Math.round(n.kcal), protein_g: r1(n.protein_g), carbs_g: r1(n.carbs_g), fat_g: r1(n.fat_g) };
+  const out: Nutrition = { kcal: Math.round(n.kcal), protein_g: r1(n.protein_g), carbs_g: r1(n.carbs_g), fat_g: r1(n.fat_g) };
+  if (typeof n.sodium_mg === "number") out.sodium_mg = Math.round(n.sodium_mg);
+  if (typeof n.fibre_g === "number") out.fibre_g = r1(n.fibre_g);
+  if (typeof n.satfat_g === "number") out.satfat_g = r1(n.satfat_g);
+  return out;
 }
 
 /** per_100g × grams ÷ 100 (rounded). */
 export function nutritionForGrams(per100: Nutrition, grams: number): Nutrition {
-  const k = grams / 100;
-  return roundNutrition({ kcal: per100.kcal * k, protein_g: per100.protein_g * k, carbs_g: per100.carbs_g * k, fat_g: per100.fat_g * k });
+  return roundNutrition(scaleAll(per100, grams / 100));
 }
 
 /** Dish per-100 g values: stored, else derived from per_serving and serving grams, else null. */
@@ -21,8 +33,7 @@ export function dishPer100g(dish: Dish): Nutrition | null {
   const g = dish.serving.grams;
   if (!g) return null;
   const k = 100 / g;
-  const s = dish.per_serving;
-  return { kcal: s.kcal * k, protein_g: s.protein_g * k, carbs_g: s.carbs_g * k, fat_g: s.fat_g * k };
+  return scaleAll(dish.per_serving, k);
 }
 
 export function dishTypicalGrams(dish: Dish): number | null {
@@ -53,7 +64,7 @@ export function withGrams(item: AnalysedItem, grams: number, typicalGrams: numbe
     // Proportional scaling. With no known weight, scale by the portion change (needs typicalGrams), else leave unchanged.
     const ratio = hadGrams ? gramRatio : item.portion > 0 && typicalGrams ? portion / item.portion : 1;
     const n = item.nutrition;
-    nutrition = roundNutrition({ kcal: n.kcal * ratio, protein_g: n.protein_g * ratio, carbs_g: n.carbs_g * ratio, fat_g: n.fat_g * ratio });
+    nutrition = roundNutrition(scaleAll(n, ratio));
     kcalRange = [Math.round(item.kcalRange[0] * ratio), Math.round(item.kcalRange[1] * ratio)];
   }
   return { ...item, grams: Math.round(g), gramsRange, nutrition, kcalRange, portion };
