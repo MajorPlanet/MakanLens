@@ -1,7 +1,7 @@
-import { analyseRequestSchema, modelOutputSchema } from "@/lib/schemas";
-import { analyseWithVision, currentProvider, MissingApiKeyError, ProviderError } from "@/lib/vision";
-import { getDishes, matchItem } from "@/lib/matcher";
-import type { AnalyseResponse, ApiError } from "@/lib/types";
+import { analyseRequestSchema } from "@/lib/schemas";
+import { currentProvider, MissingApiKeyError, ProviderError } from "@/lib/vision";
+import { analyseMeal } from "@/lib/analyse";
+import type { ApiError } from "@/lib/types";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -26,7 +26,6 @@ function err(body: ApiError, status: number) {
 }
 
 export async function POST(req: Request) {
-  const started = Date.now();
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() || "local";
   if (rateLimited(ip)) return err({ error: "rate_limited", message: "Too many requests, try again in a minute." }, 429);
 
@@ -42,29 +41,9 @@ export async function POST(req: Request) {
   }
   const { image, text } = parsed.data;
   const provider = currentProvider();
-  const knownDishes = getDishes().map((d) => ({ id: d.id, name: d.name }));
 
   try {
-    let output: ReturnType<typeof modelOutputSchema.safeParse> | undefined;
-    for (let attempt = 0; attempt < 2; attempt++) {
-      try {
-        const raw = await analyseWithVision({ image, text, knownDishes });
-        output = modelOutputSchema.safeParse(raw);
-      } catch (e) {
-        if (!(e instanceof SyntaxError)) throw e;
-        output = undefined;
-      }
-      if (output?.success) break;
-    }
-    if (!output?.success) {
-      return err({ error: "provider_error", provider, message: "Model returned invalid output." }, 502);
-    }
-    const res: AnalyseResponse = {
-      items: output.data.items.map(matchItem),
-      provider,
-      ms: Date.now() - started,
-    };
-    return Response.json(res);
+    return Response.json(await analyseMeal({ image, text }));
   } catch (e) {
     if (e instanceof MissingApiKeyError) {
       console.error(`[analyse] ${e.envVar} is missing. Set ${e.envVar} in .env.local (see CLAUDE.md section 2) and restart the dev server.`);

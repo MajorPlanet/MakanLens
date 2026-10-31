@@ -1,7 +1,7 @@
 // Client-safe nutrition maths (owned by api-builder; Manager wrote the Phase 8 starting version).
 // The model never decides calories: code computes them from per-100 g values × grams.
 // No fs, no process.env here — the UI imports this for the grams slider, follow-ups and portion learning.
-import type { AnalysedItem, Dish, FollowUp, Nutrition } from "./types";
+import type { AnalysedItem, Dish, Nutrition } from "./types";
 
 const r1 = (x: number) => Math.round(x * 10) / 10;
 
@@ -29,29 +29,32 @@ export function dishTypicalGrams(dish: Dish): number | null {
   return dish.typical_grams ?? dish.serving.grams ?? null;
 }
 
-/** Recompute an item for a new weight. Keeps the range's relative width; scales proportionally when per_100g is unknown. */
+/**
+ * Recompute an item for a new weight. Keeps the range's relative width.
+ * - per_100g known: exact maths (kcal = per_100g × grams ÷ 100), range from the scaled grams range.
+ * - per_100g unknown: nutrition scales proportionally with the change in grams (or in portion when the item has 0 grams).
+ * - item.grams === 0 (weight unknown): the range collapses to [grams, grams].
+ */
 export function withGrams(item: AnalysedItem, grams: number, typicalGrams: number | null = null): AnalysedItem {
-  const g = Math.max(1, grams);
-  const ratio = item.grams > 0 ? g / item.grams : 1;
-  const gramsRange: [number, number] = [Math.round(item.gramsRange[0] * ratio), Math.round(item.gramsRange[1] * ratio)];
+  const g = Math.max(1, Number.isFinite(grams) ? grams : 1);
+  const hadGrams = item.grams > 0;
+  const gramRatio = hadGrams ? g / item.grams : 1;
+  const gramsRange: [number, number] = hadGrams
+    ? [Math.round(item.gramsRange[0] * gramRatio), Math.round(item.gramsRange[1] * gramRatio)]
+    : [Math.round(g), Math.round(g)];
+  const portion = typicalGrams ? Math.round((g / typicalGrams) * 100) / 100 : Math.round(item.portion * gramRatio * 100) / 100;
+
   let nutrition: Nutrition;
   let kcalRange: [number, number];
   if (item.per_100g) {
     nutrition = nutritionForGrams(item.per_100g, g);
     kcalRange = [nutritionForGrams(item.per_100g, gramsRange[0]).kcal, nutritionForGrams(item.per_100g, gramsRange[1]).kcal];
   } else {
+    // Proportional scaling. With no known weight, scale by the portion change (needs typicalGrams), else leave unchanged.
+    const ratio = hadGrams ? gramRatio : item.portion > 0 && typicalGrams ? portion / item.portion : 1;
     const n = item.nutrition;
     nutrition = roundNutrition({ kcal: n.kcal * ratio, protein_g: n.protein_g * ratio, carbs_g: n.carbs_g * ratio, fat_g: n.fat_g * ratio });
     kcalRange = [Math.round(item.kcalRange[0] * ratio), Math.round(item.kcalRange[1] * ratio)];
   }
-  const portion = typicalGrams ? Math.round((g / typicalGrams) * 100) / 100 : item.portion * ratio;
   return { ...item, grams: Math.round(g), gramsRange, nutrition, kcalRange, portion };
-}
-
-/** Apply a follow-up answer (swap to the option's dish and/or scale grams), then drop the question. Implemented by api-builder. */
-export function applyFollowUpOption(item: AnalysedItem, option: FollowUp["options"][number]): AnalysedItem {
-  const grams = option.gramsFactor ? item.grams * option.gramsFactor : item.grams;
-  const next = withGrams(item, grams);
-  delete next.followUp;
-  return next;
 }

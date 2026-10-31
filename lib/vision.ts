@@ -17,15 +17,16 @@ export class ProviderError extends Error {
 }
 
 export const DEFAULT_GEMINI_MODEL = "gemini-3.8-flash";
-const TIMEOUT_MS = 15_000;
+/** Default per-call timeout; analyse.ts passes a tighter one so 3 parallel runs fit the 10 s budget. */
+export const DEFAULT_TIMEOUT_MS = 8_500;
 
 export function currentProvider(): "gemini" | "anthropic" {
   return process.env.VISION_PROVIDER === "anthropic" ? "anthropic" : "gemini";
 }
 
-async function postJson(provider: string, url: string, headers: Record<string, string>, body: unknown): Promise<unknown> {
+async function postJson(provider: string, url: string, headers: Record<string, string>, body: unknown, timeoutMs: number): Promise<unknown> {
   const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
     const res = await fetch(url, {
       method: "POST",
@@ -40,7 +41,7 @@ async function postJson(provider: string, url: string, headers: Record<string, s
     return await res.json();
   } catch (e) {
     if (e instanceof ProviderError) throw e;
-    if (e instanceof Error && e.name === "AbortError") throw new ProviderError(provider, `${provider} timed out after ${TIMEOUT_MS} ms`);
+    if (e instanceof Error && e.name === "AbortError") throw new ProviderError(provider, `${provider} timed out after ${timeoutMs} ms`);
     throw new ProviderError(provider, `${provider} request failed: ${e instanceof Error ? e.message : String(e)}`);
   } finally {
     clearTimeout(timer);
@@ -62,7 +63,7 @@ function splitImage(image: string): { mime: string; data: string } {
 interface GeminiResponse { candidates?: { content?: { parts?: { text?: string }[] } }[] }
 interface AnthropicResponse { content?: { type: string; text?: string }[] }
 
-async function gemini(prompt: string, image?: string): Promise<string> {
+async function gemini(prompt: string, timeoutMs: number, image?: string): Promise<string> {
   const key = process.env.GEMINI_API_KEY;
   if (!key) throw new MissingApiKeyError("gemini", "GEMINI_API_KEY");
   const model = process.env.GEMINI_MODEL || DEFAULT_GEMINI_MODEL;
@@ -75,12 +76,13 @@ async function gemini(prompt: string, image?: string): Promise<string> {
     "gemini",
     `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
     { "x-goog-api-key": key },
-    { contents: [{ parts }], generationConfig: { responseMimeType: "application/json", temperature: 0.2 } },
+    { contents: [{ parts }], generationConfig: { responseMimeType: "application/json", temperature: 0.4 } },
+    timeoutMs,
   )) as GeminiResponse;
   return (json.candidates?.[0]?.content?.parts ?? []).map((p) => p.text ?? "").join("");
 }
 
-async function anthropic(prompt: string, image?: string): Promise<string> {
+async function anthropic(prompt: string, timeoutMs: number, image?: string): Promise<string> {
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) throw new MissingApiKeyError("anthropic", "ANTHROPIC_API_KEY");
   const model = process.env.ANTHROPIC_MODEL || "claude-haiku-5-5";
@@ -94,7 +96,8 @@ async function anthropic(prompt: string, image?: string): Promise<string> {
     "anthropic",
     "https://api.anthropic.com/v1/messages",
     { "x-api-key": key, "anthropic-version": "2023-06-01" },
-    { model, max_tokens: 1024, messages: [{ role: "user", content }] },
+    { model, max_tokens: 1500, messages: [{ role: "user", content }] },
+    timeoutMs,
   )) as AnthropicResponse;
   return (json.content ?? []).filter((c) => c.type === "text").map((c) => c.text ?? "").join("");
 }
@@ -104,8 +107,10 @@ export async function analyseWithVision(args: {
   image?: string;
   text?: string;
   knownDishes: Pick<Dish, "id" | "name">[];
+  timeoutMs?: number;
 }): Promise<unknown> {
+  const timeoutMs = args.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   const prompt = buildPrompt({ knownDishes: args.knownDishes, text: args.text });
-  const raw = currentProvider() === "anthropic" ? await anthropic(prompt, args.image) : await gemini(prompt, args.image);
+  const raw = currentProvider() === "anthropic" ? await anthropic(prompt, timeoutMs, args.image) : await gemini(prompt, timeoutMs, args.image);
   return parseJsonText(raw);
 }

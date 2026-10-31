@@ -1,7 +1,43 @@
 {
-  "generatedAt": null,
-  "provider": null,
-  "runs": null,
-  "meals": [],
-  "summary": null
+  "generatedAt": "2026-10-31T05:43:12.185Z",
+  "provider": "anthropic",
+  "runs": 3,
+  "meals": [
+    {
+      "id": "m01",
+      "dish": "Chicken rice (steamed)",
+      "photo": "data/eval/photos/m01.jpg",
+      "true_kcal": null,
+      "calai_kcal": null,
+      "makanlens_kcal": 558,
+      "kcal_low": 466,
+      "kcal_high": 636,
+      "in_range": null,
+      "abs_error": null,
+      "pct_error": null,
+      "calai_pct_error": null,
+      "ms": 5193
+    },
+    {
+      "id": "m02",
+      "dish": "Nasi lemak",
+      "photo": "data/eval/photos/m02.jpg",
+      "true_kcal": null,
+      "calai_kcal": null,
+      "makanlens_kcal": 963,
+      "kcal_low": 799,
+      "kcal_high": 1128,
+      "in_range": null,
+      "abs_error": null,
+      "pct_error": null,
+      "calai_pct_error": null,
+      "ms": 5798
+    }
+  ],
+  "summary": {
+    "n": 2,
+    "makanlens_mape": null,
+    "calai_mape": null,
+    "hit_rate": null
+  }
 }

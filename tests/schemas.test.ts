@@ -6,65 +6,66 @@ import {
 } from "@/lib/schemas";
 
 const goodItem = {
-  label: "Hainanese chicken rice",
+  label: "steamed chicken rice",
   known_dish_id: "chicken-rice-steamed",
-  portion: 1,
-  confidence: 0.9,
-  estimate: { kcal: 607, protein_g: 30, carbs_g: 70, fat_g: 20 },
+  components: [{ name: "rice", grams: 220 }, { name: "steamed chicken", grams: 90 }],
+  grams: 330, grams_low: 280, grams_high: 400,
+  method: "steamed", confidence: 0.8, reference_object: "card",
+  ambiguity: null, fallback_kcal_per_100g: null,
 };
 
-describe("modelOutputSchema (AI JSON)", () => {
+describe("modelOutputSchema (AI JSON, Phase 8)", () => {
   it("accepts valid model JSON", () => {
     const r = modelOutputSchema.safeParse({ items: [goodItem] });
     expect(r.success).toBe(true);
-    if (r.success) expect(r.data.items[0].known_dish_id).toBe("chicken-rice-steamed");
+    if (r.success) {
+      expect(r.data.items[0].known_dish_id).toBe("chicken-rice-steamed");
+      expect(r.data.items[0].grams_high).toBe(400);
+      expect(r.data.items[0].method).toBe("steamed");
+    }
   });
 
-  it("accepts a null known_dish_id for an unmatched dish", () => {
-    const r = modelOutputSchema.safeParse({ items: [{ ...goodItem, known_dish_id: null }] });
+  it("accepts an ambiguity with options", () => {
+    const amb = { question: "Fried or steamed?", options: [{ label: "Steamed", known_dish_id: "a" }, { label: "Roasted", known_dish_id: null }] };
+    const r = modelOutputSchema.safeParse({ items: [{ ...goodItem, ambiguity: amb }] });
     expect(r.success).toBe(true);
+    if (r.success) expect(r.data.items[0].ambiguity?.options).toHaveLength(2);
   });
 
   it("accepts an empty items list (non-food photo)", () => {
     const r = modelOutputSchema.safeParse({ items: [] });
     expect(r.success).toBe(true);
-    if (r.success) expect(r.data.items).toHaveLength(0);
   });
 
-  it("rejects a missing items key", () => {
-    const r = modelOutputSchema.safeParse({});
-    expect(r.success).toBe(false);
+  it("rejects a missing items key and non-array items", () => {
+    expect(modelOutputSchema.safeParse({}).success).toBe(false);
+    expect(modelOutputSchema.safeParse({ items: goodItem }).success).toBe(false);
   });
 
-  it("rejects an item with no estimate", () => {
-    const noEstimate: Partial<typeof goodItem> = { ...goodItem };
-    delete noEstimate.estimate;
-    const r = modelOutputSchema.safeParse({ items: [noEstimate] });
-    expect(r.success).toBe(false);
-    if (!r.success) expect(r.error.issues.some((i) => i.path.includes("estimate"))).toBe(true);
+  it("rejects an empty or missing label", () => {
+    expect(modelOutputSchema.safeParse({ items: [{ ...goodItem, label: "" }] }).success).toBe(false);
+    const { label: _l, ...noLabel } = goodItem;
+    void _l;
+    expect(modelOutputSchema.safeParse({ items: [noLabel] }).success).toBe(false);
   });
 
-  it("rejects an estimate with a numeric string (wrong type)", () => {
+  it("is lenient: bad optional fields fall back to safe defaults", () => {
     const r = modelOutputSchema.safeParse({
-      items: [{ ...goodItem, estimate: { ...goodItem.estimate, kcal: "607" } }],
+      items: [{ label: "x", method: "baked", reference_object: "ruler", grams: "big", confidence: "high", grams_low: -5, ambiguity: "?", fallback_kcal_per_100g: "n/a" }],
     });
-    expect(r.success).toBe(false);
-  });
-
-  it("rejects an empty label", () => {
-    const r = modelOutputSchema.safeParse({ items: [{ ...goodItem, label: "" }] });
-    expect(r.success).toBe(false);
-  });
-
-  it("rejects items that are not an array", () => {
-    const r = modelOutputSchema.safeParse({ items: goodItem });
-    expect(r.success).toBe(false);
-  });
-
-  it("falls back to portion 1 when portion is not a number (lenient field)", () => {
-    const r = modelOutputSchema.safeParse({ items: [{ ...goodItem, portion: "big" }] });
     expect(r.success).toBe(true);
-    if (r.success) expect(r.data.items[0].portion).toBe(1);
+    if (r.success) {
+      const i = r.data.items[0];
+      expect(i.method).toBe("unknown");
+      expect(i.reference_object).toBe("none");
+      expect(i.grams).toBe(0);
+      expect(i.confidence).toBe(0.5);
+      expect(i.grams_low).toBeNull();
+      expect(i.ambiguity).toBeNull();
+      expect(i.fallback_kcal_per_100g).toBeNull();
+      expect(i.components).toEqual([]);
+      expect(i.known_dish_id).toBeNull();
+    }
   });
 });
 

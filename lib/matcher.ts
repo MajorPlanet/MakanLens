@@ -1,8 +1,9 @@
 // Client-safe: no fs, no env.
 import Fuse from "fuse.js";
 import hawker from "@/data/hawker.json";
-import type { AnalysedItem, Candidate, Dish, Nutrition } from "./types";
-import { dishPer100g, dishTypicalGrams } from "./nutrition";
+import type { AnalysedItem, Candidate, CookingMethod, Dish, FollowUp, Nutrition, ReferenceObject, Source } from "./types";
+import type { ModelItem } from "./schemas";
+import { dishPer100g, dishTypicalGrams, nutritionForGrams, roundNutrition, withGrams } from "./nutrition";
 
 type RawDish = Omit<Dish, "per_100g" | "typical_grams" | "method"> & Partial<Pick<Dish, "per_100g" | "typical_grams" | "method">>;
 
@@ -104,6 +105,21 @@ function withCandidates(item: AnalysedItem, label: string, firstId: string | nul
   return item;
 }
 
+/** Trust a valid known_dish_id (unless modifiers contradict), else a strict fuzzy match. Null when nothing is safe to match. */
+function findDish(label: string, knownId: string | null): Dish | undefined {
+  let dish = knownId ? getDish(knownId) : undefined;
+  if (dish && !modifiersConsistent(label, dish)) dish = undefined;
+  if (!dish) {
+    const top = rank(label, true)[0];
+    if (top && top.fuseScore <= MATCH_FUSE_MAX) dish = top.dish;
+  }
+  return dish;
+}
+
+/**
+ * Legacy (Phase 4) entry: portion + AI nutrition estimate. Kept for lib/mock.ts and old callers.
+ * The Phase 8 pipeline uses matchModelItem + itemFromPer100g instead.
+ */
 export function matchItem(raw: {
   label: string;
   known_dish_id: string | null;
@@ -114,12 +130,7 @@ export function matchItem(raw: {
   const portion = clamp(raw.portion, 0.5, 2);
   const confidence = clamp(raw.confidence, 0, 1);
 
-  let dish = raw.known_dish_id ? getDish(raw.known_dish_id) : undefined;
-  if (dish && !modifiersConsistent(raw.label, dish)) dish = undefined;
-  if (!dish) {
-    const top = rank(raw.label, true)[0];
-    if (top && top.fuseScore <= MATCH_FUSE_MAX) dish = top.dish;
-  }
+  const dish = findDish(raw.label, raw.known_dish_id);
   if (dish) {
     return withCandidates(itemFromDish(dish, portion, raw.label, confidence), raw.label, dish.id);
   }
@@ -136,12 +147,143 @@ export function matchItem(raw: {
 }
 
 export function itemFromDish(dish: Dish, portion: number, label = dish.name, confidence = 1): AnalysedItem {
-  const nutrition = scaleNutrition(dish.per_serving, portion);
-  const grams = dish.typical_grams ? Math.round(dish.typical_grams * portion) : 0;
+  const typical = dish.typical_grams;
+  const grams = typical ? Math.round(typical * portion) : 0;
+  // With per_100g and a weight, use the same maths the grams slider uses so the two never disagree.
+  const nutrition = dish.per_100g && grams > 0 ? nutritionForGrams(dish.per_100g, grams) : scaleNutrition(dish.per_serving, portion);
   return {
     label, dishId: dish.id, portion, confidence, nutrition,
     source: "hpb", sourceUrl: dish.source.url, candidates: [],
     grams, gramsRange: [grams, grams], method: dish.method, kcalRange: [nutrition.kcal, nutrition.kcal],
     per_100g: dish.per_100g, referenceObject: "none", runs: 1,
   };
+}
+
+// ---------------------------------------------------------------------------------------------
+// Phase 8: grams + method based matching (all maths via lib/nutrition.ts; client-safe)
+// ---------------------------------------------------------------------------------------------
+
+const MAX_GRAMS = 3000;
+const gClamp = (x: number) => Math.round(Math.min(MAX_GRAMS, Math.max(1, x)));
+
+/** Make [low, high] bracket `grams`; missing bounds default to -20% / +20%. */
+export function sanitizeRange(grams: number, low?: number | null, high?: number | null): [number, number] {
+  const lo = low && low > 0 ? Math.min(low, grams) : grams * 0.8;
+  const hi = high && high > 0 ? Math.max(high, grams) : grams * 1.2;
+  return [gClamp(lo), gClamp(hi)];
+}
+
+/** The cooking method picks the database entry: the dish's family (base + variants) member whose method matches, else the dish itself. */
+export function pickVariant(dish: Dish, method: CookingMethod): Dish {
+  if (method === "unknown" || dish.method === method) return dish;
+  const root = dish.variant_of ?? dish.id;
+  const family = dishes.filter((d) => d.id === root || d.variant_of === root);
+  return family.find((d) => d.method === method) ?? dish;
+}
+
+/** Build an item for a hawker dish at a given weight (grams may be 0 = unknown). Nutrition from per_100g, else per_serving × portion. */
+function dishItemAt(
+  dish: Dish, grams: number, range: [number, number], label: string, confidence: number,
+  referenceObject: ReferenceObject, runs: number, method: CookingMethod = dish.method,
+): AnalysedItem {
+  const typical = dish.typical_grams;
+  const portion = typical && grams > 0 ? Math.round((grams / typical) * 100) / 100 : 1;
+  let nutrition: Nutrition;
+  let kcalRange: [number, number];
+  if (dish.per_100g && grams > 0) {
+    nutrition = nutritionForGrams(dish.per_100g, grams);
+    kcalRange = [nutritionForGrams(dish.per_100g, range[0]).kcal, nutritionForGrams(dish.per_100g, range[1]).kcal];
+  } else {
+    nutrition = scaleNutrition(dish.per_serving, portion);
+    const k = grams > 0 ? [range[0] / grams, range[1] / grams] : [1, 1];
+    kcalRange = [Math.round(nutrition.kcal * k[0]), Math.round(nutrition.kcal * k[1])];
+  }
+  return {
+    label, dishId: dish.id, portion, confidence, nutrition, source: "hpb", sourceUrl: dish.source.url, candidates: [],
+    grams, gramsRange: range, method, kcalRange, per_100g: dish.per_100g, referenceObject, runs,
+  };
+}
+
+/** Step 1 of the lookup order: hawker.json. Returns null when the item has no safe hawker match (then USDA / AI fallback). */
+export function matchModelItem(m: ModelItem, runs = 1): AnalysedItem | null {
+  const found = findDish(m.label, m.known_dish_id);
+  if (!found) return null;
+  const dish = pickVariant(found, m.method);
+  const compSum = m.components.reduce((a, c) => a + c.grams, 0);
+  const given = m.grams > 0 ? m.grams : compSum;
+  const grams = given > 0 ? gClamp(given) : dishTypicalGrams(dish) ?? 0;
+  const range: [number, number] = grams > 0 ? sanitizeRange(grams, m.grams_low, m.grams_high) : [0, 0];
+  const item = dishItemAt(dish, grams, range, dish.name, clamp(m.confidence, 0, 1), m.reference_object, runs);
+  return withCandidates(item, m.label, dish.id);
+}
+
+/** Build an item from per-100 g values that came from outside hawker.json (USDA, or the model's fallback). */
+export function itemFromPer100g(args: {
+  label: string; per100: Nutrition; grams: number; gramsLow?: number | null; gramsHigh?: number | null;
+  method: CookingMethod; confidence: number; source: Source; sourceUrl?: string;
+  referenceObject: ReferenceObject; runs: number;
+}): AnalysedItem {
+  const grams = gClamp(args.grams);
+  const range = sanitizeRange(grams, args.gramsLow, args.gramsHigh);
+  const nutrition = nutritionForGrams(args.per100, grams);
+  const per_100g = roundNutrition(args.per100);
+  const item: AnalysedItem = {
+    label: args.label, dishId: null, portion: 1, confidence: clamp(args.confidence, 0, 1), nutrition,
+    source: args.source, ...(args.sourceUrl ? { sourceUrl: args.sourceUrl } : {}), candidates: [],
+    grams, gramsRange: range, method: args.method,
+    kcalRange: [nutritionForGrams(per_100g, range[0]).kcal, nutritionForGrams(per_100g, range[1]).kcal],
+    per_100g, referenceObject: args.referenceObject, runs: args.runs,
+  };
+  return withCandidates(item, args.label, null);
+}
+
+/** Switch an item to another dish, keeping its grams (or the dish's typical grams when it has none). Drops followUp. */
+export function swapDish(item: AnalysedItem, dishId: string): AnalysedItem {
+  const dish = getDish(dishId);
+  if (!dish) return item;
+  const kept = item.grams > 0;
+  const grams = kept ? item.grams : dishTypicalGrams(dish) ?? 0;
+  const range: [number, number] = kept ? item.gramsRange : grams > 0 ? sanitizeRange(grams) : [0, 0];
+  const next = dishItemAt(dish, grams, range, dish.name, item.confidence, item.referenceObject, item.runs);
+  next.candidates = item.candidates;
+  return next;
+}
+
+/** Apply a follow-up answer: dishId swaps the dish, gramsFactor scales the grams; the question is then dropped. */
+export function applyFollowUpOption(item: AnalysedItem, option: FollowUp["options"][number]): AnalysedItem {
+  let next = item;
+  if (option.dishId) next = swapDish(next, option.dishId);
+  if (option.gramsFactor && option.gramsFactor > 0) {
+    const dish = next.dishId ? getDish(next.dishId) : undefined;
+    next = withGrams(next, next.grams * option.gramsFactor, dish ? dishTypicalGrams(dish) : null);
+  }
+  const { followUp: _dropped, ...rest } = next;
+  void _dropped;
+  return rest;
+}
+
+/** Relative kcal spread above which a question is worth asking. */
+export const FOLLOWUP_MIN_SPREAD = 0.15;
+
+/** kcal spread of a follow-up's options, computed in code at the item's grams: (max - min) / max. Null when fewer than 2 usable options. */
+export function followUpSpread(item: AnalysedItem, followUp: FollowUp): number | null {
+  const kcals = followUp.options.map((o) => applyFollowUpOption(item, o).nutrition.kcal);
+  if (kcals.length < 2) return null;
+  const max = Math.max(...kcals);
+  return max > 0 ? (max - Math.min(...kcals)) / max : 0;
+}
+
+/** Turn the model's ambiguity into a FollowUp, only when it has 2+ options we can compute and their kcal differ by more than 15%. */
+export function buildFollowUp(item: AnalysedItem, amb: ModelItem["ambiguity"]): FollowUp | undefined {
+  if (!amb) return undefined;
+  const seen = new Set<string>();
+  const options: FollowUp["options"] = [];
+  for (const o of amb.options) {
+    if (!o.known_dish_id || !getDish(o.known_dish_id) || seen.has(o.known_dish_id)) continue;
+    seen.add(o.known_dish_id);
+    options.push({ label: o.label, dishId: o.known_dish_id });
+  }
+  const followUp: FollowUp = { question: amb.question, options };
+  const spread = followUpSpread(item, followUp);
+  return spread !== null && spread > FOLLOWUP_MIN_SPREAD ? followUp : undefined;
 }

@@ -22,16 +22,59 @@ export const nutritionSchema = z.object({
   fat_g: num.min(0),
 });
 
+const COOKING_METHODS = ["steamed", "boiled", "soup", "grilled", "roasted", "stir_fried", "pan_fried", "deep_fried", "raw", "unknown"] as const;
+const REFERENCE_OBJECTS = ["card", "fork", "spoon", "chopsticks", "none"] as const;
+
+const optNum = num.min(0).nullable().catch(null);
+
+/**
+ * One item from the vision model (Phase 8). The model gives grams and a cooking method, never calories.
+ * Everything except `label` is lenient (bad values fall back to a safe default) so one sloppy field never fails a run.
+ * `fallback_kcal_per_100g` and `fallback_macros_per_100g` are used ONLY when neither hawker.json nor USDA has the item.
+ */
 export const modelItemSchema = z.object({
   label: z.string().min(1),
   known_dish_id: z.string().nullable().catch(null),
-  portion: num.catch(1),
+  components: z.array(z.object({ name: z.string(), grams: num.min(0) })).catch([]),
+  grams: num.min(0).catch(0),
+  grams_low: optNum,
+  grams_high: optNum,
+  method: z.enum(COOKING_METHODS).catch("unknown"),
   confidence: num.catch(0.5),
-  estimate: nutritionSchema,
+  reference_object: z.enum(REFERENCE_OBJECTS).catch("none"),
+  ambiguity: z
+    .object({
+      question: z.string().min(1),
+      options: z.array(z.object({ label: z.string().min(1), known_dish_id: z.string().nullable().catch(null) })),
+    })
+    .nullable()
+    .catch(null),
+  fallback_kcal_per_100g: optNum,
+  fallback_macros_per_100g: z
+    .object({ protein_g: num.min(0), carbs_g: num.min(0), fat_g: num.min(0) })
+    .nullable()
+    .catch(null),
 });
 
 export const modelOutputSchema = z.object({ items: z.array(modelItemSchema) });
 export type ModelItem = z.infer<typeof modelItemSchema>;
+
+/** USDA FoodData Central /foods/search (only what we read). Values for Foundation/SR Legacy/Survey are per 100 g. */
+export const usdaSearchSchema = z.object({
+  foods: z
+    .array(
+      z.object({
+        fdcId: z.number(),
+        description: z.string(),
+        dataType: z.string().optional(),
+        foodNutrients: z
+          .array(z.object({ nutrientId: z.number().optional(), nutrientNumber: z.union([z.string(), z.number()]).optional(), value: z.number().optional() }))
+          .default([]),
+      }),
+    )
+    .default([]),
+});
+export type UsdaSearch = z.infer<typeof usdaSearchSchema>;
 
 /** Lenient: OFF returns numbers or numeric strings, and many are missing. */
 const offNum = z.preprocess((v) => {
