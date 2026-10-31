@@ -1,1 +1,92 @@
-[]
+[
+ {
+  "dish": "Chicken rice (steamed)",
+  "photo": "",
+  "hpb_kcal": 557.7,
+  "calai_kcal": null,
+  "calai_label": "",
+  "makanlens_kcal": null,
+  "notes": ""
+ },
+ {
+  "dish": "Nasi lemak",
+  "photo": "",
+  "hpb_kcal": 494,
+  "calai_kcal": null,
+  "calai_label": "",
+  "makanlens_kcal": null,
+  "notes": ""
+ },
+ {
+  "dish": "Char kway teow",
+  "photo": "",
+  "hpb_kcal": 744,
+  "calai_kcal": null,
+  "calai_label": "",
+  "makanlens_kcal": null,
+  "notes": ""
+ },
+ {
+  "dish": "Laksa",
+  "photo": "",
+  "hpb_kcal": 591,
+  "calai_kcal": null,
+  "calai_label": "",
+  "makanlens_kcal": null,
+  "notes": ""
+ },
+ {
+  "dish": "Cai fan (2 veg 1 meat)",
+  "photo": "",
+  "hpb_kcal": null,
+  "calai_kcal": null,
+  "calai_label": "",
+  "makanlens_kcal": null,
+  "notes": ""
+ },
+ {
+  "dish": "Roti prata (plain)",
+  "photo": "",
+  "hpb_kcal": 209,
+  "calai_kcal": null,
+  "calai_label": "",
+  "makanlens_kcal": null,
+  "notes": ""
+ },
+ {
+  "dish": "Bak chor mee (dry)",
+  "photo": "",
+  "hpb_kcal": 511,
+  "calai_kcal": null,
+  "calai_label": "",
+  "makanlens_kcal": null,
+  "notes": ""
+ },
+ {
+  "dish": "Mee rebus",
+  "photo": "",
+  "hpb_kcal": 571,
+  "calai_kcal": null,
+  "calai_label": "",
+  "makanlens_kcal": null,
+  "notes": ""
+ },
+ {
+  "dish": "Kaya toast set",
+  "photo": "",
+  "hpb_kcal": null,
+  "calai_kcal": null,
+  "calai_label": "",
+  "makanlens_kcal": null,
+  "notes": ""
+ },
+ {
+  "dish": "Teh tarik",
+  "photo": "",
+  "hpb_kcal": null,
+  "calai_kcal": null,
+  "calai_label": "",
+  "makanlens_kcal": null,
+  "notes": ""
+ }
+]

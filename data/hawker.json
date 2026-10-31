@@ -1,1 +1,1179 @@
-[]
+[
+ {
+  "id": "chicken-rice-steamed",
+  "name": "Chicken rice (steamed)",
+  "aliases": {
+   "en": [
+    "Hainanese chicken rice",
+    "steamed chicken rice",
+    "white chicken rice",
+    "chicken rice"
+   ],
+   "zh": [
+    "海南鸡饭",
+    "白斩鸡饭",
+    "鸡饭"
+   ],
+   "ms": [
+    "nasi ayam",
+    "nasi ayam hainan"
+   ],
+   "ta": []
+  },
+  "serving": {
+   "label": "1 plate",
+   "grams": null
+  },
+  "per_serving": {
+   "kcal": 557.7,
+   "protein_g": 28.05,
+   "carbs_g": 80.19,
+   "fat_g": 13.86
+  },
+  "source": {
+   "name": "FWD Singapore blog, figures attributed to Health Promotion Board (secondary)",
+   "url": "https://www.fwd.com.sg/blog/health-safety/enjoying-hawker-foods-without-compromising-on-health/",
+   "verified": false
+  },
+  "tip": "Choose steamed over roasted, remove the skin, and ask for less rice or more cucumber."
+ },
+ {
+  "id": "char-kway-teow",
+  "name": "Char kway teow",
+  "aliases": {
+   "en": [
+    "char kuey teow",
+    "char kway tiao",
+    "CKT",
+    "fried kway teow",
+    "fried flat rice noodles"
+   ],
+   "zh": [
+    "炒粿条",
+    "炒果条",
+    "炒贵刁"
+   ],
+   "ms": [
+    "kuew teow goreng",
+    "kway teow goreng"
+   ],
+   "ta": []
+  },
+  "serving": {
+   "label": "1 plate",
+   "grams": 384
+  },
+  "per_serving": {
+   "kcal": 744,
+   "protein_g": 23,
+   "carbs_g": 76,
+   "fat_g": 38
+  },
+  "source": {
+   "name": "HealthXchange (SingHealth) with KK Women's and Children's Hospital Dept of Nutrition and Dietetics",
+   "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-chinese-food-dim-sum-char-kway-teow",
+   "verified": false
+  },
+  "tip": "Share the plate or eat half, and ask for less oil and more beansprouts."
+ },
+ {
+  "id": "nasi-lemak",
+  "name": "Nasi lemak",
+  "aliases": {
+   "en": [
+    "coconut rice with sides",
+    "nasi lemak"
+   ],
+   "zh": [
+    "椰浆饭"
+   ],
+   "ms": [
+    "nasi lemak"
+   ],
+   "ta": [
+    "நாசி லெமாக்"
+   ]
+  },
+  "serving": {
+   "label": "1 plate",
+   "grams": 210
+  },
+  "per_serving": {
+   "kcal": 494,
+   "protein_g": 13,
+   "carbs_g": 80,
+   "fat_g": 14
+  },
+  "source": {
+   "name": "HealthXchange (SingHealth) with KK Women's and Children's Hospital Dept of Nutrition and Dietetics",
+   "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-malay-breakfast-foods-nasi-lemak-mee-siam-soto",
+   "verified": false
+  },
+  "tip": "Skip extra fried sides such as fried chicken wing, otah and fried fish, which add more calories on top of this basic plate."
+ },
+ {
+  "id": "laksa",
+  "name": "Laksa (laksa lemak)",
+  "aliases": {
+   "en": [
+    "laksa lemak",
+    "curry laksa",
+    "Singapore laksa",
+    "katong laksa"
+   ],
+   "zh": [
+    "叻沙",
+    "咖喱叻沙"
+   ],
+   "ms": [
+    "laksa lemak",
+    "laksa"
+   ],
+   "ta": []
+  },
+  "serving": {
+   "label": "1 bowl",
+   "grams": 540
+  },
+  "per_serving": {
+   "kcal": 591,
+   "protein_g": 17,
+   "carbs_g": 58,
+   "fat_g": 32
+  },
+  "source": {
+   "name": "HealthXchange (SingHealth) with KK Women's and Children's Hospital Dept of Nutrition and Dietetics",
+   "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-chinese-food-hokkien-mee-lor-mee",
+   "verified": false
+  },
+  "tip": "Leave most of the coconut gravy behind and skip extra cockles or fried items."
+ },
+ {
+  "id": "mee-siam",
+  "name": "Mee siam",
+  "aliases": {
+   "en": [
+    "mee siam",
+    "mi siam",
+    "spicy bee hoon"
+   ],
+   "zh": [
+    "米暹",
+    "暹米粉"
+   ],
+   "ms": [
+    "mi siam",
+    "mee siam"
+   ],
+   "ta": []
+  },
+  "serving": {
+   "label": "1 plate",
+   "grams": 655
+  },
+  "per_serving": {
+   "kcal": 694,
+   "protein_g": 28,
+   "carbs_g": 92,
+   "fat_g": 24
+  },
+  "source": {
+   "name": "HealthXchange (SingHealth) with KK Women's and Children's Hospital Dept of Nutrition and Dietetics",
+   "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-malay-breakfast-foods-nasi-lemak-mee-siam-soto",
+   "verified": false
+  },
+  "tip": "Leave most of the gravy."
+ },
+ {
+  "id": "mee-rebus",
+  "name": "Mee rebus",
+  "aliases": {
+   "en": [
+    "mee rebus",
+    "mi rebus",
+    "noodles in sweet potato gravy"
+   ],
+   "zh": [
+    "咖喱面",
+    "爪哇面"
+   ],
+   "ms": [
+    "mi rebus",
+    "mee rebus"
+   ],
+   "ta": []
+  },
+  "serving": {
+   "label": "1 plate",
+   "grams": 571
+  },
+  "per_serving": {
+   "kcal": 571,
+   "protein_g": 23,
+   "carbs_g": 82,
+   "fat_g": 17
+  },
+  "source": {
+   "name": "HealthXchange (SingHealth) with KK Women's and Children's Hospital Dept of Nutrition and Dietetics",
+   "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-malay-breakfast-foods-nasi-lemak-mee-siam-soto",
+   "verified": false
+  },
+  "tip": "Ask for less gravy and skip the fried toppings."
+ },
+ {
+  "id": "mee-goreng-mamak",
+  "name": "Mee goreng",
+  "aliases": {
+   "en": [
+    "mee goreng",
+    "mi goreng",
+    "mamak mee goreng",
+    "Indian mee goreng",
+    "fried yellow noodles"
+   ],
+   "zh": [
+    "炒面",
+    "印度炒面"
+   ],
+   "ms": [
+    "mi goreng",
+    "mee goreng mamak"
+   ],
+   "ta": [
+    "மீ கோரேங்"
+   ]
+  },
+  "serving": {
+   "label": "1 plate",
+   "grams": 309
+  },
+  "per_serving": {
+   "kcal": 500,
+   "protein_g": 18,
+   "carbs_g": 61,
+   "fat_g": 20
+  },
+  "source": {
+   "name": "HealthXchange (SingHealth) with KK Women's and Children's Hospital Dept of Nutrition and Dietetics",
+   "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-malay-foods-biryani-rendang-lemak-cili-padi",
+   "verified": false
+  },
+  "tip": "Ask for less oil."
+ },
+ {
+  "id": "bak-chor-mee-dry",
+  "name": "Bak chor mee (dry)",
+  "aliases": {
+   "en": [
+    "minced pork noodles",
+    "minced meat noodles",
+    "bak chor mee",
+    "BCM",
+    "mee pok tah"
+   ],
+   "zh": [
+    "肉脞面",
+    "肉碎面",
+    "干捞肉脞面"
+   ],
+   "ms": [
+    "mi bak chor"
+   ],
+   "ta": []
+  },
+  "serving": {
+   "label": "1 plate",
+   "grams": 311
+  },
+  "per_serving": {
+   "kcal": 511,
+   "protein_g": 20,
+   "carbs_g": 57,
+   "fat_g": 23
+  },
+  "source": {
+   "name": "HealthXchange (SingHealth) with KK Women's and Children's Hospital Dept of Nutrition and Dietetics",
+   "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-chinese-food-wonton-mee",
+   "verified": false
+  },
+  "tip": "Choose the soup version, which is lower in this source (383 kcal for 597 g), and ask for less lard and sauce."
+ },
+ {
+  "id": "bak-chor-mee-soup",
+  "name": "Bak chor mee (soup)",
+  "aliases": {
+   "en": [
+    "minced pork noodles soup",
+    "bak chor mee soup"
+   ],
+   "zh": [
+    "肉脞面汤"
+   ],
+   "ms": [],
+   "ta": []
+  },
+  "serving": {
+   "label": "1 bowl",
+   "grams": 597
+  },
+  "per_serving": {
+   "kcal": 383,
+   "protein_g": 18,
+   "carbs_g": 50,
+   "fat_g": 12
+  },
+  "source": {
+   "name": "HealthXchange (SingHealth) with KK Women's and Children's Hospital Dept of Nutrition and Dietetics",
+   "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-chinese-food-wonton-mee",
+   "verified": false
+  }
+ },
+ {
+  "id": "wanton-mee-dry",
+  "name": "Wanton mee (dry)",
+  "aliases": {
+   "en": [
+    "wonton noodles",
+    "wantan mee",
+    "wan tan mee",
+    "dry wanton noodles"
+   ],
+   "zh": [
+    "云吞面",
+    "馄饨面"
+   ],
+   "ms": [
+    "mi wantan"
+   ],
+   "ta": []
+  },
+  "serving": {
+   "label": "1 plate",
+   "grams": 330
+  },
+  "per_serving": {
+   "kcal": 411,
+   "protein_g": 19,
+   "carbs_g": 55,
+   "fat_g": 12
+  },
+  "source": {
+   "name": "HealthXchange (SingHealth) with KK Women's and Children's Hospital Dept of Nutrition and Dietetics",
+   "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-chinese-food-wonton-mee",
+   "verified": false
+  },
+  "tip": "Ask for less sauce and lard."
+ },
+ {
+  "id": "wanton-mee-soup",
+  "name": "Wanton mee (soup)",
+  "aliases": {
+   "en": [
+    "wonton noodle soup",
+    "soup wanton mee"
+   ],
+   "zh": [
+    "云吞汤面"
+   ],
+   "ms": [],
+   "ta": []
+  },
+  "serving": {
+   "label": "1 bowl",
+   "grams": 545
+  },
+  "per_serving": {
+   "kcal": 290,
+   "protein_g": 19,
+   "carbs_g": 41,
+   "fat_g": 5
+  },
+  "source": {
+   "name": "HealthXchange (SingHealth) with KK Women's and Children's Hospital Dept of Nutrition and Dietetics",
+   "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-chinese-food-wonton-mee",
+   "verified": false
+  }
+ },
+ {
+  "id": "fishball-noodles-soup",
+  "name": "Fishball noodles (soup)",
+  "aliases": {
+   "en": [
+    "fishball noodle soup",
+    "fishball kway teow soup",
+    "fishball mee pok soup"
+   ],
+   "zh": [
+    "鱼丸面汤",
+    "鱼圆面"
+   ],
+   "ms": [
+    "mi bebola ikan"
+   ],
+   "ta": []
+  },
+  "serving": {
+   "label": "1 bowl",
+   "grams": 798
+  },
+  "per_serving": {
+   "kcal": 551,
+   "protein_g": 30,
+   "carbs_g": 88,
+   "fat_g": 10
+  },
+  "source": {
+   "name": "HealthXchange (SingHealth) with KK Women's and Children's Hospital Dept of Nutrition and Dietetics",
+   "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-chinese-food-duck-rice-fishball-noodle",
+   "verified": false
+  }
+ },
+ {
+  "id": "fishball-noodles-dry",
+  "name": "Fishball noodles (dry)",
+  "aliases": {
+   "en": [
+    "dry fishball noodles",
+    "fishball mee pok dry"
+   ],
+   "zh": [
+    "干捞鱼丸面"
+   ],
+   "ms": [],
+   "ta": []
+  },
+  "serving": {
+   "label": "1 plate",
+   "grams": 327
+  },
+  "per_serving": {
+   "kcal": 370,
+   "protein_g": 19,
+   "carbs_g": 55,
+   "fat_g": 8
+  },
+  "source": {
+   "name": "HealthXchange (SingHealth) with KK Women's and Children's Hospital Dept of Nutrition and Dietetics",
+   "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-chinese-food-duck-rice-fishball-noodle",
+   "verified": false
+  }
+ },
+ {
+  "id": "prawn-noodles-soup",
+  "name": "Prawn noodles (soup)",
+  "aliases": {
+   "en": [
+    "prawn mee soup",
+    "hae mee soup",
+    "prawn noodle soup"
+   ],
+   "zh": [
+    "虾面",
+    "虾面汤"
+   ],
+   "ms": [
+    "mi udang"
+   ],
+   "ta": []
+  },
+  "serving": {
+   "label": "1 bowl",
+   "grams": 574
+  },
+  "per_serving": {
+   "kcal": 294,
+   "protein_g": 19,
+   "carbs_g": 49,
+   "fat_g": 2
+  },
+  "source": {
+   "name": "HealthXchange (SingHealth) with KK Women's and Children's Hospital Dept of Nutrition and Dietetics",
+   "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-chinese-food-wonton-mee",
+   "verified": false
+  }
+ },
+ {
+  "id": "hokkien-mee",
+  "name": "Hokkien mee (fried)",
+  "aliases": {
+   "en": [
+    "fried Hokkien prawn mee",
+    "Hokkien prawn mee",
+    "Hokkien fried mee",
+    "hokkien mee"
+   ],
+   "zh": [
+    "福建面",
+    "福建虾面",
+    "炒福建面"
+   ],
+   "ms": [
+    "mi hokkien goreng"
+   ],
+   "ta": []
+  },
+  "serving": {
+   "label": "1 plate",
+   "grams": 442
+  },
+  "per_serving": {
+   "kcal": 522,
+   "protein_g": 18,
+   "carbs_g": 69,
+   "fat_g": 19
+  },
+  "source": {
+   "name": "HealthXchange (SingHealth) with KK Women's and Children's Hospital Dept of Nutrition and Dietetics",
+   "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-chinese-food-hokkien-mee-lor-mee",
+   "verified": false
+  },
+  "tip": "Ask for less oil and pork lard."
+ },
+ {
+  "id": "carrot-cake-white",
+  "name": "Carrot cake (white, fried)",
+  "aliases": {
+   "en": [
+    "fried carrot cake",
+    "chai tow kway",
+    "white carrot cake",
+    "carrot cake"
+   ],
+   "zh": [
+    "菜头粿",
+    "炒菜头粿",
+    "萝卜糕"
+   ],
+   "ms": [],
+   "ta": []
+  },
+  "serving": {
+   "label": "1 plate",
+   "grams": null
+  },
+  "per_serving": {
+   "kcal": 402.5,
+   "protein_g": 12.25,
+   "carbs_g": 15.4,
+   "fat_g": 32.55
+  },
+  "source": {
+   "name": "FWD Singapore blog, figures attributed to Health Promotion Board (secondary)",
+   "url": "https://www.fwd.com.sg/blog/health-safety/enjoying-hawker-foods-without-compromising-on-health/",
+   "verified": false
+  },
+  "tip": "Share the plate; fried carrot cake is oily, so ask for less oil."
+ },
+ {
+  "id": "roti-prata-plain",
+  "name": "Roti prata (plain)",
+  "aliases": {
+   "en": [
+    "roti prata",
+    "prata kosong",
+    "plain prata",
+    "roti canai",
+    "prata"
+   ],
+   "zh": [
+    "印度煎饼",
+    "罗堤"
+   ],
+   "ms": [
+    "roti canai",
+    "roti prata kosong"
+   ],
+   "ta": [
+    "பரோட்டா"
+   ]
+  },
+  "serving": {
+   "label": "1 piece",
+   "grams": 70
+  },
+  "per_serving": {
+   "kcal": 209,
+   "protein_g": 5,
+   "carbs_g": 32,
+   "fat_g": 7
+  },
+  "source": {
+   "name": "HealthXchange (SingHealth) with KK Women's and Children's Hospital Dept of Nutrition and Dietetics",
+   "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-indian-breads-prata-mutton-murtabak",
+   "verified": false
+  },
+  "tip": "Pair it with dhal or fish curry gravy in moderation rather than adding egg or cheese."
+ },
+ {
+  "id": "roti-john",
+  "name": "Roti john",
+  "aliases": {
+   "en": [
+    "roti john"
+   ],
+   "zh": [],
+   "ms": [
+    "roti john"
+   ],
+   "ta": []
+  },
+  "serving": {
+   "label": "1 piece",
+   "grams": 252.5
+  },
+  "per_serving": {
+   "kcal": 721,
+   "protein_g": 25,
+   "carbs_g": 77,
+   "fat_g": 35
+  },
+  "source": {
+   "name": "HealthXchange (SingHealth) with KK Women's and Children's Hospital Dept of Nutrition and Dietetics",
+   "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-indian-breads-prata-mutton-murtabak",
+   "verified": false
+  }
+ },
+ {
+  "id": "mutton-murtabak",
+  "name": "Mutton murtabak",
+  "aliases": {
+   "en": [
+    "murtabak",
+    "mutton murtabak"
+   ],
+   "zh": [],
+   "ms": [
+    "murtabak daging"
+   ],
+   "ta": [
+    "முர்தபாக்"
+   ]
+  },
+  "serving": {
+   "label": "1 piece",
+   "grams": 211
+  },
+  "per_serving": {
+   "kcal": 373,
+   "protein_g": 15,
+   "carbs_g": 39,
+   "fat_g": 17
+  },
+  "source": {
+   "name": "HealthXchange (SingHealth) with KK Women's and Children's Hospital Dept of Nutrition and Dietetics",
+   "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-indian-breads-prata-mutton-murtabak",
+   "verified": false
+  }
+ },
+ {
+  "id": "nasi-briyani-chicken",
+  "name": "Nasi briyani (chicken)",
+  "aliases": {
+   "en": [
+    "chicken biryani",
+    "chicken briyani",
+    "nasi biryani with chicken"
+   ],
+   "zh": [
+    "印度香饭",
+    "鸡肉印度香饭"
+   ],
+   "ms": [
+    "nasi briyani ayam",
+    "nasi biryani ayam"
+   ],
+   "ta": [
+    "சிக்கன் பிரியாணி"
+   ]
+  },
+  "serving": {
+   "label": "1 plate",
+   "grams": 488
+  },
+  "per_serving": {
+   "kcal": 877,
+   "protein_g": 39,
+   "carbs_g": 102,
+   "fat_g": 35
+  },
+  "source": {
+   "name": "HealthXchange (SingHealth) with KK Women's and Children's Hospital Dept of Nutrition and Dietetics",
+   "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-malay-foods-biryani-rendang-lemak-cili-padi",
+   "verified": false
+  },
+  "tip": "Share the plate or ask for less rice."
+ },
+ {
+  "id": "mutton-dum-biryani",
+  "name": "Mutton dum biryani",
+  "aliases": {
+   "en": [
+    "mutton biryani",
+    "mutton briyani"
+   ],
+   "zh": [],
+   "ms": [
+    "nasi briyani kambing"
+   ],
+   "ta": [
+    "மட்டன் பிரியாணி"
+   ]
+  },
+  "serving": {
+   "label": "1 plate",
+   "grams": 859
+  },
+  "per_serving": {
+   "kcal": 1142,
+   "protein_g": 47,
+   "carbs_g": 135,
+   "fat_g": 46
+  },
+  "source": {
+   "name": "HealthXchange (SingHealth) with KK Women's and Children's Hospital Dept of Nutrition and Dietetics",
+   "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-indian-noodles-rice-dishes-mutton-dum-biryani-indian-rojak",
+   "verified": false
+  }
+ },
+ {
+  "id": "fried-rice",
+  "name": "Fried rice",
+  "aliases": {
+   "en": [
+    "egg fried rice",
+    "Chinese fried rice",
+    "fried rice"
+   ],
+   "zh": [
+    "炒饭",
+    "蛋炒饭"
+   ],
+   "ms": [
+    "nasi goreng cina"
+   ],
+   "ta": []
+  },
+  "serving": {
+   "label": "1 plate",
+   "grams": 428
+  },
+  "per_serving": {
+   "kcal": 907,
+   "protein_g": 28,
+   "carbs_g": 125,
+   "fat_g": 33
+  },
+  "source": {
+   "name": "HealthXchange (SingHealth) with KK Women's and Children's Hospital Dept of Nutrition and Dietetics",
+   "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-chinese-food-hokkien-mee-lor-mee",
+   "verified": false
+  },
+  "tip": "Share the plate or eat half."
+ },
+ {
+  "id": "nasi-goreng",
+  "name": "Nasi goreng",
+  "aliases": {
+   "en": [
+    "Malay fried rice",
+    "nasi goreng"
+   ],
+   "zh": [
+    "马来炒饭"
+   ],
+   "ms": [
+    "nasi goreng"
+   ],
+   "ta": []
+  },
+  "serving": {
+   "label": "1 plate",
+   "grams": 377
+  },
+  "per_serving": {
+   "kcal": 742,
+   "protein_g": 21,
+   "carbs_g": 103,
+   "fat_g": 27
+  },
+  "source": {
+   "name": "HealthXchange (SingHealth) with KK Women's and Children's Hospital Dept of Nutrition and Dietetics",
+   "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-malay-foods-biryani-rendang-lemak-cili-padi",
+   "verified": false
+  }
+ },
+ {
+  "id": "ban-mian-soup",
+  "name": "Ban mian",
+  "aliases": {
+   "en": [
+    "banmian",
+    "ban mee",
+    "board noodles",
+    "handmade noodles",
+    "ban mian soup"
+   ],
+   "zh": [
+    "板面",
+    "板麵"
+   ],
+   "ms": [
+    "mi ban"
+   ],
+   "ta": []
+  },
+  "serving": {
+   "label": "1 bowl",
+   "grams": 528
+  },
+  "per_serving": {
+   "kcal": 475,
+   "protein_g": 22,
+   "carbs_g": 48,
+   "fat_g": 22
+  },
+  "source": {
+   "name": "HealthXchange (SingHealth) with KK Women's and Children's Hospital Dept of Nutrition and Dietetics",
+   "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-chinese-food-dim-sum-char-kway-teow",
+   "verified": false
+  },
+  "tip": "Leave most of the soup."
+ },
+ {
+  "id": "lor-mee",
+  "name": "Lor mee",
+  "aliases": {
+   "en": [
+    "lor mee",
+    "lo mee",
+    "braised noodles"
+   ],
+   "zh": [
+    "卤面",
+    "滷麵"
+   ],
+   "ms": [
+    "mi lor"
+   ],
+   "ta": []
+  },
+  "serving": {
+   "label": "1 bowl",
+   "grams": 540
+  },
+  "per_serving": {
+   "kcal": 383,
+   "protein_g": 15,
+   "carbs_g": 55,
+   "fat_g": 11
+  },
+  "source": {
+   "name": "HealthXchange (SingHealth) with KK Women's and Children's Hospital Dept of Nutrition and Dietetics",
+   "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-chinese-food-hokkien-mee-lor-mee",
+   "verified": false
+  },
+  "tip": "Ask for less gravy."
+ },
+ {
+  "id": "kway-chap",
+  "name": "Kway chap",
+  "aliases": {
+   "en": [
+    "kuay chap",
+    "kueh chap",
+    "kway chap"
+   ],
+   "zh": [
+    "粿汁"
+   ],
+   "ms": [],
+   "ta": []
+  },
+  "serving": {
+   "label": "1 bowl",
+   "grams": 611
+  },
+  "per_serving": {
+   "kcal": 650,
+   "protein_g": 33,
+   "carbs_g": 70,
+   "fat_g": 26
+  },
+  "source": {
+   "name": "HealthXchange (SingHealth) with KK Women's and Children's Hospital Dept of Nutrition and Dietetics",
+   "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-chinese-food-hokkien-mee-lor-mee",
+   "verified": false
+  },
+  "tip": "Choose lean items over offal and fatty cuts."
+ },
+ {
+  "id": "penang-laksa",
+  "name": "Penang laksa",
+  "aliases": {
+   "en": [
+    "assam laksa",
+    "asam laksa",
+    "Penang assam laksa"
+   ],
+   "zh": [
+    "亚参叻沙",
+    "槟城叻沙"
+   ],
+   "ms": [
+    "laksa penang",
+    "laksa asam"
+   ],
+   "ta": []
+  },
+  "serving": {
+   "label": "1 bowl",
+   "grams": 569
+  },
+  "per_serving": {
+   "kcal": 377,
+   "protein_g": 18,
+   "carbs_g": 71,
+   "fat_g": 2
+  },
+  "source": {
+   "name": "HealthXchange (SingHealth) with KK Women's and Children's Hospital Dept of Nutrition and Dietetics",
+   "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-chinese-food-wonton-mee",
+   "verified": false
+  }
+ },
+ {
+  "id": "char-siew-rice",
+  "name": "Char siew rice",
+  "aliases": {
+   "en": [
+    "BBQ pork rice",
+    "roast pork rice",
+    "char siew rice"
+   ],
+   "zh": [
+    "叉烧饭"
+   ],
+   "ms": [
+    "nasi char siew"
+   ],
+   "ta": []
+  },
+  "serving": {
+   "label": "1 plate",
+   "grams": 327
+  },
+  "per_serving": {
+   "kcal": 605,
+   "protein_g": 24,
+   "carbs_g": 91,
+   "fat_g": 16
+  },
+  "source": {
+   "name": "HealthXchange (SingHealth) with KK Women's and Children's Hospital Dept of Nutrition and Dietetics",
+   "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-chinese-food-duck-rice-fishball-noodle",
+   "verified": false
+  }
+ },
+ {
+  "id": "chicken-rice-roasted",
+  "name": "Chicken rice (roasted)",
+  "aliases": {
+   "en": [
+    "roast chicken rice",
+    "roasted chicken rice",
+    "chicken rice with skin"
+   ],
+   "zh": [
+    "烧鸡饭",
+    "烧鸡"
+   ],
+   "ms": [
+    "nasi ayam panggang"
+   ],
+   "ta": []
+  },
+  "serving": {
+   "label": "1 plate",
+   "grams": 382
+  },
+  "per_serving": {
+   "kcal": 607,
+   "protein_g": 25,
+   "carbs_g": 75,
+   "fat_g": 23
+  },
+  "source": {
+   "name": "HealthXchange (SingHealth) with KK Women's and Children's Hospital Dept of Nutrition and Dietetics",
+   "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-chinese-food-duck-rice-fishball-noodle",
+   "verified": false
+  },
+  "tip": "Remove the skin."
+ },
+ {
+  "id": "duck-rice-roasted",
+  "name": "Duck rice (roasted)",
+  "aliases": {
+   "en": [
+    "roast duck rice",
+    "duck rice"
+   ],
+   "zh": [
+    "烧鸭饭",
+    "鸭饭"
+   ],
+   "ms": [
+    "nasi itik"
+   ],
+   "ta": []
+  },
+  "serving": {
+   "label": "1 plate",
+   "grams": 410
+  },
+  "per_serving": {
+   "kcal": 673,
+   "protein_g": 24,
+   "carbs_g": 99,
+   "fat_g": 20
+  },
+  "source": {
+   "name": "HealthXchange (SingHealth) with KK Women's and Children's Hospital Dept of Nutrition and Dietetics",
+   "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-chinese-food-duck-rice-fishball-noodle",
+   "verified": false
+  },
+  "tip": "Remove the skin."
+ },
+ {
+  "id": "mee-soto",
+  "name": "Mee soto",
+  "aliases": {
+   "en": [
+    "mee soto",
+    "mi soto",
+    "soto mee"
+   ],
+   "zh": [],
+   "ms": [
+    "mi soto"
+   ],
+   "ta": []
+  },
+  "serving": {
+   "label": "1 bowl",
+   "grams": 541
+  },
+  "per_serving": {
+   "kcal": 433,
+   "protein_g": 19,
+   "carbs_g": 60,
+   "fat_g": 13
+  },
+  "source": {
+   "name": "HealthXchange (SingHealth) with KK Women's and Children's Hospital Dept of Nutrition and Dietetics",
+   "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-malay-breakfast-foods-nasi-lemak-mee-siam-soto",
+   "verified": false
+  },
+  "tip": "Leave most of the soup."
+ },
+ {
+  "id": "sliced-fish-bee-hoon-soup",
+  "name": "Sliced fish bee hoon soup",
+  "aliases": {
+   "en": [
+    "fish soup bee hoon",
+    "sliced fish soup with beehoon"
+   ],
+   "zh": [
+    "鱼片米粉汤"
+   ],
+   "ms": [],
+   "ta": []
+  },
+  "serving": {
+   "label": "1 bowl",
+   "grams": 686
+  },
+  "per_serving": {
+   "kcal": 349,
+   "protein_g": 22,
+   "carbs_g": 48,
+   "fat_g": 8
+  },
+  "source": {
+   "name": "HealthXchange (SingHealth) with KK Women's and Children's Hospital Dept of Nutrition and Dietetics",
+   "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-chinese-food-wonton-mee",
+   "verified": false
+  }
+ },
+ {
+  "id": "porridge-pork-century-egg",
+  "name": "Porridge with minced pork and century egg",
+  "aliases": {
+   "en": [
+    "pork century egg porridge",
+    "teochew porridge"
+   ],
+   "zh": [
+    "皮蛋瘦肉粥",
+    "粥"
+   ],
+   "ms": [
+    "bubur"
+   ],
+   "ta": []
+  },
+  "serving": {
+   "label": "1 bowl",
+   "grams": 512
+  },
+  "per_serving": {
+   "kcal": 224,
+   "protein_g": 11,
+   "carbs_g": 34,
+   "fat_g": 5
+  },
+  "source": {
+   "name": "HealthXchange (SingHealth) with KK Women's and Children's Hospital Dept of Nutrition and Dietetics",
+   "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-chinese-food-wonton-mee",
+   "verified": false
+  }
+ },
+ {
+  "id": "satay-chicken-10",
+  "name": "Satay (10 sticks)",
+  "aliases": {
+   "en": [
+    "satay",
+    "sate",
+    "chicken satay"
+   ],
+   "zh": [
+    "沙爹",
+    "沙嗲"
+   ],
+   "ms": [
+    "sate",
+    "satay ayam"
+   ],
+   "ta": [
+    "சதே"
+   ]
+  },
+  "serving": {
+   "label": "10 sticks",
+   "grams": null
+  },
+  "per_serving": {
+   "kcal": 213.6,
+   "protein_g": 24.6,
+   "carbs_g": 18,
+   "fat_g": 4.9
+  },
+  "source": {
+   "name": "FWD Singapore blog, figures attributed to Health Promotion Board (secondary)",
+   "url": "https://www.fwd.com.sg/blog/health-safety/enjoying-hawker-foods-without-compromising-on-health/",
+   "verified": false
+  },
+  "tip": "Go easy on the peanut sauce and ketupat, which are not included in these figures."
+ }
+]
