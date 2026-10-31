@@ -21,27 +21,27 @@ Cal AI and MyFitnessPal charge for photo logging. Hawker food is hard for generi
 ## What we uncovered
 
 - **Prices are not fixed.** The public listing shows one product ("Unlimited") at five different prices, which matches reports that the paywall price is tested per user. You cannot know in advance what you will be charged.
-- **The expensive part is cheap.** A photo estimate is one vision-model call. With the setup below, one photo costs about one US cent in API tokens at paid rates, and nothing on Gemini's free tier. The subscription price is not driven by running costs.
+- **The expensive part is cheap.** A photo estimate is one vision-model call. With the setup below, one photo costs at most about 0.3 US cents in API tokens on Claude Haiku 5.5 (3 runs), and nothing on Gemini's free tier. The subscription price is not driven by running costs.
 - **Generic models guess local food.** A vision model alone invents a calorie figure. MakanLens has the model identify the dish, grams and cooking method only, then takes calories from published Singapore nutrition data (38 hawker dishes, sources in [`data/SOURCES.md`](data/SOURCES.md)), and shows the source on every number.
 - **Still to measure:** `/uncovered` compares MakanLens and Cal AI against weighed meals. The weighed test set is not complete yet, so we make no accuracy claim.
 
 ## Before and after: cost per user per month
 
-| | Cal AI | MakanLens |
-|---|---|---|
-| Price to the user | US$2.50 (annual plan) to ~US$17 (weekly plan) | **US$0** (MIT, no account, no subscription) |
-| Running cost, Gemini free tier | n/a | **US$0** |
-| Running cost, Gemini paid tier, `VISION_RUNS=3` | n/a | ~US$0.97 |
-| Running cost, Gemini paid tier, `VISION_RUNS=1` | n/a | ~US$0.32 |
-| Hosting | n/a | US$0 (static + serverless on Vercel Hobby; no database) |
+MakanLens supports two vision providers (`VISION_PROVIDER` in `.env.local`). Our test runs used **Claude Haiku 5.5** (`claude-haiku-5-5`, the `anthropic` provider); Gemini is the default in `.env.example` because it has a free tier.
 
-How the running cost is worked out (estimate, stated assumptions):
-- Model `gemini-3.8-flash`, Standard paid tier: US$0.75 per 1M input tokens, US$3.75 per 1M output tokens (through 31 Dec 2026). Source: [Gemini API pricing](https://ai.google.dev/gemini-api/docs/pricing), checked 31 Oct 2026. The same page lists a free tier for this model.
-- Per call: about 2,300 input tokens (a photo resized to 1024 px, about 1,300 tokens assumed, plus the prompt) and about 500 output tokens (JSON). That is about US$0.0036 per call.
-- 3 photos a day × 30 days = 90 photos a month. With 3 runs per photo: 90 × 3 × 0.0036 ≈ US$0.97.
-- Prices on that page double from 1 Jan 2027 (about US$1.94 a month at 3 runs). Even then it stays below Cal AI's cheapest plan, and on the free tier it is US$0.
+| | Cal AI | MakanLens on Claude Haiku 5.5 (what we ran) | MakanLens on Gemini |
+|---|---|---|---|
+| Price to the user | US$2.50 (annual plan) to ~US$17 (weekly plan) | **US$0** (MIT, no account, no subscription) | **US$0** |
+| API cost, `VISION_RUNS=3` (default) | n/a | **≤ US$0.27** | US$0 free tier; ~US$0.97 paid |
+| API cost, `VISION_RUNS=1` | n/a | ≤ US$0.09 | US$0 free tier; ~US$0.32 paid |
+| Hosting | n/a | US$0 (Vercel Hobby; no database) | US$0 |
 
-**Saving:** US$2.50 to US$0 per user per month for anyone running MakanLens on the free tier (100%), and at least 61% when paying for API calls.
+How the API cost is worked out (estimates, assumptions stated). Usage: 3 photos a day × 30 days = 90 photos a month; each photo is sent `VISION_RUNS` times.
+
+- **Claude Haiku 5.5:** US$0.10 per 1M input tokens, US$0.50 per 1M output tokens (prompts under 100K tokens). Source: [Claude API pricing](https://platform.claude.com/docs/en/about-claude/pricing), checked 31 Oct 2026. Per call: about 2,400 input tokens (a photo resized to 1024 px is about 1,400 tokens, using Anthropic's estimate of width × height ÷ 750, plus about 1,000 tokens of prompt) and at most 1,500 output tokens (the `max_tokens` cap in `lib/vision.ts`, which includes thinking). Worst case about US$0.001 per call, so 90 × 3 × 0.001 ≈ **US$0.27** a month. This is an upper bound; typical replies are shorter.
+- **Gemini (`gemini-3.8-flash`):** US$0.75 per 1M input, US$3.75 per 1M output on the Standard paid tier, with a free tier also listed. Source: [Gemini API pricing](https://ai.google.dev/gemini-api/docs/pricing), checked 31 Oct 2026. About 2,300 input and 500 output tokens per call is about US$0.0036, so 90 × 3 × 0.0036 ≈ US$0.97. These Gemini prices double from 1 Jan 2027.
+
+**Saving:** Cal AI's cheapest plan is US$2.50 per user per month. MakanLens costs at most US$0.27 per user per month on Claude Haiku 5.5 (at least 89% cheaper, and the user pays nothing if the host covers it), or US$0 on Gemini's free tier.
 
 ## Features
 

@@ -24,9 +24,9 @@ Track: NUS Hackers, Autonomous SG 2026. Brief: reverse engineer an opaque, expen
 - Follow the demo steps below. This is the highest-weighted criterion.
 
 **Cost reduction (25%)**
-- The default vision provider (Gemini) has a free tier. Check current limits in Google AI Studio before quoting a per-user cost.
+- We run Claude Haiku 5.5 (US$0.10 / US$0.50 per 1M tokens). Gemini is a free-tier alternative.
 - No database, no backend accounts. All user data stays in the browser.
-- Cost per user per month: Cal AI US$2.50 (cheapest plan) vs MakanLens US$0 on Gemini free tier, ~US$0.97 at paid rates with 3 runs per photo. Working in README "Before and after".
+- Cost per user per month: Cal AI US$2.50 (cheapest plan) vs MakanLens at most US$0.27 on Claude Haiku 5.5 (what we run, 3 runs per photo), or US$0 on Gemini free tier. Working in README "Before and after".
 
 **Open-source licence (15%)**
 - MIT licence (`LICENSE`), public repo, setup in `README.md`.
