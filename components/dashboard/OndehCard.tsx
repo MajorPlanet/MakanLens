@@ -85,7 +85,7 @@ export default function OndehCard({ entries, target }: { entries: LogEntry[]; ta
 
   if (!nudge || !img) return null;
   return (
-    <section aria-label="Ondeh" className="mt-4 flex items-center gap-3 rounded-2xl border border-emerald-200 bg-white p-3 dark:border-emerald-900 dark:bg-neutral-900">
+    <section aria-label="Ondeh" className="mt-4 flex items-center gap-3 rounded-3xl border border-emerald-200 bg-card p-3 dark:border-emerald-900">
       {/* eslint-disable-next-line @next/next/no-img-element -- small local mascot, no optimisation needed */}
       <img
         src={img}

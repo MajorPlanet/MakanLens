@@ -86,7 +86,7 @@ export default function LabelPage() {
     <main className="mx-auto max-w-md px-4 pb-8 pt-4">
       <PageHeader title="Scan label" />
 
-      <section className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+      <section className="p-4 card">
         <p className="mb-3 text-sm text-neutral-600 dark:text-neutral-300">
           Photograph a printed nutrition panel. We copy only what is printed, and you can check it before logging.
         </p>
@@ -97,22 +97,26 @@ export default function LabelPage() {
       </section>
 
       {loading && (
-        <div role="status" className="mt-4 flex items-center gap-3 rounded-2xl bg-orange-50 p-4 dark:bg-orange-950/40">
-          <span className="h-5 w-5 animate-spin rounded-full border-2 border-orange-500 border-t-transparent" />
-          <span className="font-medium">Reading the label…</span>
+        <div role="status" aria-live="polite" className="card mt-4 p-4">
+          <p className="mb-3 text-sm text-neutral-500 dark:text-neutral-400">Reading the label…</p>
+          <div className="space-y-2">
+            <div className="skeleton h-5 w-2/3" />
+            <div className="skeleton h-9 w-1/3" />
+            <div className="skeleton h-3 w-full rounded-full" />
+          </div>
         </div>
       )}
       {error && (
-        <p role="alert" className="mt-4 rounded-2xl border border-orange-200 bg-orange-50 p-4 text-sm dark:border-orange-900 dark:bg-orange-950/40">{error}</p>
+        <p role="alert" className="mt-4 rounded-3xl border border-orange-200 bg-orange-50 p-4 text-sm dark:border-orange-900 dark:bg-orange-950/40">{error}</p>
       )}
 
       {read && base && (
         <section className="mt-4 space-y-4">
-          <div className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
+          <div className="p-4 card">
             <div className="flex gap-3">
               {photo && (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={photo} alt="Your label photo" className="h-32 w-24 shrink-0 rounded-lg bg-neutral-100 object-cover dark:bg-neutral-800" />
+                <img src={photo} alt="Your label photo" className="h-32 w-24 shrink-0 rounded-xl bg-neutral-100 object-cover dark:bg-neutral-800" />
               )}
               <div className="min-w-0 flex-1">
                 <h2 className="break-words text-lg font-semibold leading-tight">{base.label || "Packaged food"}</h2>
@@ -131,7 +135,7 @@ export default function LabelPage() {
             <p className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">Compare these numbers with your photo before you log.</p>
           </div>
 
-          <div className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+          <div className="p-4 card">
             <div className="mb-2 flex items-center justify-between">
               <h3 className="text-sm font-medium">{byGrams ? "Amount eaten (grams)" : "Servings eaten"}</h3>
               {canGrams && (
@@ -172,7 +176,7 @@ export default function LabelPage() {
           </div>
 
           <SearchSlotPicker slot={slot} onChange={setSlot} />
-          <button type="button" onClick={add} disabled={!final} className={`h-14 w-full rounded-2xl text-lg font-semibold ${ACCENT_BTN}`}>
+          <button type="button" onClick={add} disabled={!final} className={`h-14 w-full rounded-xl text-lg font-semibold ${ACCENT_BTN}`}>
             Add to today{final ? ` · ${fmtKcal(final.nutrition.kcal)} kcal` : ""}
           </button>
         </section>

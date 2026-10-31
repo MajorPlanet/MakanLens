@@ -105,7 +105,7 @@ export default function ProfileForm({ initial, submitLabel, onSave, allowOverrid
         </label>
       )}
 
-      <div className="rounded-2xl border border-orange-200 bg-orange-50 p-4 text-center dark:border-orange-900 dark:bg-orange-950/40" aria-live="polite">
+      <div className="rounded-3xl border border-orange-200 bg-orange-50 p-4 text-center dark:border-orange-900 dark:bg-orange-950/40" aria-live="polite">
         {preview ? (
           <>
             <p className="text-sm">Your daily target</p>
@@ -121,7 +121,7 @@ export default function ProfileForm({ initial, submitLabel, onSave, allowOverrid
         )}
       </div>
 
-      <button type="submit" disabled={!preview} className={`h-14 w-full rounded-2xl text-lg font-semibold ${ACCENT_BTN}`}>
+      <button type="submit" disabled={!preview} className={`h-14 w-full rounded-xl text-lg font-semibold ${ACCENT_BTN}`}>
         {submitLabel}
       </button>
       {savedMessage && <p role="status" className="text-center text-sm font-medium text-green-700 dark:text-green-400">{savedMessage}</p>}

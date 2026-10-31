@@ -59,7 +59,7 @@ export default function ErrorNotice({
 }) {
   const c = COPY[kind];
   return (
-    <div role="alert" className="rounded-2xl border border-orange-200 bg-orange-50 p-4 dark:border-orange-900 dark:bg-orange-950/40">
+    <div role="alert" className="rounded-3xl border border-orange-200 bg-orange-50 p-4 dark:border-orange-900 dark:bg-orange-950/40">
       <p className="font-semibold">{c.title}</p>
       <p className="mt-1 text-sm">{kind === "image" && detail ? detail : c.body}</p>
       <div className="mt-3 flex gap-2">

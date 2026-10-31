@@ -32,26 +32,29 @@ export default function HistoryPage() {
     <main className="mx-auto max-w-md px-4 pb-8 pt-4">
       <PageHeader title="History" />
       {!ready ? (
-        <p className="text-sm text-neutral-500">Loading…</p>
+        <div aria-busy="true" aria-label="Loading" className="space-y-4">
+          <div className="grid grid-cols-2 gap-2"><div className="skeleton h-20 rounded-3xl" /><div className="skeleton h-20 rounded-3xl" /></div>
+          <div className="skeleton h-56 rounded-3xl" />
+        </div>
       ) : entries.length === 0 ? (
-        <div className="rounded-2xl border border-neutral-200 p-6 text-center dark:border-neutral-800">
+        <div className="p-6 text-center card">
           <p className="text-lg font-semibold">Nothing logged yet</p>
           <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">Snap your first meal and your week will show up here.</p>
-          <Link href="/" className={`mt-4 inline-flex min-h-12 items-center rounded-2xl px-6 font-semibold ${ACCENT_BTN}`}>Log a meal</Link>
+          <Link href="/" className={`mt-4 inline-flex min-h-12 items-center rounded-xl px-6 font-semibold ${ACCENT_BTN}`}>Log a meal</Link>
         </div>
       ) : (
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-2xl border border-orange-200 bg-orange-50 p-4 dark:border-orange-900 dark:bg-orange-950/40">
-              <p className="text-sm">Logging streak</p>
-              <p className="text-4xl font-bold tabular-nums text-orange-600 dark:text-orange-400">{streak}<span className="ml-1 text-base font-medium">{streak === 1 ? "day" : "days"}</span></p>
+            <div className="rounded-3xl border border-orange-200 bg-orange-50 p-4 dark:border-orange-900 dark:bg-orange-950/40">
+              <p className="text-sm text-neutral-500 dark:text-neutral-400">Logging streak</p>
+              <p className="font-display text-4xl font-extrabold tabular-nums text-orange-600 dark:text-orange-400">{streak}<span className="ml-1 text-base font-medium">{streak === 1 ? "day" : "days"}</span></p>
             </div>
-            <div className="rounded-2xl border border-neutral-200 p-4 dark:border-neutral-800">
-              <p className="text-sm">7-day average</p>
-              <p className="text-4xl font-bold tabular-nums">{avg}<span className="ml-1 text-base font-medium">kcal</span></p>
+            <div className="p-4 card">
+              <p className="text-sm text-neutral-500 dark:text-neutral-400">7-day average</p>
+              <p className="font-display text-4xl font-extrabold tabular-nums">{avg}<span className="ml-1 text-base font-medium">kcal</span></p>
             </div>
           </div>
-          <section className="rounded-2xl border border-neutral-200 p-4 dark:border-neutral-800">
+          <section className="p-4 card">
             <h2 className="mb-2 text-sm font-semibold">Last 7 days</h2>
             <WeekChart days={days} target={target} />
             <p className="mt-2 flex flex-wrap gap-x-4 text-xs text-neutral-500 dark:text-neutral-400">

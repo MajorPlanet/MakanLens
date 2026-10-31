@@ -10,8 +10,8 @@ export default function WeekStack({ days, goal }: { days: DayMacros[]; goal: num
   const y = (v: number) => H - pad - (v / max) * (H - pad * 2);
   const step = (W - pad * 2) / days.length;
   return (
-    <section className="mt-4 rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
-      <h2 className="font-semibold">This week</h2>
+    <section className="mt-4 p-4 card">
+      <h2 className="text-sm font-medium text-neutral-500 dark:text-neutral-400">This week</h2>
       <svg viewBox={`0 0 ${W} ${H + 14}`} className="mt-2 w-full" role="img" aria-label="Calories per day this week, by macro">
         {days.map((d, i) => {
           const x = pad + i * step + (step - barW) / 2;

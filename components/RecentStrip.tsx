@@ -1,4 +1,6 @@
 "use client";
+import { Star } from "lucide-react";
+import { ICON } from "@/components/icons";
 import { useEffect, useState } from "react";
 import { getRecentMeals, logSavedMeal, setFavourite } from "@/lib/storage";
 import { defaultSlot, fmtKcal } from "@/components/format";
@@ -27,7 +29,7 @@ export default function RecentStrip({ onLogged }: { onLogged?: () => void }) {
         {recents.map((m) => {
           const fav = m.favourite;
           return (
-            <li key={m.id} className="flex shrink-0 items-stretch rounded-xl border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
+            <li key={m.id} className="flex shrink-0 items-stretch rounded-xl border border-neutral-200 bg-card dark:border-neutral-800">
               <button
                 type="button"
                 onClick={() => {
@@ -51,7 +53,7 @@ export default function RecentStrip({ onLogged }: { onLogged?: () => void }) {
                 aria-label={fav ? `Remove ${m.name} from favourites` : `Favourite ${m.name}`}
                 className="flex min-h-11 min-w-11 items-center justify-center text-xl"
               >
-                <span className={fav ? "text-orange-500" : "text-neutral-400"}>{fav ? "★" : "☆"}</span>
+                <Star {...ICON} fill={fav ? "currentColor" : "none"} aria-hidden className={fav ? "text-orange-500" : "text-neutral-400"} />
               </button>
             </li>
           );

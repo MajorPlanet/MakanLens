@@ -1,5 +1,6 @@
 "use client";
-import Link from "next/link";
+import { X } from "lucide-react";
+import { ICON } from "@/components/icons";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { AnalysedItem, LogEntry, MealSlot, Profile } from "@/lib/types";
@@ -31,6 +32,8 @@ export default function Home() {
   const [ready, setReady] = useState(false);
   const [loading, setLoading] = useState<string | null>(null);
   const [found, setFound] = useState<AnalysedItem[] | null>(null);
+  /** Resized photo for the results thumbnail; memory only, never saved. */
+  const [photo, setPhoto] = useState<string | null>(null);
   const [editing, setEditing] = useState<LogEntry | null>(null);
   const [notice, setNotice] = useState<{ kind: NoticeKind; detail?: string } | null>(null);
   const [unconfigured, setUnconfigured] = useState(false);
@@ -74,6 +77,7 @@ export default function Home() {
         setLoading("Resizing photo…");
         try {
           image = await resizeImage(input.file);
+          setPhoto(`data:image/jpeg;base64,${image}`);
         } catch (e) {
           setNotice({ kind: "image", detail: e instanceof Error ? e.message : undefined });
           return;
@@ -82,6 +86,7 @@ export default function Home() {
         setLoading("Identifying dishes…");
       } else {
         text = input.text;
+        setPhoto(null);
         setLoading("Identifying dishes…");
       }
       const t = setTimeout(() => setLoading("Matching local dish data…"), 2500);
@@ -125,7 +130,18 @@ export default function Home() {
   }
 
   if (!ready || !profile) {
-    return <main className="p-6 text-center text-neutral-500">Loading…</main>;
+    return (
+      <main aria-busy="true" aria-label="Loading" className="mx-auto max-w-md space-y-4 px-4 pt-6">
+        <div className="skeleton h-8 w-40" />
+        <div className="skeleton h-72 rounded-3xl" />
+        <div className="grid grid-cols-3 gap-2">
+          <div className="skeleton h-24 rounded-3xl" />
+          <div className="skeleton h-24 rounded-3xl" />
+          <div className="skeleton h-24 rounded-3xl" />
+        </div>
+        <div className="skeleton h-48 rounded-3xl" />
+      </main>
+    );
   }
 
   const todayDate = localDateString();
@@ -143,24 +159,20 @@ export default function Home() {
 
   return (
     <main className="mx-auto max-w-md px-4 pt-4">
-      <header className="mb-4 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-orange-600 dark:text-orange-400">MakanLens</h1>
-        <nav className="flex text-sm font-medium">
-          <Link href="/history" className="flex h-11 items-center px-3">History</Link>
-          <Link href="/settings" className="flex h-11 items-center px-3">Settings</Link>
-        </nav>
+      <header className="mb-4 flex items-center justify-between pt-2">
+        <h1 className="font-display text-2xl font-extrabold text-orange-600 dark:text-orange-400">MakanLens</h1>
       </header>
 
       {unconfigured && (
-        <p role="status" className="mb-4 rounded-2xl border border-neutral-200 bg-neutral-100 p-4 text-sm dark:border-neutral-800 dark:bg-neutral-900">
+        <p role="status" className="card mb-4 p-4 text-sm text-neutral-600 dark:text-neutral-300">
           Photo analysis isn&apos;t set up on this server yet (no API key). Barcode scanning still works.
         </p>
       )}
 
       {tip && (
-        <div className="mb-4 flex items-start gap-2 rounded-2xl border border-green-200 bg-green-50 p-4 text-sm dark:border-green-900 dark:bg-green-950/40">
+        <div className="mb-4 flex items-start gap-2 rounded-3xl border border-green-200 bg-green-50 p-4 text-sm dark:border-green-900 dark:bg-green-950/40">
           <p className="flex-1"><span className="font-semibold">Lighter next time:</span> {tip}</p>
-          <button type="button" onClick={() => setTip(null)} aria-label="Dismiss tip" className="-m-2 flex h-11 w-11 shrink-0 items-center justify-center text-xl">×</button>
+          <button type="button" onClick={() => setTip(null)} aria-label="Dismiss tip" className="-m-2 flex h-11 w-11 shrink-0 items-center justify-center"><X {...ICON} aria-hidden /></button>
         </div>
       )}
 
@@ -176,14 +188,22 @@ export default function Home() {
       )}
 
       {loading && (
-        <div role="status" className="mb-4 flex items-center gap-3 rounded-2xl bg-orange-50 p-4 dark:bg-orange-950/40">
-          <span className="h-5 w-5 animate-spin rounded-full border-2 border-orange-500 border-t-transparent" />
-          <span className="font-medium">{loading}</span>
+        <div role="status" aria-live="polite" className="card mb-4 p-4">
+          <p className="mb-3 text-sm text-neutral-500 dark:text-neutral-400">{loading}</p>
+          <div className="flex gap-3">
+            <div className="skeleton h-20 w-20 shrink-0" />
+            <div className="flex-1 space-y-2">
+              <div className="skeleton h-5 w-2/3" />
+              <div className="skeleton h-8 w-1/2" />
+              <div className="skeleton h-3 w-full rounded-full" />
+            </div>
+          </div>
         </div>
       )}
 
       <SummaryHeader eaten={totals.kcal} exercise={targets.exercise} goal={targets.kcal} />
       <OndehCard entries={entries} target={targets.kcal} />
+      <SnapBar disabled={loading !== null} onFile={(file) => run({ file })} onText={(text) => run({ text })} />
       <MacroCards totals={totals} targets={targets.macros} />
       <WeekStack days={week} goal={profile.targetKcal} />
       <BalanceDonut totals={totals} />
@@ -195,7 +215,7 @@ export default function Home() {
 
       <section className="mt-5">
         {today.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-neutral-300 p-6 text-center dark:border-neutral-700">
+          <div className="rounded-3xl border border-dashed border-neutral-300 p-6 text-center dark:border-neutral-700">
             <p className="text-lg font-semibold">Nothing logged yet today</p>
             <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
               Snap your next meal and we&apos;ll work out the calories.
@@ -206,10 +226,9 @@ export default function Home() {
         )}
       </section>
 
-      <SnapBar disabled={loading !== null} onFile={(file) => run({ file })} onText={(text) => run({ text })} />
 
       {found && (
-        <ResultsCard mode="add" initialItems={found} onConfirm={confirmAdd} onCancel={() => setFound(null)} />
+        <ResultsCard mode="add" photo={photo} initialItems={found} onConfirm={confirmAdd} onCancel={() => { setFound(null); setPhoto(null); }} />
       )}
       {editing && (
         <ResultsCard

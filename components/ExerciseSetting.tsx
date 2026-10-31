@@ -7,7 +7,7 @@ export default function ExerciseSetting({ profile, onSave }: { profile: Profile;
   return (
     <section className="mt-8 space-y-2" aria-label="Exercise">
       <h2 className="text-sm font-semibold">Exercise</h2>
-      <label className="flex min-h-12 items-center justify-between gap-3 rounded-2xl border border-neutral-300 px-4 dark:border-neutral-700">
+      <label className="flex min-h-12 items-center justify-between gap-3 rounded-xl border border-neutral-300 px-4 dark:border-neutral-700">
         <span className="text-sm">Add exercise calories to my daily target</span>
         <input
           type="checkbox" role="switch" checked={on}

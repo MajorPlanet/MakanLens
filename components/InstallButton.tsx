@@ -1,4 +1,6 @@
 "use client";
+import { Download, Share } from "lucide-react";
+import { ICON } from "@/components/icons";
 import { useEffect, useState } from "react";
 
 interface BeforeInstallPromptEvent extends Event {
@@ -41,12 +43,12 @@ export default function InstallButton() {
         onClick={async () => { await deferred.prompt(); const r = await deferred.userChoice; if (r.outcome === "accepted") setDeferred(null); }}
         className="mx-auto mb-2 flex min-h-11 items-center gap-2 rounded-full bg-emerald-500 px-5 text-sm font-semibold text-white shadow"
       >
-        📲 Install MakanLens
+        <Download {...ICON} aria-hidden /> Install MakanLens
       </button>
     );
   }
   if (iosTip) {
-    return <p className="mb-2">📲 To install: tap <strong>Share</strong>, then <strong>Add to Home Screen</strong>.</p>;
+    return <p className="mb-2"><Share size={14} strokeWidth={1.75} aria-hidden className="mr-1 inline align-[-2px]" />To install: tap <strong>Share</strong>, then <strong>Add to Home Screen</strong>.</p>;
   }
   return null;
 }

@@ -1,4 +1,6 @@
 "use client";
+import { Trash2 } from "lucide-react";
+import { ICON } from "@/components/icons";
 import { useEffect, useState } from "react";
 import { ACCENT_BTN } from "@/components/format";
 import { addExerciseEntry, deleteExerciseEntry, getExercisesFor, sumExerciseKcal } from "@/lib/storage";
@@ -56,7 +58,7 @@ export default function ExerciseCard({ profile, date, onChange }: Props) {
   const burned = sumExerciseKcal(list);
 
   return (
-    <section className="rounded-2xl border border-neutral-200 p-4 dark:border-neutral-800" aria-label="Exercise">
+    <section className="p-4 card" aria-label="Exercise">
       <div className="flex items-center justify-between gap-2">
         <h2 className="font-semibold">Exercise</h2>
         {!open && (
@@ -81,7 +83,7 @@ export default function ExerciseCard({ profile, date, onChange }: Props) {
               <span className="min-w-0 truncate text-sm">{e.label}</span>
               <span className="flex shrink-0 items-center gap-1 text-sm tabular-nums">
                 {fmt(e.kcal)} kcal
-                <button type="button" onClick={() => remove(e.id)} aria-label={`Remove ${e.label}`} className="h-11 w-11 rounded-xl text-neutral-500 hover:text-red-600">✕</button>
+                <button type="button" onClick={() => remove(e.id)} aria-label={`Remove ${e.label}`} className="flex h-11 w-11 items-center justify-center rounded-xl text-neutral-500 hover:text-red-600"><Trash2 {...ICON} aria-hidden /></button>
               </span>
             </li>
           ))}

@@ -1,22 +1,59 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
+  /* Coconut cream page, white cards. */
+  --background: #fbf8f1;
   --foreground: #171717;
+  --card: #ffffff;
+  --card-line: transparent;
+  --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 16px rgba(0, 0, 0, 0.06);
+  --skeleton: #ece8de;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Warm charcoal page, slightly lighter cards; a hairline border instead of a shadow. */
+    --background: #151513;
+    --foreground: #ededed;
+    --card: #1e1e1b;
+    --card-line: rgba(255, 255, 255, 0.08);
+    --card-shadow: none;
+    --skeleton: #2a2a26;
+  }
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-page: var(--background);
+  --color-card: var(--card);
+  --color-skeleton: var(--skeleton);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-nunito);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* One card style everywhere: rounded-3xl, soft shadow (light) or hairline border (dark). */
+@utility card {
+  background-color: var(--card);
+  border-radius: var(--radius-3xl);
+  border: 1px solid var(--card-line);
+  box-shadow: var(--card-shadow);
+}
+
+/* Skeleton placeholder: grey rounded shape with a gentle pulse (no pulse under reduced motion). */
+@utility skeleton {
+  background-color: var(--skeleton);
+  border-radius: var(--radius-xl);
+  animation: skeleton-pulse 1.4s ease-in-out infinite;
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
   }
+}
+
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
 }
 
 body {

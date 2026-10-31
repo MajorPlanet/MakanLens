@@ -1,3 +1,5 @@
+import { Lightbulb } from "lucide-react";
+import { ICON } from "@/components/icons";
 import type { DayMacros } from "./WeekStack";
 
 /** One auto-generated line from this week's local data. */
@@ -15,8 +17,8 @@ export function weekInsight(days: DayMacros[], goal: number): string {
 
 export default function InsightCard({ text }: { text: string }) {
   return (
-    <section className="mt-4 flex gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-100">
-      <span aria-hidden className="text-lg">💡</span>
+    <section className="mt-4 flex gap-3 rounded-3xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-100">
+      <Lightbulb {...ICON} aria-hidden className="mt-0.5 shrink-0" />
       <p><span className="font-semibold">Insight: </span>{text}</p>
     </section>
   );

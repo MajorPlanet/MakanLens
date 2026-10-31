@@ -106,10 +106,19 @@ export default function SearchPage() {
         className="h-12 w-full rounded-xl border border-neutral-300 bg-transparent px-4 text-base dark:border-neutral-700"
       />
 
-      {loading && <p role="status" className="mt-3 text-sm text-neutral-500 dark:text-neutral-400">Searching…</p>}
-      {error && <p role="alert" className="mt-3 rounded-2xl border border-orange-200 bg-orange-50 p-4 text-sm dark:border-orange-900 dark:bg-orange-950/40">{error}</p>}
+      {loading && (
+        <ul role="status" aria-label="Searching" className="mt-3 space-y-2">
+          {[0, 1, 2, 3].map((i) => (
+            <li key={i} className="card flex items-center justify-between p-4">
+              <div className="flex-1 space-y-2"><div className="skeleton h-4 w-1/2" /><div className="skeleton h-3 w-1/3" /></div>
+              <div className="skeleton h-6 w-14 rounded-full" />
+            </li>
+          ))}
+        </ul>
+      )}
+      {error && <p role="alert" className="mt-3 rounded-3xl border border-orange-200 bg-orange-50 p-4 text-sm dark:border-orange-900 dark:bg-orange-950/40">{error}</p>}
       {searched && !loading && !error && results.length === 0 && (
-        <p className="mt-3 rounded-2xl border border-dashed border-neutral-300 p-4 text-sm dark:border-neutral-700">Nothing found for “{q.trim()}”. Try another spelling or a simpler name.</p>
+        <p className="mt-3 rounded-3xl border border-dashed border-neutral-300 p-4 text-sm dark:border-neutral-700">Nothing found for “{q.trim()}”. Try another spelling or a simpler name.</p>
       )}
       {notice && <p role="status" className="mt-3 text-sm text-green-700 dark:text-green-400">{notice}</p>}
 
@@ -120,7 +129,7 @@ export default function SearchPage() {
             const preview = buildItem(r, Number(amountText));
             const shown = r.per_100g ?? r.per_serving;
             return (
-              <li key={r.id} className="rounded-xl border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
+              <li key={r.id} className="rounded-xl border border-neutral-200 bg-card dark:border-neutral-800">
                 <button type="button" onClick={() => open(r)} aria-expanded={isOpen} className="flex min-h-11 w-full items-center justify-between gap-3 px-3 py-2 text-left">
                   <span className="min-w-0">
                     <span className="block truncate text-sm font-medium">{r.name}</span>

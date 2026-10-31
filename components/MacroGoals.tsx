@@ -91,7 +91,7 @@ export default function MacroGoals({ profile, onSave }: Props) {
         </div>
       )}
 
-      <button type="button" onClick={save} disabled={!canSave} className={`h-12 w-full rounded-2xl font-semibold ${ACCENT_BTN}`}>Save macro goals</button>
+      <button type="button" onClick={save} disabled={!canSave} className={`h-12 w-full rounded-xl font-semibold ${ACCENT_BTN}`}>Save macro goals</button>
       {saved && <p role="status" className="text-center text-sm font-medium text-green-700 dark:text-green-400">Saved</p>}
     </section>
   );

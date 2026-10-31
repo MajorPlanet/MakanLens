@@ -38,7 +38,10 @@ export default function ResultsCard({
   mode,
   onConfirm,
   onCancel,
+  photo,
 }: {
+  /** In-memory data URL of the snapped (resized) photo; never stored. */
+  photo?: string | null;
   initialItems: AnalysedItem[];
   initialSlot?: MealSlot;
   mode: "add" | "edit";
@@ -65,12 +68,16 @@ export default function ResultsCard({
   const total = items.reduce((s, i) => s + i.nutrition.kcal, 0);
 
   return (
-    <div className="fixed inset-0 z-40 overflow-y-auto bg-neutral-50 dark:bg-neutral-950">
-      <div className="mx-auto max-w-md px-4 pb-48 pt-4">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-page">
+      <div className="mx-auto max-w-md px-4 pb-48 pt-[max(1rem,env(safe-area-inset-top))]">
+        {photo && (
+          // eslint-disable-next-line @next/next/no-img-element -- local in-memory data URL
+          <img src={photo} alt="Your meal" className="mb-4 h-44 w-full rounded-3xl object-cover shadow-sm" />
+        )}
         <h2 className="mb-3 text-xl font-bold">{mode === "add" ? "Here's what we found" : "Edit entry"}</h2>
 
         {rows.length === 0 ? (
-          <p className="rounded-2xl border border-neutral-200 p-4 text-center dark:border-neutral-800">
+          <p className="p-4 text-center card">
             Nothing left to add.
           </p>
         ) : (
@@ -108,9 +115,7 @@ export default function ResultsCard({
                 type="button"
                 onClick={() => setSlot(s.id)}
                 aria-pressed={slot === s.id}
-                className={`h-11 rounded-xl text-sm font-medium ${
-                  slot === s.id ? "bg-orange-500 text-white" : "border border-neutral-300 dark:border-neutral-700"
-                }`}
+                className={`h-11 rounded-xl text-sm font-medium ${slot === s.id ? "bg-orange-500 text-white" : "border border-neutral-300 dark:border-neutral-700" }`}
               >
                 {s.label}
               </button>
@@ -119,13 +124,13 @@ export default function ResultsCard({
         </fieldset>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 border-t border-neutral-200 bg-white/95 p-3 backdrop-blur dark:border-neutral-800 dark:bg-neutral-900/95">
+      <div className="fixed inset-x-0 bottom-0 border-t border-black/5 bg-card/95 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur dark:border-white/10">
         <div className="mx-auto flex max-w-md flex-col gap-1">
           <button
             type="button"
             disabled={items.length === 0}
             onClick={confirm}
-            className={`h-14 w-full rounded-2xl px-3 text-lg font-semibold ${ACCENT_BTN}`}
+            className={`h-14 w-full rounded-xl px-3 text-lg font-semibold ${ACCENT_BTN}`}
           >
             {mode === "add" ? "Add to today" : "Save"} · {fmtKcal(total)} kcal
           </button>

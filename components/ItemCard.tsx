@@ -3,7 +3,9 @@ import { useState } from "react";
 import type { AnalysedItem, CookingMethod, Dish, FollowUp, Nutrition } from "@/lib/types";
 import { applyFollowUpOption, getDish, scaleNutrition, searchDishes, swapDish } from "@/lib/matcher";
 import { dishTypicalGrams, withGrams } from "@/lib/nutrition";
+import { Check, ChevronDown, ChevronUp, ExternalLink, X } from "lucide-react";
 import { fmtKcal, fmtMacro, sourceLabel } from "./format";
+import { ICON } from "./icons";
 
 const sourceLabelFor = (item: AnalysedItem, dish: Dish | undefined) => sourceLabel(item.source, dish);
 
@@ -46,11 +48,17 @@ function RangeBar({ low, high, mid }: { low: number; high: number; mid: number }
   const max = Math.max(high, mid, 1) * 1.4;
   const left = (low / max) * 100;
   const width = Math.max(((high - low) / max) * 100, 1.5);
+  const at = (mid / max) * 100;
   return (
-    <div aria-hidden className="mt-2 h-2 w-full overflow-hidden rounded-full bg-neutral-100 dark:bg-neutral-800">
+    <div aria-hidden className="relative mt-3 h-2.5 w-full rounded-full bg-neutral-100 dark:bg-white/10">
       <div
-        className="h-full rounded-full bg-orange-400 transition-all duration-700 ease-out motion-reduce:transition-none dark:bg-orange-500"
-        style={{ marginLeft: `${left}%`, width: `${width}%` }}
+        className="absolute inset-y-0 rounded-full bg-orange-300 transition-all duration-700 ease-out motion-reduce:transition-none dark:bg-orange-500/70"
+        style={{ left: `${left}%`, width: `${width}%` }}
+      />
+      {/* Midpoint (best guess) marker. */}
+      <div
+        className="absolute -top-1 h-[18px] w-1 -translate-x-1/2 rounded-full bg-orange-600 ring-2 ring-[var(--card)] transition-all duration-700 ease-out motion-reduce:transition-none dark:bg-orange-400"
+        style={{ left: `${at}%` }}
       />
     </div>
   );
@@ -113,7 +121,7 @@ export default function ItemCard({
   const tickPct = typical && typical >= G_MIN && typical <= G_MAX ? ((typical - G_MIN) / (G_MAX - G_MIN)) * 100 : null;
 
   return (
-    <div className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
+    <div className="p-4 card">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <h3 className="break-words text-lg font-semibold leading-tight">{title}</h3>
@@ -125,13 +133,13 @@ export default function ItemCard({
           aria-label={`Remove ${title}`}
           className="-mr-2 -mt-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800"
         >
-          <span aria-hidden className="text-2xl leading-none">×</span>
+          <X {...ICON} aria-hidden />
         </button>
       </div>
 
       {hasRange ? (
         <>
-          <p className="mt-2 text-4xl font-bold tabular-nums text-orange-600 dark:text-orange-400" aria-label={`${fmtKcal(low)} to ${fmtKcal(high)} kilocalories`}>
+          <p className="mt-2 font-display text-4xl font-extrabold tabular-nums text-orange-600 dark:text-orange-400" aria-label={`${fmtKcal(low)} to ${fmtKcal(high)} kilocalories`}>
             {fmtKcal(low)}–{fmtKcal(high)}
             <span className="ml-1 text-base font-medium text-neutral-500 dark:text-neutral-400">kcal</span>
           </p>
@@ -139,7 +147,7 @@ export default function ItemCard({
           <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">Best guess {fmtKcal(item.nutrition.kcal)} kcal</p>
         </>
       ) : (
-        <p className="mt-2 text-5xl font-bold tabular-nums text-orange-600 dark:text-orange-400">
+        <p className="mt-2 font-display text-5xl font-extrabold tabular-nums text-orange-600 dark:text-orange-400">
           {fmtKcal(item.nutrition.kcal)}
           <span className="ml-1 text-base font-medium text-neutral-500 dark:text-neutral-400">kcal</span>
         </p>
@@ -150,11 +158,11 @@ export default function ItemCard({
 
       <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
         <span className={`rounded-full px-2.5 py-1 font-medium ${badge.cls}`}>{badge.text}</span>
-        {hasGrams && <span className="rounded-full bg-neutral-100 px-2.5 py-1 font-medium dark:bg-neutral-800">≈{Math.round(item.grams)} g</span>}
-        {methodText && <span className="rounded-full bg-neutral-100 px-2.5 py-1 font-medium dark:bg-neutral-800">{methodText}</span>}
+        {hasGrams && <span className="rounded-full bg-neutral-100 px-2.5 py-1 text-neutral-600 dark:bg-white/10 dark:text-neutral-300 tabular-nums">≈{Math.round(item.grams)} g</span>}
+        {methodText && <span className="rounded-full bg-neutral-100 px-2.5 py-1 text-neutral-600 dark:bg-white/10 dark:text-neutral-300">{methodText}</span>}
         {item.referenceObject !== "none" && (
           <span className="rounded-full bg-green-100 px-2.5 py-1 font-medium text-green-800 dark:bg-green-950 dark:text-green-300">
-            Size reference: {item.referenceObject} ✓
+            Size reference: {item.referenceObject} <Check size={14} strokeWidth={2} aria-hidden className="inline align-[-2px]" />
           </span>
         )}
         {item.sourceUrl ? (
@@ -163,12 +171,13 @@ export default function ItemCard({
             target="_blank"
             rel="noopener noreferrer"
             title={src.title}
-            className="inline-flex min-h-11 items-center rounded-full bg-neutral-100 px-3 font-medium underline dark:bg-neutral-800"
+            className="inline-flex min-h-11 items-center gap-1 rounded-full bg-neutral-100 px-3 text-neutral-600 dark:bg-white/10 dark:text-neutral-300"
           >
             {src.text}
+            <ExternalLink size={12} strokeWidth={1.75} aria-hidden />
           </a>
         ) : (
-          <span title={src.title} className="inline-flex min-h-11 items-center rounded-full bg-neutral-100 px-3 font-medium dark:bg-neutral-800">{src.text}</span>
+          <span title={src.title} className="inline-flex min-h-11 items-center rounded-full bg-neutral-100 px-3 text-neutral-600 dark:bg-white/10 dark:text-neutral-300">{src.text}</span>
         )}
       </div>
 
@@ -182,7 +191,7 @@ export default function ItemCard({
                 key={o.label}
                 type="button"
                 onClick={() => answer(o)}
-                className="min-h-11 rounded-full border border-orange-400 bg-white px-4 text-sm font-medium hover:bg-orange-100 dark:border-orange-700 dark:bg-neutral-900 dark:hover:bg-neutral-800"
+                className="min-h-11 rounded-full border border-orange-400 bg-card px-4 text-sm font-medium hover:bg-orange-100 dark:border-orange-700 dark:hover:bg-neutral-800"
               >
                 {o.label}
               </button>
@@ -256,7 +265,7 @@ export default function ItemCard({
         className="mt-3 flex h-11 w-full items-center justify-between rounded-xl border border-neutral-300 px-3 text-sm font-medium dark:border-neutral-700"
       >
         Not right? Swap dish
-        <span aria-hidden>{swapping ? "▲" : "▼"}</span>
+        {swapping ? <ChevronUp {...ICON} aria-hidden /> : <ChevronDown {...ICON} aria-hidden />}
       </button>
       {swapping && (
         <div className="mt-2 rounded-xl border border-neutral-200 p-2 dark:border-neutral-800">
@@ -266,7 +275,7 @@ export default function ItemCard({
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search dishes…"
             aria-label="Search dishes"
-            className="h-11 w-full rounded-lg border border-neutral-300 bg-transparent px-3 text-base dark:border-neutral-700"
+            className="h-11 w-full rounded-xl border border-neutral-300 bg-transparent px-3 text-base dark:border-neutral-700"
           />
           <ul className="mt-1">
             {options.map((c) => (
@@ -274,7 +283,7 @@ export default function ItemCard({
                 <button
                   type="button"
                   onClick={() => swap(c.dishId)}
-                  className="flex min-h-11 w-full items-center justify-between rounded-lg px-2 text-left text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                  className="flex min-h-11 w-full items-center justify-between rounded-xl px-2 text-left text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800"
                 >
                   <span className="break-words">{c.name}</span>
                   <span className="ml-2 shrink-0 text-xs text-neutral-500">{Math.round(c.score * 100)}%</span>

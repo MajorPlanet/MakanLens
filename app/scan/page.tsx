@@ -163,7 +163,7 @@ export default function ScanPage() {
         <Link href="/" className="flex h-11 items-center px-3 text-sm font-medium">Back</Link>
       </header>
 
-      <section className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+      <section className="p-4 card">
         <div id={READER_ID} className={cameraOn ? "mb-3 w-full overflow-hidden rounded-xl" : "hidden"} />
         {cameraOn ? (
           <button type="button" onClick={() => void stopCamera()} className="h-11 w-full rounded-xl border border-neutral-300 font-medium dark:border-neutral-700">
@@ -207,14 +207,18 @@ export default function ScanPage() {
       </section>
 
       {loading && (
-        <div role="status" className="mt-4 flex items-center gap-3 rounded-2xl bg-orange-50 p-4 dark:bg-orange-950/40">
-          <span className="h-5 w-5 animate-spin rounded-full border-2 border-orange-500 border-t-transparent" />
-          <span className="font-medium">Looking up barcode…</span>
+        <div role="status" aria-live="polite" className="card mt-4 p-4">
+          <p className="mb-3 text-sm text-neutral-500 dark:text-neutral-400">Looking up barcode…</p>
+          <div className="space-y-2">
+            <div className="skeleton h-5 w-2/3" />
+            <div className="skeleton h-9 w-1/3" />
+            <div className="skeleton h-3 w-full rounded-full" />
+          </div>
         </div>
       )}
 
       {message && (
-        <p role="alert" className="mt-4 rounded-2xl border border-orange-200 bg-orange-50 p-4 text-sm dark:border-orange-900 dark:bg-orange-950/40">
+        <p role="alert" className="mt-4 rounded-3xl border border-orange-200 bg-orange-50 p-4 text-sm dark:border-orange-900 dark:bg-orange-950/40">
           {message}
         </p>
       )}
@@ -224,7 +228,7 @@ export default function ScanPage() {
           {product.basis === "serving" ? (
             <ItemCard item={item} onChange={setItem} onRemove={() => { setProduct(null); setItem(null); }} />
           ) : (
-            <div className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
+            <div className="p-4 card">
               <h2 className="break-words text-lg font-semibold leading-tight">{product.productName}</h2>
               <p className="mt-2 text-5xl font-bold tabular-nums text-orange-600 dark:text-orange-400">
                 {fmtKcal(finalItem.nutrition.kcal)}
@@ -273,7 +277,7 @@ export default function ScanPage() {
             type="button"
             onClick={add}
             disabled={product.basis === "100g" && !(gramsNum > 0)}
-            className={`h-14 w-full rounded-2xl text-lg font-semibold ${ACCENT_BTN}`}
+            className={`h-14 w-full rounded-xl text-lg font-semibold ${ACCENT_BTN}`}
           >
             Add to today · {fmtKcal(finalItem.nutrition.kcal)} kcal
           </button>

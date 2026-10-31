@@ -1,4 +1,6 @@
 "use client";
+import { Star } from "lucide-react";
+import { ICON } from "@/components/icons";
 import { useEffect, useState } from "react";
 import { defaultSlot, fmtKcal } from "@/components/format";
 import { getFavouriteMeals, logSavedMeal, setFavourite } from "@/lib/storage";
@@ -15,15 +17,15 @@ export default function FavouriteList({ onLogged }: { onLogged?: (name: string) 
 
   return (
     <section aria-label="Favourites" className="mt-6">
-      <h2 className="mb-2 text-sm font-semibold text-neutral-600 dark:text-neutral-300">★ Favourites</h2>
+      <h2 className="mb-2 text-sm font-semibold text-neutral-500 dark:text-neutral-400"><Star size={16} strokeWidth={1.75} aria-hidden className="mr-1 inline align-[-3px]" />Favourites</h2>
       {favs.length === 0 ? (
-        <p className="rounded-2xl border border-dashed border-neutral-300 p-4 text-sm text-neutral-500 dark:border-neutral-700 dark:text-neutral-400">
+        <p className="rounded-3xl border border-dashed border-neutral-300 p-4 text-sm text-neutral-500 dark:border-neutral-700 dark:text-neutral-400">
           No favourites yet. Tap the star on a meal under “Log again” on Today.
         </p>
       ) : (
         <ul className="space-y-2">
           {favs.map((f) => (
-            <li key={f.id} className="flex items-stretch rounded-xl border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
+            <li key={f.id} className="flex items-stretch rounded-xl border border-neutral-200 bg-card dark:border-neutral-800">
               <button
                 type="button"
                 onClick={() => {
@@ -45,7 +47,7 @@ export default function FavouriteList({ onLogged }: { onLogged?: (name: string) 
                 aria-label={`Remove ${f.name} from favourites`}
                 className="flex min-h-11 min-w-11 items-center justify-center text-xl text-orange-500"
               >
-                ★
+                <Star {...ICON} fill="currentColor" aria-hidden />
               </button>
             </li>
           ))}

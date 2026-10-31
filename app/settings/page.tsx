@@ -62,13 +62,15 @@ export default function SettingsPage() {
     router.push("/onboarding");
   }
 
-  const btn = "min-h-12 w-full rounded-2xl border border-neutral-300 px-4 font-semibold dark:border-neutral-700";
+  const btn = "min-h-12 w-full rounded-xl border border-neutral-300 px-4 font-semibold dark:border-neutral-700";
 
   return (
     <main className="mx-auto max-w-md px-4 pb-8 pt-4">
       <PageHeader title="Settings" />
       {!ready ? (
-        <p className="text-sm text-neutral-500">Loading…</p>
+        <div aria-busy="true" aria-label="Loading" className="space-y-3">
+          <div className="skeleton h-12" /><div className="skeleton h-12" /><div className="skeleton h-12" /><div className="skeleton h-40 rounded-3xl" />
+        </div>
       ) : (
         <>
           <h2 className="text-sm font-semibold">Your profile</h2>
@@ -93,7 +95,7 @@ export default function SettingsPage() {
             <button type="button" onClick={exportCsv} className={btn}>Export CSV</button>
             {note && <p role="status" className="text-sm text-neutral-600 dark:text-neutral-300">{note}</p>}
             {confirming ? (
-              <div className="rounded-2xl border border-red-300 p-4 dark:border-red-900" role="alertdialog" aria-label="Confirm clearing data">
+              <div className="rounded-3xl border border-red-300 p-4 dark:border-red-900" role="alertdialog" aria-label="Confirm clearing data">
                 <p className="text-sm">This permanently deletes your profile and every logged meal from this device. It cannot be undone.</p>
                 <div className="mt-3 flex gap-2">
                   <button type="button" onClick={() => setConfirming(false)} className="min-h-12 flex-1 rounded-xl border border-neutral-300 font-semibold dark:border-neutral-700">Cancel</button>

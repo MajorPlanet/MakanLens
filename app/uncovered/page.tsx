@@ -1,3 +1,5 @@
+import { Check, X } from "lucide-react";
+import { ICON } from "@/components/icons";
 import Link from "next/link";
 import experiment from "@/data/experiment.json";
 import evalData from "@/data/eval-results.json";
@@ -32,7 +34,7 @@ function EvalSection({ data }: { data: EvalResults }) {
   const scored = data.meals.filter((m) => m.in_range !== null);
   const hits = scored.filter((m) => m.in_range).length;
   const hitRate = data.summary?.hit_rate ?? (scored.length ? hits / scored.length : null);
-  const stat = "rounded-2xl border border-neutral-200 p-3 dark:border-neutral-800";
+  const stat = "card p-3";
   return (
     <section className="mt-4" aria-labelledby="eval-h">
       <h2 id="eval-h" className="text-lg font-semibold">Weighed-meal test</h2>
@@ -51,7 +53,7 @@ function EvalSection({ data }: { data: EvalResults }) {
         <span className="font-semibold tabular-nums">{hitRate === null ? "—" : `${Math.round(hitRate * 100)}%`}</span>
         {scored.length > 0 && <span className="text-neutral-500 dark:text-neutral-400"> ({hits} of {scored.length} meals)</span>}
       </p>
-      <div className="mt-3 overflow-x-auto rounded-2xl border border-neutral-200 dark:border-neutral-800">
+      <div className="mt-3 overflow-x-auto card">
         <table className="w-full min-w-[40rem] text-sm">
           <thead className="bg-neutral-50 dark:bg-neutral-900">
             <tr>
@@ -74,7 +76,7 @@ function EvalSection({ data }: { data: EvalResults }) {
                 <td className={td}>{kcal(m.calai_kcal)}</td>
                 <td className={td}>{pct(m.calai_pct_error)}</td>
                 <td className={td} aria-label={m.in_range === null ? "unknown" : m.in_range ? "yes" : "no"}>
-                  {m.in_range === null ? "—" : m.in_range ? "✓" : "✗"}
+                  {m.in_range === null ? "—" : m.in_range ? <Check {...ICON} aria-label="in range" className="inline text-green-600" /> : <X {...ICON} aria-label="out of range" className="inline text-red-600" />}
                 </td>
               </tr>
             ))}
@@ -111,18 +113,18 @@ export default function UncoveredPage() {
       {evalResults.meals.length > 0 ? (
         <EvalSection data={evalResults} />
       ) : (
-        <p className="mt-3 rounded-2xl border border-neutral-200 p-3 text-sm dark:border-neutral-800">
+        <p className="mt-3 p-3 text-sm card">
           Awaiting test data. Weigh real meals and run <code className="rounded bg-neutral-100 px-1 dark:bg-neutral-800">npm run eval</code>.
         </p>
       )}
       <h2 className="mt-6 text-lg font-semibold">Early experiment</h2>
       {noCalai && (
-        <p className="mt-3 rounded-2xl border border-orange-200 bg-orange-50 p-3 text-sm dark:border-orange-900 dark:bg-orange-950/40">
+        <p className="mt-3 rounded-3xl border border-orange-200 bg-orange-50 p-3 text-sm dark:border-orange-900 dark:bg-orange-950/40">
           Comparison numbers coming soon.
         </p>
       )}
 
-      <div className="mt-4 overflow-x-auto rounded-2xl border border-neutral-200 dark:border-neutral-800">
+      <div className="mt-4 overflow-x-auto card">
         <table className="w-full min-w-[34rem] text-sm">
           <thead className="bg-neutral-50 dark:bg-neutral-900">
             <tr>
@@ -154,7 +156,7 @@ export default function UncoveredPage() {
       </div>
       <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">Error % = (estimate − reference) ÷ reference.</p>
 
-      <section className="mt-6 rounded-2xl border border-neutral-200 p-4 text-sm dark:border-neutral-800">
+      <section className="mt-6 p-4 text-sm card">
         <h2 className="font-semibold">A note on the data</h2>
         <p className="mt-1 text-neutral-600 dark:text-neutral-300">
           Singapore&apos;s HPB food composition database (FOCOS) was discontinued in November 2025, so the reference values come

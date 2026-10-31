@@ -1,3 +1,5 @@
+import { Trash2 } from "lucide-react";
+import { ICON } from "@/components/icons";
 import type { LogEntry } from "@/lib/types";
 import { SLOTS, fmtKcal, fmtMacro } from "./format";
 import { getDish } from "@/lib/matcher";
@@ -23,7 +25,7 @@ export default function MealList({
               <h3>{s.label}</h3>
               <span className="text-neutral-500 dark:text-neutral-400">{fmtKcal(total)} kcal</span>
             </div>
-            <ul className="divide-y divide-neutral-200 rounded-2xl border border-neutral-200 bg-white dark:divide-neutral-800 dark:border-neutral-800 dark:bg-neutral-900">
+            <ul className="divide-y divide-neutral-200 dark:divide-neutral-800 card">
               {list.map((e) => {
                 const name = (e.item.dishId && getDish(e.item.dishId)?.name) || e.item.label;
                 return (
@@ -34,12 +36,12 @@ export default function MealList({
                         {e.item.grams > 0 ? `${Math.round(e.item.grams)} g` : `${e.item.portion}×`} · P {fmtMacro(e.item.nutrition.protein_g)} · C {fmtMacro(e.item.nutrition.carbs_g)} · F {fmtMacro(e.item.nutrition.fat_g)}
                       </p>
                     </div>
-                    <span className="shrink-0 font-semibold tabular-nums">{fmtKcal(e.item.nutrition.kcal)}</span>
+                    <span className="shrink-0 font-display font-bold tabular-nums">{fmtKcal(e.item.nutrition.kcal)}</span>
                     <button type="button" onClick={() => onEdit(e)} aria-label={`Edit ${name}`} className="flex h-11 w-11 shrink-0 items-center justify-center text-sm font-medium text-orange-600 dark:text-orange-400">
                       Edit
                     </button>
-                    <button type="button" onClick={() => onDelete(e)} aria-label={`Delete ${name}`} className="flex h-11 w-11 shrink-0 items-center justify-center text-xl text-neutral-500">
-                      ×
+                    <button type="button" onClick={() => onDelete(e)} aria-label={`Delete ${name}`} className="flex h-11 w-11 shrink-0 items-center justify-center text-neutral-500">
+                      <Trash2 {...ICON} aria-hidden />
                     </button>
                   </li>
                 );
