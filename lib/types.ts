@@ -90,3 +90,19 @@ export interface BarcodeResponse {
   servingLabel: string;                // e.g. "1 can (325 ml)" or "100 g"
   item: AnalysedItem;                  // source = "off", portion = 1, candidates = []
 }
+
+/** data/eval-results.json, written by `npm run eval` (scripts/eval.ts), read by /uncovered. */
+export interface EvalMealResult {
+  id: string; dish: string; photo: string;
+  true_kcal: number | null; calai_kcal: number | null;
+  makanlens_kcal: number | null; kcal_low: number | null; kcal_high: number | null;
+  in_range: boolean | null;            // true_kcal within [kcal_low, kcal_high]
+  abs_error: number | null; pct_error: number | null;          // MakanLens vs truth (pct is absolute %)
+  calai_pct_error: number | null;      // Cal AI vs truth (absolute %)
+  ms: number | null; error?: string;   // pipeline failure for this meal
+}
+export interface EvalResults {
+  generatedAt: string | null; provider: string | null; runs: number | null;
+  meals: EvalMealResult[];
+  summary: { n: number; makanlens_mape: number | null; calai_mape: number | null; hit_rate: number | null } | null;
+}
