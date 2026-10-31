@@ -38,7 +38,9 @@ export default function ScanPage() {
   const [product, setProduct] = useState<BarcodeResponse | null>(null);
   const [item, setItem] = useState<AnalysedItem | null>(null);
   const [grams, setGrams] = useState("100");
-  const [slot, setSlot] = useState<MealSlot>(defaultSlot());
+  // Fixed initial value so SSR (UTC on Vercel) can't pick the slot; the real default is set from the device clock on lookup.
+  const [slot, setSlot] = useState<MealSlot>("lunch");
+  const mounted = useRef(true);
 
   async function stopCamera() {
     const s = scanner.current;
@@ -54,7 +56,9 @@ export default function ScanPage() {
   }
 
   useEffect(() => {
+    mounted.current = true;
     return () => {
+      mounted.current = false;
       const s = scanner.current;
       scanner.current = null;
       if (s) void s.stop().then(() => s.clear()).catch(() => undefined);
@@ -79,6 +83,7 @@ export default function ScanPage() {
       setProduct(res);
       setItem(res.item);
       setGrams("100");
+      setSlot(defaultSlot());
     } catch (e) {
       const c = e instanceof ApiClientError ? e.code : "provider_error";
       if (c === "not_found") setMessage("We couldn't find that barcode in Open Food Facts");
@@ -118,6 +123,8 @@ export default function ScanPage() {
         },
         () => undefined,
       );
+      // Left the page while the camera was starting: the unmount cleanup ran too early, so stop it here.
+      if (!mounted.current) void s.stop().then(() => s.clear()).catch(() => undefined);
     } catch (e) {
       scanner.current = null;
       setCameraOn(false);

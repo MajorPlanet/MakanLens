@@ -37,7 +37,8 @@ describe("modelOutputSchema (AI JSON)", () => {
   });
 
   it("rejects an item with no estimate", () => {
-    const { estimate: _omit, ...noEstimate } = goodItem;
+    const noEstimate: Partial<typeof goodItem> = { ...goodItem };
+    delete noEstimate.estimate;
     const r = modelOutputSchema.safeParse({ items: [noEstimate] });
     expect(r.success).toBe(false);
     if (!r.success) expect(r.error.issues.some((i) => i.path.includes("estimate"))).toBe(true);
