@@ -7,8 +7,11 @@ import { deleteEntry, exerciseKcalFor, getEntries, getProfile, localDateString, 
 import { dayTargets, type DayTargets } from "@/lib/targets";
 import { analyse, ApiClientError, getHealth } from "@/lib/client";
 import { resizeImage } from "@/lib/image";
-import CalorieRing from "@/components/CalorieRing";
-import MacroBars from "@/components/MacroBars";
+import SummaryHeader from "@/components/dashboard/SummaryHeader";
+import MacroCards from "@/components/dashboard/MacroCards";
+import WeekStack, { type DayMacros } from "@/components/dashboard/WeekStack";
+import BalanceDonut from "@/components/dashboard/BalanceDonut";
+import InsightCard, { weekInsight } from "@/components/dashboard/InsightCard";
 import MealList from "@/components/MealList";
 import RecentStrip from "@/components/RecentStrip";
 import ExerciseCard from "@/components/ExerciseCard";
@@ -129,6 +132,13 @@ export default function Home() {
   const totals = sumNutrition(today.map((e) => e.item.nutrition));
   // Exercise-adjusted targets: ExerciseCard reports changes; before it does, compute from storage.
   const targets = day ?? dayTargets(profile, exerciseKcalFor(todayDate));
+  const week: DayMacros[] = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() - (6 - i));
+    const date = localDateString(d);
+    const n = sumNutrition(entries.filter((e) => e.date === date).map((e) => e.item.nutrition));
+    return { date, label: d.toLocaleDateString("en-GB", { weekday: "narrow" }), carbs: n.carbs_g * 4, protein: n.protein_g * 4, fat: n.fat_g * 9 };
+  });
 
   return (
     <main className="mx-auto max-w-md px-4 pt-4">
@@ -171,14 +181,13 @@ export default function Home() {
         </div>
       )}
 
-      <section className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
-        <CalorieRing eaten={totals.kcal} target={targets.kcal} />
-        <div className="mt-4">
-          <MacroBars totals={totals} targets={targets.macros} />
-        </div>
-      </section>
+      <SummaryHeader eaten={totals.kcal} exercise={targets.exercise} goal={targets.kcal} />
+      <MacroCards totals={totals} targets={targets.macros} />
+      <WeekStack days={week} goal={profile.targetKcal} />
+      <BalanceDonut totals={totals} />
+      <InsightCard text={weekInsight(week, profile.targetKcal)} />
 
-      <ExerciseCard profile={profile} date={todayDate} onChange={setDay} />
+      <div className="mt-4"><ExerciseCard profile={profile} date={todayDate} onChange={setDay} /></div>
 
       <RecentStrip key={recentVersion} onLogged={() => setEntries(getEntries())} />
 
