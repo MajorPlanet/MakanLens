@@ -41,3 +41,12 @@ Values in hawker.json are now rounded: kcal to whole numbers, macros to 1 dp (ch
 - popiah and yong-tau-foo-soup: a SAFRA NSman page (nsman.safra.sg/?p=13904) was quoted in search results with popiah (2 rolls) 568 kcal and YTF (1 bowl) 265.7 kcal, but I could not open the page (redirects away), its data source is not named, and the YTF carbs (3.7 g) look implausible. Left out.
 - Sugar only, no macros: NUH nuhsplus.edu.sg "What's in your dabao" gives sugar in teaspoons (kopi 4, kopi siew dai 3.5, kopi C kosong 0.5, sugarcane juice 5.5). Not used.
 - HealthXchange dim sum page (https://www.healthxchange.sg/food-nutrition/food-tips/local-breakfast-choices-is-dim-sum-healthy, HPB figures) gives kcal and fat only; no dish added.
+
+## Phase 8 additions (2026-10-31)
+- New fields `per_100g`, `typical_grams`, `method`, `variant_of` added to every dish. `per_100g` = per_serving / serving.grams x 100 (kcal to integers, macros to 1 dp); arithmetic only, null where grams are unknown. `method` and `variant_of` are classifications by the curator, not published values. `penang-laksa` is deliberately not a variant of `laksa` (different recipe).
+- New dishes, both HealthXchange (`verified: false`):
+  - carrot-cake-black: page row "Fried Carrot Cake" (fried radish with egg and sweet sauce), 295 g, 493 kcal, P 2, C 42, F 35 (hokkien-mee-lor-mee page). The page does not say "black"; I classed it black because of the sweet sauce. It is a variant_of carrot-cake-white.
+  - duck-rice-skin-removed: row "Duck Rice - Skin Removed", 350 g, 530 kcal, P 24, C 99, F 11 (duck-rice-fishball-noodle page). variant_of duck-rice-roasted.
+- Variants searched for and NOT found with full values (not added): egg roti prata (only a kcal-only 576 kcal for 2 pieces from Daniel Food Diary, no macros or grams), fried fish bee hoon, fried wanton, chicken cutlet rice, fried chicken rice, dry ban mian.
+- Serving weights still unknown, left null: chicken-rice-steamed, carrot-cake-white, satay-chicken-10. No HealthXchange page has a steamed chicken rice row (the roasted row is 382 g, but is a different dish and kcal), so the FWD figures were kept without grams. A HealthHub snippet gives white carrot cake 402 kcal and black 556 kcal, which disagrees with the HealthXchange 493 kcal fried carrot cake (different serving/source); not used.
+- Eval sample photos: see data/eval/PHOTOS.md.

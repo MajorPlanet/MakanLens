@@ -1,0 +1,38 @@
+[
+ {
+  "id": "m01",
+  "photo": "data/eval/photos/m01.jpg",
+  "dish": "Chicken rice (steamed)",
+  "components": [
+   {
+    "name": "rice",
+    "grams_weighed": null
+   },
+   {
+    "name": "chicken",
+    "grams_weighed": null
+   }
+  ],
+  "true_kcal": null,
+  "calai_kcal": null,
+  "notes": "SAMPLE: public photo, not weighed; replace with a team-weighed meal"
+ },
+ {
+  "id": "m02",
+  "photo": "data/eval/photos/m02.jpg",
+  "dish": "Nasi lemak",
+  "components": [
+   {
+    "name": "rice",
+    "grams_weighed": null
+   },
+   {
+    "name": "sides",
+    "grams_weighed": null
+   }
+  ],
+  "true_kcal": null,
+  "calai_kcal": null,
+  "notes": "SAMPLE: public photo, not weighed; replace with a team-weighed meal"
+ }
+]

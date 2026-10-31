@@ -35,7 +35,10 @@
    "url": "https://www.fwd.com.sg/blog/health-safety/enjoying-hawker-foods-without-compromising-on-health/",
    "verified": false
   },
-  "tip": "Choose steamed over roasted, remove the skin, and ask for less rice or more cucumber."
+  "tip": "Choose steamed over roasted, remove the skin, and ask for less rice or more cucumber.",
+  "per_100g": null,
+  "typical_grams": null,
+  "method": "steamed"
  },
  {
   "id": "char-kway-teow",
@@ -74,7 +77,15 @@
    "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-chinese-food-dim-sum-char-kway-teow",
    "verified": false
   },
-  "tip": "Share the plate or eat half, and ask for less oil and more beansprouts."
+  "tip": "Share the plate or eat half, and ask for less oil and more beansprouts.",
+  "per_100g": {
+   "kcal": 194,
+   "protein_g": 6.0,
+   "carbs_g": 19.8,
+   "fat_g": 9.9
+  },
+  "typical_grams": 384,
+  "method": "stir_fried"
  },
  {
   "id": "nasi-lemak",
@@ -109,7 +120,15 @@
    "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-malay-breakfast-foods-nasi-lemak-mee-siam-soto",
    "verified": false
   },
-  "tip": "Skip extra fried sides such as fried chicken wing, otah and fried fish, which add more calories on top of this basic plate."
+  "tip": "Skip extra fried sides such as fried chicken wing, otah and fried fish, which add more calories on top of this basic plate.",
+  "per_100g": {
+   "kcal": 235,
+   "protein_g": 6.2,
+   "carbs_g": 38.1,
+   "fat_g": 6.7
+  },
+  "typical_grams": 210,
+  "method": "unknown"
  },
  {
   "id": "laksa",
@@ -146,7 +165,15 @@
    "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-chinese-food-hokkien-mee-lor-mee",
    "verified": false
   },
-  "tip": "Leave most of the coconut gravy behind and skip extra cockles or fried items."
+  "tip": "Leave most of the coconut gravy behind and skip extra cockles or fried items.",
+  "per_100g": {
+   "kcal": 109,
+   "protein_g": 3.1,
+   "carbs_g": 10.7,
+   "fat_g": 5.9
+  },
+  "typical_grams": 540,
+  "method": "soup"
  },
  {
   "id": "mee-siam",
@@ -182,7 +209,15 @@
    "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-malay-breakfast-foods-nasi-lemak-mee-siam-soto",
    "verified": false
   },
-  "tip": "Leave most of the gravy."
+  "tip": "Leave most of the gravy.",
+  "per_100g": {
+   "kcal": 106,
+   "protein_g": 4.3,
+   "carbs_g": 14.0,
+   "fat_g": 3.7
+  },
+  "typical_grams": 655,
+  "method": "stir_fried"
  },
  {
   "id": "mee-rebus",
@@ -218,7 +253,15 @@
    "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-malay-breakfast-foods-nasi-lemak-mee-siam-soto",
    "verified": false
   },
-  "tip": "Ask for less gravy and skip the fried toppings."
+  "tip": "Ask for less gravy and skip the fried toppings.",
+  "per_100g": {
+   "kcal": 100,
+   "protein_g": 4.0,
+   "carbs_g": 14.4,
+   "fat_g": 3.0
+  },
+  "typical_grams": 571,
+  "method": "soup"
  },
  {
   "id": "mee-goreng-mamak",
@@ -258,7 +301,15 @@
    "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-malay-foods-biryani-rendang-lemak-cili-padi",
    "verified": false
   },
-  "tip": "Ask for less oil."
+  "tip": "Ask for less oil.",
+  "per_100g": {
+   "kcal": 162,
+   "protein_g": 5.8,
+   "carbs_g": 19.7,
+   "fat_g": 6.5
+  },
+  "typical_grams": 309,
+  "method": "stir_fried"
  },
  {
   "id": "bak-chor-mee-dry",
@@ -296,7 +347,15 @@
    "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-chinese-food-wonton-mee",
    "verified": false
   },
-  "tip": "Choose the soup version, which is lower in this source (383 kcal for 597 g), and ask for less lard and sauce."
+  "tip": "Choose the soup version, which is lower in this source (383 kcal for 597 g), and ask for less lard and sauce.",
+  "per_100g": {
+   "kcal": 164,
+   "protein_g": 6.4,
+   "carbs_g": 18.3,
+   "fat_g": 7.4
+  },
+  "typical_grams": 311,
+  "method": "boiled"
  },
  {
   "id": "bak-chor-mee-soup",
@@ -326,7 +385,16 @@
    "name": "HealthXchange (SingHealth) with KK Women's and Children's Hospital Dept of Nutrition and Dietetics",
    "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-chinese-food-wonton-mee",
    "verified": false
-  }
+  },
+  "per_100g": {
+   "kcal": 64,
+   "protein_g": 3.0,
+   "carbs_g": 8.4,
+   "fat_g": 2.0
+  },
+  "typical_grams": 597,
+  "method": "soup",
+  "variant_of": "bak-chor-mee-dry"
  },
  {
   "id": "wanton-mee-dry",
@@ -362,7 +430,15 @@
    "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-chinese-food-wonton-mee",
    "verified": false
   },
-  "tip": "Ask for less sauce and lard."
+  "tip": "Ask for less sauce and lard.",
+  "per_100g": {
+   "kcal": 125,
+   "protein_g": 5.8,
+   "carbs_g": 16.7,
+   "fat_g": 3.6
+  },
+  "typical_grams": 330,
+  "method": "boiled"
  },
  {
   "id": "wanton-mee-soup",
@@ -392,7 +468,16 @@
    "name": "HealthXchange (SingHealth) with KK Women's and Children's Hospital Dept of Nutrition and Dietetics",
    "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-chinese-food-wonton-mee",
    "verified": false
-  }
+  },
+  "per_100g": {
+   "kcal": 53,
+   "protein_g": 3.5,
+   "carbs_g": 7.5,
+   "fat_g": 0.9
+  },
+  "typical_grams": 545,
+  "method": "soup",
+  "variant_of": "wanton-mee-dry"
  },
  {
   "id": "fishball-noodles-soup",
@@ -426,7 +511,15 @@
    "name": "HealthXchange (SingHealth) with KK Women's and Children's Hospital Dept of Nutrition and Dietetics",
    "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-chinese-food-duck-rice-fishball-noodle",
    "verified": false
-  }
+  },
+  "per_100g": {
+   "kcal": 69,
+   "protein_g": 3.8,
+   "carbs_g": 11.0,
+   "fat_g": 1.3
+  },
+  "typical_grams": 798,
+  "method": "soup"
  },
  {
   "id": "fishball-noodles-dry",
@@ -456,7 +549,16 @@
    "name": "HealthXchange (SingHealth) with KK Women's and Children's Hospital Dept of Nutrition and Dietetics",
    "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-chinese-food-duck-rice-fishball-noodle",
    "verified": false
-  }
+  },
+  "per_100g": {
+   "kcal": 113,
+   "protein_g": 5.8,
+   "carbs_g": 16.8,
+   "fat_g": 2.4
+  },
+  "typical_grams": 327,
+  "method": "boiled",
+  "variant_of": "fishball-noodles-soup"
  },
  {
   "id": "prawn-noodles-soup",
@@ -490,7 +592,15 @@
    "name": "HealthXchange (SingHealth) with KK Women's and Children's Hospital Dept of Nutrition and Dietetics",
    "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-chinese-food-wonton-mee",
    "verified": false
-  }
+  },
+  "per_100g": {
+   "kcal": 51,
+   "protein_g": 3.3,
+   "carbs_g": 8.5,
+   "fat_g": 0.3
+  },
+  "typical_grams": 574,
+  "method": "soup"
  },
  {
   "id": "hokkien-mee",
@@ -527,7 +637,15 @@
    "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-chinese-food-hokkien-mee-lor-mee",
    "verified": false
   },
-  "tip": "Ask for less oil and pork lard."
+  "tip": "Ask for less oil and pork lard.",
+  "per_100g": {
+   "kcal": 118,
+   "protein_g": 4.1,
+   "carbs_g": 15.6,
+   "fat_g": 4.3
+  },
+  "typical_grams": 442,
+  "method": "stir_fried"
  },
  {
   "id": "carrot-cake-white",
@@ -562,7 +680,10 @@
    "url": "https://www.fwd.com.sg/blog/health-safety/enjoying-hawker-foods-without-compromising-on-health/",
    "verified": false
   },
-  "tip": "Share the plate; fried carrot cake is oily, so ask for less oil."
+  "tip": "Share the plate; fried carrot cake is oily, so ask for less oil.",
+  "per_100g": null,
+  "typical_grams": null,
+  "method": "pan_fried"
  },
  {
   "id": "roti-prata-plain",
@@ -602,7 +723,15 @@
    "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-indian-breads-prata-mutton-murtabak",
    "verified": false
   },
-  "tip": "Pair it with dhal or fish curry gravy in moderation rather than adding egg or cheese."
+  "tip": "Pair it with dhal or fish curry gravy in moderation rather than adding egg or cheese.",
+  "per_100g": {
+   "kcal": 299,
+   "protein_g": 7.1,
+   "carbs_g": 45.7,
+   "fat_g": 10.0
+  },
+  "typical_grams": 70,
+  "method": "pan_fried"
  },
  {
   "id": "roti-john",
@@ -631,7 +760,15 @@
    "name": "HealthXchange (SingHealth) with KK Women's and Children's Hospital Dept of Nutrition and Dietetics",
    "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-indian-breads-prata-mutton-murtabak",
    "verified": false
-  }
+  },
+  "per_100g": {
+   "kcal": 286,
+   "protein_g": 9.9,
+   "carbs_g": 30.5,
+   "fat_g": 13.9
+  },
+  "typical_grams": 252.5,
+  "method": "pan_fried"
  },
  {
   "id": "mutton-murtabak",
@@ -663,7 +800,15 @@
    "name": "HealthXchange (SingHealth) with KK Women's and Children's Hospital Dept of Nutrition and Dietetics",
    "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-indian-breads-prata-mutton-murtabak",
    "verified": false
-  }
+  },
+  "per_100g": {
+   "kcal": 177,
+   "protein_g": 7.1,
+   "carbs_g": 18.5,
+   "fat_g": 8.1
+  },
+  "typical_grams": 211,
+  "method": "pan_fried"
  },
  {
   "id": "nasi-briyani-chicken",
@@ -701,7 +846,15 @@
    "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-malay-foods-biryani-rendang-lemak-cili-padi",
    "verified": false
   },
-  "tip": "Share the plate or ask for less rice."
+  "tip": "Share the plate or ask for less rice.",
+  "per_100g": {
+   "kcal": 180,
+   "protein_g": 8.0,
+   "carbs_g": 20.9,
+   "fat_g": 7.2
+  },
+  "typical_grams": 488,
+  "method": "unknown"
  },
  {
   "id": "mutton-dum-biryani",
@@ -733,7 +886,15 @@
    "name": "HealthXchange (SingHealth) with KK Women's and Children's Hospital Dept of Nutrition and Dietetics",
    "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-indian-noodles-rice-dishes-mutton-dum-biryani-indian-rojak",
    "verified": false
-  }
+  },
+  "per_100g": {
+   "kcal": 133,
+   "protein_g": 5.5,
+   "carbs_g": 15.7,
+   "fat_g": 5.4
+  },
+  "typical_grams": 859,
+  "method": "unknown"
  },
  {
   "id": "fried-rice",
@@ -768,7 +929,15 @@
    "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-chinese-food-hokkien-mee-lor-mee",
    "verified": false
   },
-  "tip": "Share the plate or eat half."
+  "tip": "Share the plate or eat half.",
+  "per_100g": {
+   "kcal": 212,
+   "protein_g": 6.5,
+   "carbs_g": 29.2,
+   "fat_g": 7.7
+  },
+  "typical_grams": 428,
+  "method": "stir_fried"
  },
  {
   "id": "nasi-goreng",
@@ -800,7 +969,15 @@
    "name": "HealthXchange (SingHealth) with KK Women's and Children's Hospital Dept of Nutrition and Dietetics",
    "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-malay-foods-biryani-rendang-lemak-cili-padi",
    "verified": false
-  }
+  },
+  "per_100g": {
+   "kcal": 197,
+   "protein_g": 5.6,
+   "carbs_g": 27.3,
+   "fat_g": 7.2
+  },
+  "typical_grams": 377,
+  "method": "stir_fried"
  },
  {
   "id": "ban-mian-soup",
@@ -837,7 +1014,15 @@
    "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-chinese-food-dim-sum-char-kway-teow",
    "verified": false
   },
-  "tip": "Leave most of the soup."
+  "tip": "Leave most of the soup.",
+  "per_100g": {
+   "kcal": 90,
+   "protein_g": 4.2,
+   "carbs_g": 9.1,
+   "fat_g": 4.2
+  },
+  "typical_grams": 528,
+  "method": "soup"
  },
  {
   "id": "lor-mee",
@@ -872,7 +1057,15 @@
    "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-chinese-food-hokkien-mee-lor-mee",
    "verified": false
   },
-  "tip": "Ask for less gravy."
+  "tip": "Ask for less gravy.",
+  "per_100g": {
+   "kcal": 71,
+   "protein_g": 2.8,
+   "carbs_g": 10.2,
+   "fat_g": 2.0
+  },
+  "typical_grams": 540,
+  "method": "soup"
  },
  {
   "id": "kway-chap",
@@ -904,7 +1097,15 @@
    "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-chinese-food-hokkien-mee-lor-mee",
    "verified": false
   },
-  "tip": "Choose lean items over offal and fatty cuts."
+  "tip": "Choose lean items over offal and fatty cuts.",
+  "per_100g": {
+   "kcal": 106,
+   "protein_g": 5.4,
+   "carbs_g": 11.5,
+   "fat_g": 4.3
+  },
+  "typical_grams": 611,
+  "method": "soup"
  },
  {
   "id": "penang-laksa",
@@ -939,7 +1140,15 @@
    "name": "HealthXchange (SingHealth) with KK Women's and Children's Hospital Dept of Nutrition and Dietetics",
    "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-chinese-food-wonton-mee",
    "verified": false
-  }
+  },
+  "per_100g": {
+   "kcal": 66,
+   "protein_g": 3.2,
+   "carbs_g": 12.5,
+   "fat_g": 0.4
+  },
+  "typical_grams": 569,
+  "method": "soup"
  },
  {
   "id": "char-siew-rice",
@@ -972,7 +1181,15 @@
    "name": "HealthXchange (SingHealth) with KK Women's and Children's Hospital Dept of Nutrition and Dietetics",
    "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-chinese-food-duck-rice-fishball-noodle",
    "verified": false
-  }
+  },
+  "per_100g": {
+   "kcal": 185,
+   "protein_g": 7.3,
+   "carbs_g": 27.8,
+   "fat_g": 4.9
+  },
+  "typical_grams": 327,
+  "method": "roasted"
  },
  {
   "id": "chicken-rice-roasted",
@@ -1007,7 +1224,16 @@
    "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-chinese-food-duck-rice-fishball-noodle",
    "verified": false
   },
-  "tip": "Remove the skin."
+  "tip": "Remove the skin.",
+  "per_100g": {
+   "kcal": 159,
+   "protein_g": 6.5,
+   "carbs_g": 19.6,
+   "fat_g": 6.0
+  },
+  "typical_grams": 382,
+  "method": "roasted",
+  "variant_of": "chicken-rice-steamed"
  },
  {
   "id": "duck-rice-roasted",
@@ -1041,7 +1267,15 @@
    "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-chinese-food-duck-rice-fishball-noodle",
    "verified": false
   },
-  "tip": "Remove the skin."
+  "tip": "Remove the skin.",
+  "per_100g": {
+   "kcal": 164,
+   "protein_g": 5.9,
+   "carbs_g": 24.1,
+   "fat_g": 4.9
+  },
+  "typical_grams": 410,
+  "method": "roasted"
  },
  {
   "id": "mee-soto",
@@ -1073,7 +1307,15 @@
    "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-malay-breakfast-foods-nasi-lemak-mee-siam-soto",
    "verified": false
   },
-  "tip": "Leave most of the soup."
+  "tip": "Leave most of the soup.",
+  "per_100g": {
+   "kcal": 80,
+   "protein_g": 3.5,
+   "carbs_g": 11.1,
+   "fat_g": 2.4
+  },
+  "typical_grams": 541,
+  "method": "soup"
  },
  {
   "id": "sliced-fish-bee-hoon-soup",
@@ -1103,7 +1345,15 @@
    "name": "HealthXchange (SingHealth) with KK Women's and Children's Hospital Dept of Nutrition and Dietetics",
    "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-chinese-food-wonton-mee",
    "verified": false
-  }
+  },
+  "per_100g": {
+   "kcal": 51,
+   "protein_g": 3.2,
+   "carbs_g": 7.0,
+   "fat_g": 1.2
+  },
+  "typical_grams": 686,
+  "method": "soup"
  },
  {
   "id": "porridge-pork-century-egg",
@@ -1136,7 +1386,15 @@
    "name": "HealthXchange (SingHealth) with KK Women's and Children's Hospital Dept of Nutrition and Dietetics",
    "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-chinese-food-wonton-mee",
    "verified": false
-  }
+  },
+  "per_100g": {
+   "kcal": 44,
+   "protein_g": 2.1,
+   "carbs_g": 6.6,
+   "fat_g": 1.0
+  },
+  "typical_grams": 512,
+  "method": "soup"
  },
  {
   "id": "satay-chicken-10",
@@ -1174,7 +1432,10 @@
    "url": "https://www.fwd.com.sg/blog/health-safety/enjoying-hawker-foods-without-compromising-on-health/",
    "verified": false
   },
-  "tip": "Go easy on the peanut sauce and ketupat, which are not included in these figures."
+  "tip": "Go easy on the peanut sauce and ketupat, which are not included in these figures.",
+  "per_100g": null,
+  "typical_grams": null,
+  "method": "grilled"
  },
  {
   "id": "half-boiled-eggs-2",
@@ -1211,7 +1472,15 @@
    "url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/173424/nutrients",
    "verified": false
   },
-  "tip": "Eggs are a lean protein choice; go easy on the dark soy sauce, which adds sodium."
+  "tip": "Eggs are a lean protein choice; go easy on the dark soy sauce, which adds sodium.",
+  "per_100g": {
+   "kcal": 155,
+   "protein_g": 12.6,
+   "carbs_g": 1.1,
+   "fat_g": 10.6
+  },
+  "typical_grams": 100,
+  "method": "boiled"
  },
  {
   "id": "kopi-o-kosong",
@@ -1247,6 +1516,100 @@
    "url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/171890/nutrients",
    "verified": false
   },
-  "tip": "Already the lowest-calorie way to order kopi. Adding sugar or condensed milk is what adds calories."
+  "tip": "Already the lowest-calorie way to order kopi. Adding sugar or condensed milk is what adds calories.",
+  "per_100g": {
+   "kcal": 1,
+   "protein_g": 0.1,
+   "carbs_g": 0.0,
+   "fat_g": 0.0
+  },
+  "typical_grams": 237,
+  "method": "unknown"
+ },
+ {
+  "id": "carrot-cake-black",
+  "name": "Carrot cake (black, fried)",
+  "aliases": {
+   "en": [
+    "fried carrot cake",
+    "black carrot cake",
+    "fried radish cake",
+    "fried radish with egg and sweet sauce"
+   ],
+   "zh": [
+    "炒菜头粿",
+    "黑菜头粿",
+    "菜头粿"
+   ],
+   "ms": [],
+   "ta": []
+  },
+  "serving": {
+   "label": "1 plate",
+   "grams": 295
+  },
+  "per_serving": {
+   "kcal": 493,
+   "protein_g": 2,
+   "carbs_g": 42,
+   "fat_g": 35
+  },
+  "source": {
+   "name": "HealthXchange (SingHealth/KKH), listed as 'Fried Carrot Cake' (fried radish with egg and sweet sauce)",
+   "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-chinese-food-hokkien-mee-lor-mee",
+   "verified": false
+  },
+  "tip": "Share the plate and ask for less oil; the white version (no sweet sauce) is lighter.",
+  "method": "pan_fried",
+  "variant_of": "carrot-cake-white",
+  "per_100g": {
+   "kcal": 167,
+   "protein_g": 0.7,
+   "carbs_g": 14.2,
+   "fat_g": 11.9
+  },
+  "typical_grams": 295
+ },
+ {
+  "id": "duck-rice-skin-removed",
+  "name": "Duck rice (skin removed)",
+  "aliases": {
+   "en": [
+    "duck rice without skin",
+    "skinless duck rice",
+    "duck rice skin off"
+   ],
+   "zh": [
+    "去皮鸭饭",
+    "鸭饭"
+   ],
+   "ms": [],
+   "ta": []
+  },
+  "serving": {
+   "label": "1 plate",
+   "grams": 350
+  },
+  "per_serving": {
+   "kcal": 530,
+   "protein_g": 24,
+   "carbs_g": 99,
+   "fat_g": 11
+  },
+  "source": {
+   "name": "HealthXchange (SingHealth/KKH), 'Duck Rice - Skin Removed'",
+   "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-chinese-food-duck-rice-fishball-noodle",
+   "verified": false
+  },
+  "tip": "Ask for the skin to be removed and go easy on the gravy.",
+  "method": "roasted",
+  "variant_of": "duck-rice-roasted",
+  "per_100g": {
+   "kcal": 151,
+   "protein_g": 6.9,
+   "carbs_g": 28.3,
+   "fat_g": 3.1
+  },
+  "typical_grams": 350
  }
 ]
