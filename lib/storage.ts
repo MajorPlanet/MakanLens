@@ -2,6 +2,12 @@
 import type { AnalysedItem, ExerciseEntry, LogEntry, MealSlot, Profile, SavedMeal } from "./types";
 import { normaliseProfile } from "./targets";
 
+// crypto.randomUUID only exists on HTTPS/localhost; fall back so phones on a LAN IP work.
+function newId(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") return crypto.randomUUID();
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
 const PROFILE_KEY = "makanlens:v1:profile";
 const ENTRIES_KEY = "makanlens:v1:entries";
 
@@ -164,7 +170,7 @@ function seedSavedMeals(): SavedMeal[] {
       if (!f?.item?.nutrition) continue;
       const item = normaliseItem(f.item);
       seeded.push({
-        id: crypto.randomUUID(), name: typeof f.name === "string" ? f.name : item.label, items: [item],
+        id: newId(), name: typeof f.name === "string" ? f.name : item.label, items: [item],
         lastUsed: typeof f.lastUsed === "number" ? f.lastUsed : 0, uses: 1, favourite: true,
       });
     }
@@ -182,7 +188,7 @@ function seedSavedMeals(): SavedMeal[] {
     const same = seeded.find((m) => mealSignature(m.items) === sig);
     const lastUsed = g[g.length - 1].createdAt;
     if (same) { same.uses += 1; same.lastUsed = Math.max(same.lastUsed, lastUsed); }
-    else seeded.push({ id: crypto.randomUUID(), name: mealName(items), items, lastUsed, uses: 1, favourite: false });
+    else seeded.push({ id: newId(), name: mealName(items), items, lastUsed, uses: 1, favourite: false });
   }
   write(SAVED_MEALS_KEY, seeded);
   if (typeof window !== "undefined") {
@@ -233,7 +239,7 @@ export function recordRecentMeal(items: AnalysedItem[], now = Date.now()): Saved
   if (existing) {
     saved = { ...existing, items: clean, lastUsed: now, uses: existing.uses + 1 };
   } else {
-    saved = { id: crypto.randomUUID(), name: mealName(clean), items: clean, lastUsed: now, uses: 1, favourite: false };
+    saved = { id: newId(), name: mealName(clean), items: clean, lastUsed: now, uses: 1, favourite: false };
   }
   const others = meals.filter((m) => m.id !== saved.id);
   const favourites = others.filter((m) => m.favourite);
@@ -246,7 +252,7 @@ export function recordRecentMeal(items: AnalysedItem[], now = Date.now()): Saved
 export function logItems(items: AnalysedItem[], slot: MealSlot, date = localDateString()): LogEntry[] {
   getSavedMeals(); // seed recents from the existing log first, so this meal isn't counted twice
   const now = Date.now();
-  const added = items.map((item, i) => ({ id: crypto.randomUUID(), date, slot, createdAt: now + i, item }));
+  const added = items.map((item, i) => ({ id: newId(), date, slot, createdAt: now + i, item }));
   saveEntries([...getEntries(), ...added]);
   recordRecentMeal(items, now);
   return added;
