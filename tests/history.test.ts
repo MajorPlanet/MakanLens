@@ -128,7 +128,7 @@ describe("currentStreak", () => {
 });
 
 describe("entriesToCsv", () => {
-  const HEADER = "date,slot,dish,label,portion,kcal,protein_g,carbs_g,fat_g,source,source_url";
+  const HEADER = "date,slot,dish,label,portion,kcal,protein_g,carbs_g,fat_g,source,source_url,grams,method,kcal_low,kcal_high";
 
   function rows(csv: string): string[] {
     return csv.slice(1).split("\r\n").filter((l) => l.length > 0);

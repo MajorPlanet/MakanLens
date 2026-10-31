@@ -81,7 +81,8 @@ export default function ScanPage() {
     try {
       const res = await lookupBarcode(code);
       setProduct(res);
-      setItem(res.item);
+      // Per-serving products keep the 0.5–2× portion slider (grams 0); per-100 g products use the grams input below.
+      setItem(res.basis === "serving" ? { ...res.item, grams: 0, gramsRange: [0, 0] } : res.item);
       setGrams("100");
       setSlot(defaultSlot());
     } catch (e) {
@@ -139,6 +140,10 @@ export default function ScanPage() {
         ? {
             ...item,
             portion: 1,
+            grams: gramsNum > 0 ? gramsNum : 0,
+            gramsRange: [gramsNum > 0 ? gramsNum : 0, gramsNum > 0 ? gramsNum : 0],
+            kcalRange: [per100(product.item.nutrition, gramsNum > 0 ? gramsNum : 0).kcal, per100(product.item.nutrition, gramsNum > 0 ? gramsNum : 0).kcal],
+            per_100g: product.item.nutrition,
             nutrition: per100(product.item.nutrition, gramsNum > 0 ? gramsNum : 0),
             label: `${product.productName} (${gramsNum > 0 ? gramsNum : 0} g)`,
           }

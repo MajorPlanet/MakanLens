@@ -125,6 +125,9 @@ export default function SnapBar({
             </button>
           </form>
         )}
+        <p className="text-center text-xs text-neutral-500 dark:text-neutral-400">
+          Tip: put a card or fork next to your food for better portions.
+        </p>
         <input ref={cam} type="file" accept="image/*" capture="environment" hidden onChange={pick} />
         <input ref={up} type="file" accept="image/*" hidden onChange={pick} />
         <button

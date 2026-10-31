@@ -2,7 +2,35 @@
 import { useState } from "react";
 import type { AnalysedItem, MealSlot } from "@/lib/types";
 import ItemCard from "./ItemCard";
+import { getDish } from "@/lib/matcher";
+import { dishTypicalGrams, withGrams } from "@/lib/nutrition";
+import { getLearnedRatio, recordPortionEdit } from "@/lib/storage";
 import { ACCENT_BTN, SLOTS, defaultSlot, fmtKcal } from "./format";
+
+interface Row {
+  item: AnalysedItem;
+  /** The model's grams (scaled along with follow-up answers), the baseline for portion learning. */
+  modelGrams: number;
+  /** User moved the slider by hand. */
+  touched: boolean;
+  /** Grams applied by portion learning, if any. */
+  adjusted: number | null;
+}
+
+function typicalFor(item: AnalysedItem): number | null {
+  const d = item.dishId ? getDish(item.dishId) : undefined;
+  return d ? dishTypicalGrams(d) : null;
+}
+
+function initRow(item: AnalysedItem, learn: boolean): Row {
+  const row: Row = { item, modelGrams: item.grams, touched: false, adjusted: null };
+  const ratio = learn && item.dishId && item.grams > 0 ? getLearnedRatio(item.dishId) : null;
+  if (ratio) {
+    const g = Math.min(800, Math.max(50, Math.round((item.grams * ratio) / 5) * 5));
+    if (g !== item.grams) return { ...row, item: withGrams(item, g, typicalFor(item)), adjusted: g };
+  }
+  return row;
+}
 
 export default function ResultsCard({
   initialItems,
@@ -17,7 +45,22 @@ export default function ResultsCard({
   onConfirm: (items: AnalysedItem[], slot: MealSlot) => void;
   onCancel: () => void;
 }) {
-  const [items, setItems] = useState(initialItems);
+  const [rows, setRows] = useState<Row[]>(() => initialItems.map((i) => initRow(i, mode === "add")));
+  const [questionUsed, setQuestionUsed] = useState(false);
+  const items = rows.map((r) => r.item);
+  const firstQuestion = questionUsed ? -1 : items.findIndex((i) => i.followUp);
+  const patch = (idx: number, f: (r: Row) => Row) => setRows((l) => l.map((x, i) => (i === idx ? f(x) : x)));
+
+  function confirm() {
+    if (mode === "add") {
+      for (const r of rows) {
+        if (r.touched && r.item.dishId && r.modelGrams > 0 && r.item.grams > 0) {
+          recordPortionEdit(r.item.dishId, r.modelGrams, r.item.grams);
+        }
+      }
+    }
+    onConfirm(items, slot);
+  }
   const [slot, setSlot] = useState<MealSlot>(initialSlot ?? defaultSlot());
   const total = items.reduce((s, i) => s + i.nutrition.kcal, 0);
 
@@ -26,7 +69,7 @@ export default function ResultsCard({
       <div className="mx-auto max-w-md px-4 pb-48 pt-4">
         <h2 className="mb-3 text-xl font-bold">{mode === "add" ? "Here's what we found" : "Edit entry"}</h2>
 
-        {items.length === 0 ? (
+        {rows.length === 0 ? (
           <p className="rounded-2xl border border-neutral-200 p-4 text-center dark:border-neutral-800">
             Nothing left to add.
           </p>
@@ -36,8 +79,21 @@ export default function ResultsCard({
               <ItemCard
                 key={`${idx}-${it.label}`}
                 item={it}
-                onChange={(n) => setItems((l) => l.map((x, i) => (i === idx ? n : x)))}
-                onRemove={() => setItems((l) => l.filter((_, i) => i !== idx))}
+                showFollowUp={idx === firstQuestion}
+                onChange={(n) => patch(idx, (r) => ({ ...r, item: n, touched: r.touched || n.grams !== r.item.grams, adjusted: n.grams !== r.item.grams ? null : r.adjusted }))}
+                onFollowUp={(n, prev) => {
+                  setQuestionUsed(true);
+                  patch(idx, (r) => ({
+                    ...r,
+                    item: n,
+                    modelGrams: prev.grams > 0 ? r.modelGrams * (n.grams / prev.grams) : r.modelGrams,
+                  }));
+                }}
+                adjustedGrams={rows[idx].adjusted}
+                onUndoAdjust={() =>
+                  patch(idx, (r) => ({ ...r, item: withGrams(r.item, r.modelGrams, typicalFor(r.item)), adjusted: null, touched: false }))
+                }
+                onRemove={() => setRows((l) => l.filter((_, i) => i !== idx))}
               />
             ))}
           </div>
@@ -68,7 +124,7 @@ export default function ResultsCard({
           <button
             type="button"
             disabled={items.length === 0}
-            onClick={() => onConfirm(items, slot)}
+            onClick={confirm}
             className={`h-14 w-full rounded-2xl px-3 text-lg font-semibold ${ACCENT_BTN}`}
           >
             {mode === "add" ? "Add to today" : "Save"} · {fmtKcal(total)} kcal

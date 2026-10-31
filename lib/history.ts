@@ -38,7 +38,7 @@ function csvField(v: string | number | undefined): string {
 }
 
 export function entriesToCsv(entries: LogEntry[]): string {
-  const header = ["date", "slot", "dish", "label", "portion", "kcal", "protein_g", "carbs_g", "fat_g", "source", "source_url"];
+  const header = ["date", "slot", "dish", "label", "portion", "kcal", "protein_g", "carbs_g", "fat_g", "source", "source_url", "grams", "method", "kcal_low", "kcal_high"];
   const sorted = [...entries].sort((a, b) => a.date.localeCompare(b.date) || a.createdAt - b.createdAt);
   const rows = sorted.map((e) => {
     const i = e.item;
@@ -50,6 +50,8 @@ export function entriesToCsv(entries: LogEntry[]): string {
       Math.round(i.nutrition.carbs_g * 10) / 10,
       Math.round(i.nutrition.fat_g * 10) / 10,
       i.source, i.sourceUrl ?? "",
+      i.grams ?? 0, i.method ?? "unknown",
+      Math.round(i.kcalRange?.[0] ?? i.nutrition.kcal), Math.round(i.kcalRange?.[1] ?? i.nutrition.kcal),
     ].map(csvField).join(",");
   });
   // BOM so Excel reads UTF-8 correctly; CRLF line endings.

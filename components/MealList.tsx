@@ -31,7 +31,7 @@ export default function MealList({
                     <div className="min-w-0 flex-1 py-2">
                       <p className="break-words font-medium leading-tight">{name}</p>
                       <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                        {e.item.portion}× · P {fmtMacro(e.item.nutrition.protein_g)} · C {fmtMacro(e.item.nutrition.carbs_g)} · F {fmtMacro(e.item.nutrition.fat_g)}
+                        {e.item.grams > 0 ? `${Math.round(e.item.grams)} g` : `${e.item.portion}×`} · P {fmtMacro(e.item.nutrition.protein_g)} · C {fmtMacro(e.item.nutrition.carbs_g)} · F {fmtMacro(e.item.nutrition.fat_g)}
                       </p>
                     </div>
                     <span className="shrink-0 font-semibold tabular-nums">{fmtKcal(e.item.nutrition.kcal)}</span>
