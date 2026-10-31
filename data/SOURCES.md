@@ -50,3 +50,9 @@ Values in hawker.json are now rounded: kcal to whole numbers, macros to 1 dp (ch
 - Variants searched for and NOT found with full values (not added): egg roti prata (only a kcal-only 576 kcal for 2 pieces from Daniel Food Diary, no macros or grams), fried fish bee hoon, fried wanton, chicken cutlet rice, fried chicken rice, dry ban mian.
 - Serving weights still unknown, left null: chicken-rice-steamed, carrot-cake-white, satay-chicken-10. No HealthXchange page has a steamed chicken rice row (the roasted row is 382 g, but is a different dish and kcal), so the FWD figures were kept without grams. A HealthHub snippet gives white carrot cake 402 kcal and black 556 kcal, which disagrees with the HealthXchange 493 kcal fried carrot cake (different serving/source); not used.
 - Eval sample photos: see data/eval/PHOTOS.md.
+
+## Phase 9 additions: sodium, fibre, saturated fat (2026-10-31)
+Added `sodium_mg`, `fibre_g` and `satfat_g` to `per_serving` (and to `per_100g` where the serving weight is known; per_100g is arithmetic only: value / serving.grams x 100, sodium to whole mg, others to 1 dp) for 33 dishes. Values are copied as printed from the same HealthXchange (SingHealth, with KKH Dept of Nutrition and Dietetics) pages listed in section 1; each page's table has Saturated Fat, Dietary fibre and Sodium columns. Column order was checked against the raw page HTML for the duck rice, char kway teow and wonton mee pages. `verified` is unchanged (`false`: not HPB).
+- Not added (no sourced value): chicken-rice-steamed, carrot-cake-white, satay-chicken-10 (FWD blog gives macros only), half-boiled-eggs-2 and kopi-o-kosong (USDA entries not read for these fields).
+- Notes: char-kway-teow saturated fat 29.2 g and wonton-mee-soup saturated fat 0 g are as printed. Two dishes use the nearest page row: laksa is "Laksa Lemak", mee-goreng-mamak is generic "Mee Goreng".
+- Sodium is only shown in the app for dishes that have a value.

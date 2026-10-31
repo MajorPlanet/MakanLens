@@ -118,6 +118,7 @@ export function clearAll(): void {
     window.localStorage.removeItem(ENTRIES_KEY);
     window.localStorage.removeItem(SAVED_MEALS_KEY);
     window.localStorage.removeItem(EXERCISE_KEY);
+    window.localStorage.removeItem(LEGACY_FAVOURITES_KEY);
   } catch {
     /* ignore */
   }
@@ -133,7 +134,6 @@ export function localDateString(d: Date = new Date()): string {
 // ---- Phase 9: saved meals (recent + favourites) and exercise ----
 
 const SAVED_MEALS_KEY = "makanlens:v1:saved-meals";
-/** Same key and shape as components/ExerciseStore.ts, so both read the same data. */
 const EXERCISE_KEY = "makanlens:v1:exercise";
 /** Non-favourite recents kept; favourites are never pruned. */
 export const RECENT_KEEP = 30;
@@ -150,8 +150,56 @@ export function mealName(items: AnalysedItem[]): string {
   return items.map((i) => i.label).join(" + ") || "Meal";
 }
 
+/** Favourites saved by the first Phase 9 build under their own key ({ key, name, item, lastUsed }). */
+const LEGACY_FAVOURITES_KEY = "makanlens:v1:favourite-meals";
+/** Entries logged within this window in the same slot count as one meal when seeding recents from the log. */
+const SAME_MEAL_MS = 10_000;
+
+/** First read only: build saved meals from legacy favourites and the existing log, so "Log again" isn't empty. */
+function seedSavedMeals(): SavedMeal[] {
+  const seeded: SavedMeal[] = [];
+  const legacy = read<unknown>(LEGACY_FAVOURITES_KEY);
+  if (Array.isArray(legacy)) {
+    for (const f of legacy as { name?: unknown; item?: AnalysedItem; lastUsed?: unknown }[]) {
+      if (!f?.item?.nutrition) continue;
+      const item = normaliseItem(f.item);
+      seeded.push({
+        id: crypto.randomUUID(), name: typeof f.name === "string" ? f.name : item.label, items: [item],
+        lastUsed: typeof f.lastUsed === "number" ? f.lastUsed : 0, uses: 1, favourite: true,
+      });
+    }
+  }
+  const groups: LogEntry[][] = [];
+  for (const e of [...getEntries()].sort((a, b) => a.createdAt - b.createdAt)) {
+    const last = groups[groups.length - 1];
+    const prev = last?.[last.length - 1];
+    if (prev && prev.slot === e.slot && prev.date === e.date && e.createdAt - prev.createdAt <= SAME_MEAL_MS) last.push(e);
+    else groups.push([e]);
+  }
+  for (const g of groups.slice(-RECENT_KEEP)) {
+    const items = g.map((e) => e.item);
+    const sig = mealSignature(items);
+    const same = seeded.find((m) => mealSignature(m.items) === sig);
+    const lastUsed = g[g.length - 1].createdAt;
+    if (same) { same.uses += 1; same.lastUsed = Math.max(same.lastUsed, lastUsed); }
+    else seeded.push({ id: crypto.randomUUID(), name: mealName(items), items, lastUsed, uses: 1, favourite: false });
+  }
+  write(SAVED_MEALS_KEY, seeded);
+  if (typeof window !== "undefined") {
+    try { window.localStorage.removeItem(LEGACY_FAVOURITES_KEY); } catch { /* ignore */ }
+  }
+  return seeded;
+}
+
 export function getSavedMeals(): SavedMeal[] {
-  const v = read<unknown>(SAVED_MEALS_KEY);
+  if (typeof window === "undefined") return [];
+  let stored: string | null;
+  try {
+    stored = window.localStorage.getItem(SAVED_MEALS_KEY);
+  } catch {
+    return []; // storage blocked
+  }
+  const v = stored === null ? seedSavedMeals() : read<unknown>(SAVED_MEALS_KEY);
   if (!Array.isArray(v)) return [];
   return v
     .filter((m): m is SavedMeal => !!m && typeof m === "object" && Array.isArray((m as SavedMeal).items) && typeof (m as SavedMeal).id === "string")
@@ -196,6 +244,7 @@ export function recordRecentMeal(items: AnalysedItem[], now = Date.now()): Saved
 
 /** Log items to a slot today AND record them as a recent meal. Every "add to today" flow should use this. */
 export function logItems(items: AnalysedItem[], slot: MealSlot, date = localDateString()): LogEntry[] {
+  getSavedMeals(); // seed recents from the existing log first, so this meal isn't counted twice
   const now = Date.now();
   const added = items.map((item, i) => ({ id: crypto.randomUUID(), date, slot, createdAt: now + i, item }));
   saveEntries([...getEntries(), ...added]);
@@ -213,7 +262,8 @@ export function getExercises(): ExerciseEntry[] {
   if (!Array.isArray(v)) return [];
   return v.filter(
     (e): e is ExerciseEntry =>
-      !!e && typeof e === "object" && typeof (e as ExerciseEntry).id === "string" && typeof (e as ExerciseEntry).date === "string" && Number.isFinite((e as ExerciseEntry).kcal),
+      !!e && typeof e === "object" && typeof (e as ExerciseEntry).id === "string" && typeof (e as ExerciseEntry).date === "string" &&
+      typeof (e as ExerciseEntry).label === "string" && Number.isFinite((e as ExerciseEntry).kcal),
   );
 }
 export function saveExercises(list: ExerciseEntry[]): void {
@@ -225,6 +275,12 @@ export function addExerciseEntry(e: ExerciseEntry): void {
 export function deleteExerciseEntry(id: string): void {
   saveExercises(getExercises().filter((e) => e.id !== id));
 }
+export function getExercisesFor(date: string): ExerciseEntry[] {
+  return getExercises().filter((e) => e.date === date);
+}
+export function sumExerciseKcal(list: ExerciseEntry[]): number {
+  return list.reduce((sum, e) => sum + e.kcal, 0);
+}
 export function exerciseKcalFor(date: string): number {
-  return getExercises().filter((e) => e.date === date).reduce((sum, e) => sum + e.kcal, 0);
+  return sumExerciseKcal(getExercisesFor(date));
 }

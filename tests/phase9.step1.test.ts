@@ -55,3 +55,18 @@ test("micronutrients survive scaling only when present", () => {
   expect(nutritionForGrams({ kcal: 100, protein_g: 1, carbs_g: 1, fat_g: 1, sodium_mg: 400 }, 250).sodium_mg).toBe(1000);
   expect("sodium_mg" in nutritionForGrams({ kcal: 100, protein_g: 1, carbs_g: 1, fat_g: 1 }, 250)).toBe(false);
 });
+
+describe("saved-meal seeding", () => {
+  test("existing log and legacy favourites seed 'Log again' once, without double counting", () => {
+    const item = itemFromDish(getDish("laksa")!, 1);
+    store.set("makanlens:v1:entries", JSON.stringify([{ id: "e1", date: "2026-10-30", slot: "lunch", createdAt: 1000, item }]));
+    store.set("makanlens:v1:favourite-meals", JSON.stringify([{ key: "k", name: "My laksa", item, lastUsed: 500 }]));
+    const recents = getRecentMeals();
+    expect(recents).toHaveLength(1);           // legacy favourite + logged laksa are the same meal
+    expect(recents[0].favourite).toBe(true);
+    expect(recents[0].uses).toBe(2);
+    expect(store.has("makanlens:v1:favourite-meals")).toBe(false);
+    logItems([item], "dinner");
+    expect(getRecentMeals()[0].uses).toBe(3);
+  });
+});

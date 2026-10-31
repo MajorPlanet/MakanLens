@@ -12,25 +12,34 @@ Cal AI and MyFitnessPal charge for photo logging. Hawker food is hard for generi
 
 ## Features
 
-- **Onboarding:** sex, age, height, weight, activity and goal. Daily target from Mifflin-St Jeor BMR × activity factor, adjusted for goal, with a 30/40/30 protein/carbs/fat split. Editable later.
-- **Snap, upload or describe:** take a photo or upload one. You can also type a meal (Singlish is fine, e.g. "cai fan 2 veg 1 meat, less rice"). Voice input works where the browser supports it.
-- **Results card:** each dish with kcal, protein, carbs and fat, a confidence badge, and a source tag that links to the publisher. Adjust the portion (0.5× to 2×), swap the matched dish, or remove an item.
+- **Onboarding:** sex, age, height, weight, activity and goal. Daily target from Mifflin-St Jeor BMR × activity factor, adjusted for goal. Editable later.
+- **Snap, upload or describe:** take a photo or upload one, or type a meal (Singlish is fine, e.g. "cai fan 2 veg 1 meat, less rice"). Voice input works where the browser supports it. Tip: a card or fork next to the plate helps with portion size.
+- **Results card:** each dish shows a **kcal range** (e.g. 446–670 kcal) with a best guess, its estimated weight in grams, the cooking method, a confidence badge and a source tag that links to the publisher. Adjust the weight with a grams slider (50–800 g), swap the matched dish, or remove an item.
+- **One follow-up question** when it matters: if the cooking method or variant would change the calories by more than 15% (e.g. "Steamed or roasted?"), one tap answers it and the range narrows.
+- **Learns your portions:** after you correct the grams for a dish twice, future estimates for that dish start at your usual portion, with an Undo.
 - **Today:** calorie ring against your target, protein/carbs/fat bars, and meals grouped by breakfast, lunch, dinner and snack, with edit and delete.
-- **Swap tips:** a short tip on a lower-calorie way to order some dishes.
+- **Log again and favourites:** your recent meals appear on Today; one tap logs a meal again, and a star saves it to Favourites (also listed on Search).
+- **Search:** `/search` finds dishes in the local dataset by name or alias (English, Chinese, Malay, Tamil), then USDA FoodData Central when a `USDA_API_KEY` is set. Pick grams and add it.
+- **Scan a nutrition label:** `/label` reads a photo of a printed nutrition panel and copies only what is printed (kJ is converted to kcal). Check the values next to the photo, choose servings or grams, and add.
 - **Barcode:** `/scan` looks up packaged products on Open Food Facts, by camera or manual entry, per serving or per 100 g.
+- **Sodium, fibre and saturated fat:** shown only where the source lists them (33 of 38 dishes have sodium). Never estimated.
+- **Custom macro goals:** in Settings, use a % split (always totals 100%) or fixed grams per macro.
+- **Exercise add-back:** log exercise kcal on Today; with add-back on (the default), the day's target rises by that amount ("Target 1,900 + 300 exercise = 2,200").
+- **Install to home screen:** the app has a web manifest and icons, so "Add to Home Screen" gives a MakanLens icon that opens full screen.
+- **Swap tips:** a short tip on a lower-calorie way to order some dishes.
 - **History:** 7-day chart against your target, and your logging streak.
 - **Settings:** edit your profile, set a manual kcal override, export all entries as CSV, or clear all data.
-- **Uncovered:** `/uncovered` compares Cal AI's estimates with reference values for the same dishes. The Cal AI and MakanLens columns are still being filled in.
+- **Uncovered:** `/uncovered` compares MakanLens and Cal AI against weighed meals (run `npm run eval`). The weighed test set is still being collected, so the error figures read "awaiting test data" until it is.
 
-Not built yet: weight logging and an adaptive calorie target (planned as a stretch goal, see Roadmap).
+Not built yet: weight logging and an adaptive calorie target (see Roadmap).
 
 ## How it works
 
 1. You take or upload a photo (or type a description). The image is resized in your browser before upload.
-2. A vision model (Google Gemini by default, or Claude) names each dish and drink, estimates the portion, and returns JSON. The server checks that JSON against a schema.
-3. A fuzzy matcher compares each dish name, including English, Chinese, Malay and Tamil aliases, against the local dataset in `data/hawker.json`.
-4. On a confident match, the nutrition comes from the dataset, scaled by the portion, and is tagged with its publisher. With no match, the result is the model's own estimate and is tagged "AI estimate".
-5. You check the results, adjust them, and add them to today's log. The log is stored in `localStorage` on your device.
+2. A vision model (Claude or Google Gemini) names each dish and drink, estimates its **weight in grams** (with a low–high range) and its **cooking method**, and returns JSON that the server checks against a schema. By default the model is run 3 times in parallel and the results are combined by median (`VISION_RUNS`).
+3. **The model never decides the calories.** Code looks up nutrition per 100 g: first the local dataset in `data/hawker.json` (the cooking method picks the right variant, e.g. roasted vs steamed chicken rice), then USDA FoodData Central, and only as a last resort the model's own estimate, tagged "AI estimate".
+4. Calories and macros = per-100 g values × grams; the kcal range comes from the grams range. Every number is tagged with its source.
+5. You check the results, adjust them, and add them to today's log. Everything is stored in `localStorage` on your device; there are no accounts.
 
 ## Setup
 
@@ -47,6 +56,8 @@ Open `.env.local` and add a key:
 
 - **Gemini (default, free tier):** get a key from Google AI Studio and set `GEMINI_API_KEY`. `GEMINI_MODEL` defaults to `gemini-3.8-flash` if left blank.
 - **Claude (optional):** set `VISION_PROVIDER=anthropic` and `ANTHROPIC_API_KEY`. `ANTHROPIC_MODEL` defaults to `claude-haiku-5-5`.
+- **USDA (optional):** set `USDA_API_KEY` (free from api.data.gov) so search and lookups can use USDA FoodData Central. Without it, search uses the local dataset only.
+- **Cost control (optional):** `VISION_RUNS` (default 3) sets how many model runs are combined per photo. Set it to 1 to use a third of the API calls.
 
 Then start the app:
 

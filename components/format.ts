@@ -1,4 +1,4 @@
-import type { MealSlot, Nutrition } from "@/lib/types";
+import type { Dish, Source, MealSlot, Nutrition } from "@/lib/types";
 
 export const SLOTS: { id: MealSlot; label: string }[] = [
   { id: "breakfast", label: "Breakfast" },
@@ -36,3 +36,14 @@ export function sumNutrition(list: Nutrition[]): Nutrition {
 
 export const ACCENT_BTN =
   "bg-orange-500 text-white hover:bg-orange-600 active:bg-orange-700 disabled:opacity-50";
+
+export const SOURCE_LABEL: Record<Source, string> = { hpb: "HPB", usda: "USDA FoodData Central", off: "Open Food Facts", label: "Nutrition label", ai_estimate: "AI estimate" };
+
+/** Curated dishes are typed "hpb", but only verified ones are HPB; otherwise name the real publisher. */
+export function sourceLabel(source: Source, dish?: Dish): { text: string; title: string } {
+  if (source === "hpb" && dish && !dish.source.verified) {
+    const short = dish.source.name.split(/\s*[(,;]|\s+with\s+/)[0].trim() || dish.source.name;
+    return { text: short, title: dish.source.name };
+  }
+  return { text: SOURCE_LABEL[source], title: dish?.source.name ?? SOURCE_LABEL[source] };
+}

@@ -15,14 +15,20 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "MakanLens",
-  description: "Snap a hawker meal, get calories and macros from official HPB data. Free and open source.",
+  description: "Snap a hawker meal and get calories and macros from published Singapore nutrition data. Free and open source.",
+  applicationName: "MakanLens",
+  appleWebApp: { capable: true, title: "MakanLens", statusBarStyle: "default" },
+  icons: {
+    icon: [{ url: "/icons/icon.svg", type: "image/svg+xml" }, { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }],
+    apple: "/icons/apple-touch-icon.png",
+  },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: light)", color: "#f97316" },
     { media: "(prefers-color-scheme: dark)", color: "#0a0a0a" },
   ],
 };

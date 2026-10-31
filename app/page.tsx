@@ -3,12 +3,15 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { AnalysedItem, LogEntry, MealSlot, Profile } from "@/lib/types";
-import { deleteEntry, getEntries, getProfile, localDateString, logItems, updateEntry } from "@/lib/storage";
+import { deleteEntry, exerciseKcalFor, getEntries, getProfile, localDateString, logItems, updateEntry } from "@/lib/storage";
+import { dayTargets, type DayTargets } from "@/lib/targets";
 import { analyse, ApiClientError, getHealth } from "@/lib/client";
 import { resizeImage } from "@/lib/image";
 import CalorieRing from "@/components/CalorieRing";
 import MacroBars from "@/components/MacroBars";
 import MealList from "@/components/MealList";
+import RecentStrip from "@/components/RecentStrip";
+import ExerciseCard from "@/components/ExerciseCard";
 import ResultsCard from "@/components/ResultsCard";
 import SnapBar from "@/components/SnapBar";
 import ErrorNotice, { type NoticeKind } from "@/components/ErrorNotice";
@@ -28,6 +31,9 @@ export default function Home() {
   const [notice, setNotice] = useState<{ kind: NoticeKind; detail?: string } | null>(null);
   const [unconfigured, setUnconfigured] = useState(false);
   const [tip, setTip] = useState<string | null>(null);
+  const [day, setDay] = useState<DayTargets | null>(null);
+  /** Bumped whenever meals are logged so the "Log again" strip re-reads storage. */
+  const [recentVersion, setRecentVersion] = useState(0);
   const last = useRef<Input | null>(null);
   const runId = useRef(0);
 
@@ -74,7 +80,7 @@ export default function Home() {
         text = input.text;
         setLoading("Identifying dishes…");
       }
-      const t = setTimeout(() => setLoading("Matching HPB data…"), 2500);
+      const t = setTimeout(() => setLoading("Matching local dish data…"), 2500);
       try {
         const res = await analyse({ image, text });
         if (id !== runId.current) return;
@@ -94,6 +100,7 @@ export default function Home() {
   function confirmAdd(items: AnalysedItem[], slot: MealSlot) {
     logItems(items, slot);
     setEntries(getEntries());
+    setRecentVersion((v) => v + 1);
     setFound(null);
     const tips = items.flatMap((i) => {
       const t = i.dishId ? getDish(i.dishId)?.tip : undefined;
@@ -117,8 +124,11 @@ export default function Home() {
     return <main className="p-6 text-center text-neutral-500">Loading…</main>;
   }
 
-  const today = entries.filter((e) => e.date === localDateString());
+  const todayDate = localDateString();
+  const today = entries.filter((e) => e.date === todayDate);
   const totals = sumNutrition(today.map((e) => e.item.nutrition));
+  // Exercise-adjusted targets: ExerciseCard reports changes; before it does, compute from storage.
+  const targets = day ?? dayTargets(profile, exerciseKcalFor(todayDate));
 
   return (
     <main className="mx-auto max-w-md px-4 pt-4">
@@ -162,11 +172,15 @@ export default function Home() {
       )}
 
       <section className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
-        <CalorieRing eaten={totals.kcal} target={profile.targetKcal} />
+        <CalorieRing eaten={totals.kcal} target={targets.kcal} />
         <div className="mt-4">
-          <MacroBars totals={totals} targets={profile.macroTargets} />
+          <MacroBars totals={totals} targets={targets.macros} />
         </div>
       </section>
+
+      <ExerciseCard profile={profile} date={todayDate} onChange={setDay} />
+
+      <RecentStrip key={recentVersion} onLogged={() => setEntries(getEntries())} />
 
       <section className="mt-5">
         {today.length === 0 ? (

@@ -1,20 +1,11 @@
 "use client";
 import { useState } from "react";
-import type { AnalysedItem, CookingMethod, Dish, FollowUp, Nutrition, Source } from "@/lib/types";
+import type { AnalysedItem, CookingMethod, Dish, FollowUp, Nutrition } from "@/lib/types";
 import { applyFollowUpOption, getDish, scaleNutrition, searchDishes, swapDish } from "@/lib/matcher";
 import { dishTypicalGrams, withGrams } from "@/lib/nutrition";
-import { fmtKcal, fmtMacro } from "./format";
+import { fmtKcal, fmtMacro, sourceLabel } from "./format";
 
-const SOURCE_LABEL: Record<Source, string> = { hpb: "HPB", usda: "USDA FoodData Central", off: "Open Food Facts", label: "Nutrition label", ai_estimate: "AI estimate" };
-
-/** Curated dishes are typed "hpb", but only verified ones are HPB; otherwise name the real publisher. */
-function sourceLabel(item: AnalysedItem, dish: Dish | undefined): { text: string; title: string } {
-  if (item.source === "hpb" && dish && !dish.source.verified) {
-    const short = dish.source.name.split(/\s*[(,;]|\s+with\s+/)[0].trim() || dish.source.name;
-    return { text: short, title: dish.source.name };
-  }
-  return { text: SOURCE_LABEL[item.source], title: dish?.source.name ?? SOURCE_LABEL[item.source] };
-}
+const sourceLabelFor = (item: AnalysedItem, dish: Dish | undefined) => sourceLabel(item.source, dish);
 
 function confidenceBadge(c: number): { text: string; cls: string } {
   if (c >= 0.75) return { text: "High confidence", cls: "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300" };
@@ -91,7 +82,7 @@ export default function ItemCard({
   const title = dish?.name ?? item.label;
   const subtitle = dish && item.label && item.label !== dish.name ? item.label : null;
   const servingLabel = dish?.serving.label ?? "serving";
-  const src = sourceLabel(item, dish);
+  const src = sourceLabelFor(item, dish);
   const badge = confidenceBadge(item.confidence);
 
   const options = query.trim()

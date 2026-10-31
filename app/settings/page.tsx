@@ -6,11 +6,15 @@ import { clearAll, getEntries, getProfile, localDateString, saveProfile } from "
 import { entriesToCsv } from "@/lib/history";
 import PageHeader from "@/components/PageHeader";
 import ProfileForm from "@/components/ProfileForm";
+import MacroGoals from "@/components/MacroGoals";
+import ExerciseSetting from "@/components/ExerciseSetting";
+import { gramsToSplit, splitToGrams } from "@/lib/targets";
 
 export default function SettingsPage() {
   const router = useRouter();
   const [ready, setReady] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [formKey, setFormKey] = useState(0);
   const [saved, setSaved] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [note, setNote] = useState<string | null>(null);
@@ -21,6 +25,22 @@ export default function SettingsPage() {
     setReady(true);
   }, []);
   /* eslint-enable react-hooks/set-state-in-effect */
+
+  function persist(p: Profile) {
+    saveProfile(p as Profile);
+    setProfile(p);
+  }
+
+  /** ProfileForm rebuilds the profile from scratch, so carry the custom macro and exercise settings across. */
+  function saveFromForm(p: Profile) {
+    const old = profile;
+    const merged: Profile = { ...p, macroMode: old?.macroMode ?? "split", macroSplit: old?.macroSplit, macroGrams: old?.macroGrams, addBackExercise: old?.addBackExercise ?? true };
+    if (old?.macroMode === "grams" && old.macroGrams) merged.macroTargets = old.macroGrams;
+    else if (old) merged.macroTargets = splitToGrams(p.targetKcal, old.macroSplit ?? gramsToSplit(old.macroTargets));
+    persist(merged);
+    setFormKey((k) => k + 1);
+    setSaved(true);
+  }
 
   function exportCsv() {
     const entries = getEntries();
@@ -58,8 +78,15 @@ export default function SettingsPage() {
             allowOverride
             savedMessage={saved ? "Saved" : null}
             onEdit={() => setSaved(false)}
-            onSave={(p) => { saveProfile(p); setProfile(p); setSaved(true); }}
+            onSave={saveFromForm}
           />
+
+          {profile && (
+            <>
+              <MacroGoals key={`m${formKey}`} profile={profile} onSave={persist} />
+              <ExerciseSetting profile={profile} onSave={persist} />
+            </>
+          )}
 
           <section className="mt-8 space-y-3">
             <h2 className="text-sm font-semibold">Your data</h2>

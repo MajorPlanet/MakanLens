@@ -1,73 +1,59 @@
-# MakanLens QA report: Phase 8 accuracy upgrade (2026-10-31)
+# MakanLens QA report: Phase 9 feature batch (2026-10-31)
 
-**Status:** FAIL. Gates, real calls and the maths are green. Two Phase 8 "Done when" items are not met (follow-up does not narrow the range; `source` is "hpb" for 0 of 38 unverified dishes, carried over from Phase 5).
+**Status:** FAIL (one must-fix, honesty). Gates are green. `/search` tags every local dish as "HPB", but all 38 dishes are `verified: false`. This is the same issue the Phase 8 report flagged and it is still open on the Search screen. Live-model and phone checks were not run here (see ⚠️).
 
 ## Gates
-- ✅ `npm run build`, `npm run lint`, `npx tsc --noEmit`: exit 0
-- ✅ `npm test`: 13 files, 145 tests (137 before; 8 added in `tests/phase8.qa.test.ts`)
-- ✅ Secret grep on `.next/static` (`AIza|sk-ant`): 0 matches. Not checked against the key value itself (that would mean reading `.env.local`).
+- ✅ `npm run build`: exit 0 (all 16 routes build, including `/manifest.webmanifest`)
+- ✅ `npm run lint`: exit 0
+- ✅ `npx tsc --noEmit`: exit 0
+- ✅ `npm test`: 18 files, 168 tests pass (162 before; 6 added in `tests/phase9.qa.test.ts`)
+- ✅ Secret grep `grep -r "AIza\|sk-ant" .next/static`: 0 matches
 - ✅ `.gitignore` has `.env*` and `!.env.example`
-- ✅ `.env.example` has `USDA_API_KEY` and `VISION_RUNS`
-- ✅ `process.env` reads: `app/api/health/route.ts`, `lib/analyse.ts:19` (VISION_RUNS), `lib/usda.ts:53`, `lib/vision.ts`, `scripts/eval.ts:54`. No `NEXT_PUBLIC_` key variable.
-- ⚠️ `lib/client.ts:40` reads `NEXT_PUBLIC_USE_MOCK`. It is a mock flag, not a key, but it is outside the audit list. Owner: frontend-builder. Fix: none needed; note it in the audit.
-- ✅ Client bundle trace: no client file imports `lib/vision`, `lib/usda`, `lib/analyse`, `lib/off` or `lib/combine`, directly or transitively. `lib/matcher.ts:5` and `lib/matcher.ts`'s `schemas` import are `import type` (erased). `lib/client.ts` → `lib/mock.ts` → `lib/matcher.ts` and `lib/nutrition.ts` only.
+- ✅ `process.env` reads are server-side, except `NEXT_PUBLIC_USE_MOCK` (mock flag, not a key): `components/LabelApi.ts:31`, `components/SearchApi.ts:69`, `lib/client.ts:40`
 
-## Real calls (dev server on :3200, no mock flag; stopped afterwards)
-- ✅ `GET /api/health` → 200, `{"provider":"anthropic","model":"claude-haiku-5-5","configured":true,"dishes":38}`
-- ✅ Text "1 plate char kway teow and kopi" → 200 in **7.07 s** (server `ms` 6991). 2 items:
-  - Char kway teow: `hpb`, 300 g [240–370], `stir_fried`, kcal 582 in [466–718], runs 3.
-  - Kopi (`ai_estimate`, dishId null, not kopi-o-kosong): 250 g [200–280], kcal 120 in [96–134].
-  - All fields present, and low ≤ kcal ≤ high.
-- ✅ Photo `m01.jpg` → 200 in **5.17 s**. Matched `chicken-rice-steamed` (`hpb`), 400 g [320–450], `steamed`, `referenceObject: fork`, kcal 558 in [446–628], runs 3.
-- ✅ Non-food solid-colour PNG → 200, `items: []` in 0.93 s.
-- ✅ `POST /api/analyse` `{}` → 400 `provide image or text`. Empty body → 400 `Body must be JSON.`
-- ✅ Barcode 5449000000996 → 200. `item` has `grams`, `gramsRange`, `method`, `kcalRange`, `per_100g`, `referenceObject`, `runs`.
-- ✅ No key pattern in the dev log.
-- Budget note: 3 billable analyse requests, plus 2 free 400s (5 POSTs in total). The eval below also makes 2 model calls, as the brief requires.
-
-## Eval
-- ✅ `VISION_RUNS=1 EVAL_OUT=/tmp/ml-eval-check.json npm run eval` exits 0. m01 558 kcal [465–651], 4.9 s. m02 1058 kcal [893–1175], 5.0 s.
-- ✅ `scripts/eval.ts:54` honours `EVAL_OUT`. The output matches `EvalResults` in `lib/types.ts`. The committed `data/eval-results.json` was not touched.
-- ⚠️ MAPE and hit rate are null because the sample meals have `true_kcal: null`. They can't be measured until real weighed meals are added.
+## Static checks
+- ✅ Server-only modules. A transitive import walk from every `components/**` file and every `app/**/page.tsx` or `layout.tsx` never reaches `lib/usda.ts`, `lib/vision.ts`, `lib/analyse.ts` or `lib/label.ts`. The client path to `lib/search.ts` (via `components/SearchApi.ts`) stops there. `lib/search.ts` reads `process.env.USDA_API_KEY` only inside `searchUsda` (line 78), which is server-only in use.
+- ✅ Duplicates gone: `components/FavouriteMeals*`, `ExerciseStore*` and `MacroMath*` do not exist, and nothing imports them. The stale comment at `lib/storage.ts:137` still names `components/ExerciseStore.ts` (see failures).
+- ✅ Every add-to-today flow calls `logItems`: `app/page.tsx:101`, `app/label/page.tsx:81`, `app/scan/page.tsx:155`, `app/search/page.tsx:90`. Saved-meal re-logs go through `logSavedMeal` → `logItems`.
+- ✅ Micronutrients in `data/hawker.json`: 33 of 38 dishes have `sodium_mg`, `fibre_g` and `satfat_g`. The 5 without are chicken-rice-steamed, carrot-cake-white, satay-chicken-10, half-boiled-eggs-2 and kopi-o-kosong. `per_serving` and `per_100g` list the same fields for every dish. `components/NutritionRow.tsx` renders each micronutrient only when it is a number. `lib/nutrition.ts` `scaleAll` (l.11), `roundNutrition` (l.17) and `withGrams` carry them through.
+- ✅ Honesty grep: no "official HPB" claim anywhere. The README (line 93) says no dish is verified HPB, and `components/ItemCard.tsx:12` demotes unverified HPB to the real publisher. The Search screen does not (see failures).
 
 ## Failures
-1. **`lib/matcher.ts:156` and `:202`** (`source: "hpb"`). Every curated dish is tagged `hpb`, but `data/hawker.json` has 0 of 38 `verified`. Carried over from the Phase 5 report, still open. The UI relabels it (`components/ItemCard.tsx:11-17`), but the API contract is wrong. Owner: api-builder (with Manager for `lib/types.ts`). Fix: derive the source from `dish.source.verified`, or add a source value for unverified publisher data.
-2. **`lib/matcher.ts:241-263`** (`swapDish` / `applyFollowUpOption`). Answering a follow-up keeps `item.gramsRange`, so the kcal range moves but its width does not narrow. The Done-when item "answering it narrows the range" is not met. Owner: api-builder. Fix: on an answer, recompute `gramsRange` from the chosen variant's typical grams (for example ±10%) instead of keeping the old range.
+1. **`app/search/page.tsx:14`, `:130`, `:150`**: `SOURCE_LABEL.hpb = "HPB"`. Every local dish shows an "HPB" tag, and the "Source:" link is labelled HPB while pointing at the FWD or HealthXchange page. All 38 dishes are `verified: false`. Owner: **frontend-builder** (owns `app/search/**`). Fix: reuse the `ItemCard.tsx` `sourceLabel` logic, which shows `dish.source.name` when `verified` is false.
+2. **`app/page.tsx:83`**: loading copy "Matching HPB data…" implies HPB matching. Owner: **frontend-builder**. Fix: "Matching local dish data…".
+3. **`app/label/page.tsx:63`** (with `:76`): in grams mode the field is pre-filled with `Math.round(serving grams)`. A printed serving of 33.5 g becomes "34", so tapping "Use grams" without editing logs about 1.5% more than the printed value. Servings mode is exact. Owner: **frontend-builder**. Fix: keep the unrounded grams, or skip rescaling while the typed value equals the printed grams.
+4. **`app/api/label/route.ts:13`**: `req.json()` buffers the whole body before the 4 MB check (`lib/label.ts:32`), with no `Content-Length` guard. Owner: **api-builder**. Fix: reject when the `content-length` header exceeds about 5 MB, before parsing.
+5. **`lib/storage.ts:197`**: `window.localStorage.getItem` is called directly, not through `read()`. If storage is blocked, `getSavedMeals` throws and `logItems` throws with it. Owner: **frontend-builder** (owns `lib/storage.ts`). Fix: wrap it in try/catch, or use `read()`.
+6. **`lib/storage.ts:137`**: stale comment about `components/ExerciseStore.ts`, which no longer exists. Owner: **frontend-builder**. Fix: delete the comment.
+7. **`components/ExerciseCard.tsx:42`**: accepts 0.4 kcal (`k > 0`), which `Math.round` (line 46) stores as 0. Owner: **frontend-builder #2** (owns `components/Exercise*`). Fix: require `Math.round(k) >= 1`.
 
-## Warnings
-- `lib/analyse.ts:14` and `:51`: when the model gives no grams and no database match, the item is set to 200 g and presented at normal confidence (`:63-66`). That is an invented weight. Owner: api-builder. Fix: use `[0,0]` and cap confidence at 0.3, as for the kcal fallback.
-- `lib/analyse.ts:42`: when `fallback_kcal_per_100g` is missing, kcal is forced to 150 even if the model gave macros, so kcal may not equal 4P + 4C + 9F. Owner: api-builder. Fix: derive kcal from the macros when they are present.
-- `lib/combine.ts:37-41`: items that appear only in a non-reference run are dropped. This is intended, and the new test documents it. Mismatched counts are handled.
-- `lib/analyse.ts:76-78` plus `:11`: the vision budget is 8.5 s, and USDA can add up to 1.5 s, so the worst case is about 10 s with no headroom for the "within 10 s" item. Owner: api-builder. Fix: lower `VISION_BUDGET_MS` to about 7.5 s.
-- `lib/storage.ts:57`: `normaliseEntries` only checks that `item.nutrition` exists, not that `kcal` is a number, so a malformed legacy entry can give NaN. Minor. Owner: frontend-builder.
-- `lib/nutrition.ts:38-59` (`withGrams`): grams 0, `per_100g` null and NaN are handled (`:39`, `:44`). No bug found.
-- `components/ItemCard.tsx:9-17` and `components/ResultsCard.tsx:51, 82`: at most one follow-up per meal is enforced. No bug found.
-- `lib/storage.ts:33-51` (`normaliseItem`): legacy entries get defaults. No bug found.
-- `app/scan/page.tsx`: the Phase 5 SSR slot issue appears fixed (`defaultSlot()` is now set in an effect at `:87`). Not fully re-audited.
+Reviewed with no bug found: `lib/storage.ts` seeding and legacy-key migration (l.155–193), `logItems` (l.241), `clearAll` (l.113, removes all six keys), `components/RecentStrip.tsx`, `app/label/page.tsx` servings scaling (0.5–3×), `app/api/label/route.ts` missing key (500 `missing_api_key`, mapped in `components/LabelApi.ts` and `app/label/page.tsx`).
 
-## "Done when" (Phase 8)
-- ✅ Photo returns grams, method, kcal range and source per item. Changing grams recomputes instantly (Manager E2E, `withGrams` tests).
-- ❌ "Answering it narrows the range": the range moves but does not narrow (Failure 2). The single-question rule and the 15% threshold are ✅.
-- ⚠️ 3 runs median within 10 s, with one failure tolerated. Median and failed-run tests ✅, real call 7.07 s ✅, but the worst case is about 10 s (Warning).
-- ✅ Portion learning after 2+ edits, with undo (new tests in `tests/phase8.qa.test.ts`, Manager E2E 450 g → undo 330 g).
-- ✅ `npm run eval` writes the results file (verified with `EVAL_OUT`). `/uncovered` shows the table (Manager E2E). Metrics pending weighed meals.
-- ❌ All §6 checks green: blocked by the failures above.
+## Unit-test gaps
+- Already covered: kJ→kcal (`tests/label.test.ts:5`), label nulls (`:10`, `:41`), search ranking local above USDA (`tests/search.test.ts:14`), legacy profile normalisation (`tests/phase9.step1.test.ts:15`), add-back on/off and grams vs split (`:22`, `:26`), micronutrient scaling (`:54`).
+- Added in `tests/phase9.qa.test.ts`: `rebalance` always totals 100 with every macro ≥5% (exhaustive sweep), and direct `dayTargets` tests (add-back on and off, negative exercise, grams mode with exercise).
 
-## CLAUDE.md §6 checklist
-- ✅ build, lint, tsc, test all pass
-- ⚠️ Fresh browser onboarding → target on Today: not re-run here (needs a browser)
-- ✅ Chicken rice photo → ≥1 item, `source` "hpb", 5.17 s (the dish data is unverified, see Failure 1)
-- ⚠️ Portion slider and swap dropdown update instantly: grams slider ✅ (Manager E2E); swap not browser-tested here (`swapDish` unit-tested)
-- ⚠️ Add to today → ring and bars update, survives reload: not re-run here
-- ✅ "1 plate char kway teow and kopi" → 2 items, 7.07 s
-- ⚠️ Non-food → "No food spotted" (API returns `items: []` ✅; UI copy at `components/ErrorNotice.tsx:8`, not browser-tested)
-- ✅ Missing API key → clear error and log (`app/api/analyse/route.ts:48-50`, verified in the Phase 5 run, not re-run)
-- ⚠️ Barcode valid EAN ✅ (200). Unknown code shows "not found" and manual entry: not browser-tested
-- ✅ 375 px, no horizontal scroll, ≥44 px tap targets (Manager E2E)
-- ✅ No key in client bundles (pattern grep)
-- ✅ Disclaimer in `app/layout.tsx:38` (`<Footer />`) on every page; `LICENSE` is MIT; README has setup steps (`README.md:35-59`)
+## Phase 9 "Done when"
+- ⚠️ Label photo returns printed values: mock path ✅ (Manager E2E, 96 kcal exact, `source: "label"`). Real photo not run.
+- ✅ "laksa" shows HPB first; 300 g logs 327 kcal with sodium (Manager E2E). Tag issue above applies to the source label.
+- ✅ Logged meal in "Log again", one tap re-logs, favourites persist after reload (Manager E2E).
+- ✅ Gram-based macros change the Today bars (Manager E2E: 180 g protein / 60 g fat).
+- ✅ +300 kcal exercise raises the target by 300 with add-back on (Manager E2E 2,056 → 2,356; unit test).
+- ⚠️ Add to Home Screen shows name and icon: manifest and apple-touch-icon return 200 and the link is in the HTML (Manager). Needs a phone.
+- ✅ Sodium only for sourced dishes (33 of 38 in data; `NutritionRow` renders only when present).
+- ⚠️ All earlier acceptance checks: gates pass, but the live-model checks below were not run.
 
-## Files changed by QA
-- `tests/phase8.qa.test.ts` (new, 8 tests)
-- `docs/qa-report.md` (this file)
-- Outputs in `/tmp`: `ml-eval-check.json`, `ml-*.log`. The dev server was stopped.
+## CLAUDE.md section 6 checklist
+- ✅ build, lint, typecheck, test all pass.
+- ✅ Fresh onboarding → target on Today (Manager E2E: 2,056 shown).
+- ⚠️ Chicken rice photo → HPB match in under 8 s: needs a live model. Not run (no model calls).
+- ⚠️ Portion slider and swap dropdown update instantly: not re-run here.
+- ⚠️ Add to today → ring and bars update and survive reload: ring not re-checked here. Saved-meal persistence was verified by the Manager.
+- ⚠️ "1 plate char kway teow and kopi" returns 2 items: needs a live model.
+- ⚠️ Non-food photo shows a friendly message: needs a live model. The copy exists (`components/ErrorNotice.tsx:8`).
+- ✅ Missing API key → clear UI message and server log (label route verified statically; `/api/analyse` not re-checked).
+- ⚠️ Barcode lookup and "not found" path: needs network and camera. Not run.
+- ✅ 375 px, no horizontal scroll, tap targets ≥44 px on `/`, `/search`, `/label`, `/settings` (Manager E2E).
+- ✅ No API key in client bundles (`.next/static` grep, `NEXT_PUBLIC_` only for the mock flag).
+- ✅ Disclaimer on every page (`components/Footer.tsx`, used in `app/layout.tsx:44`); `LICENSE` is MIT; README has setup steps.
+- ⚠️ Not run here: dev-server curl of `POST /api/analyse` (human's dev server on :3000 left alone, per instructions).
