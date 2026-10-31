@@ -2,7 +2,7 @@
 // N parallel vision runs -> median combine -> lookup (hawker.json -> USDA -> model fallback) -> code maths -> follow-up.
 import { modelOutputSchema, type ModelItem } from "./schemas";
 import { analyseWithVision, currentProvider, MissingApiKeyError, ProviderError } from "./vision";
-import { buildFollowUp, followUpSpread, getDishes, itemFromPer100g, matchModelItem } from "./matcher";
+import { attachFollowUp, buildFollowUp, followUpSpread, getDishes, itemFromPer100g, matchModelItem } from "./matcher";
 import { combineRuns, itemGrams, type CombinedItem } from "./combine";
 import { lookupUsda } from "./usda";
 import type { AnalyseResponse, AnalysedItem, FollowUp, Nutrition } from "./types";
@@ -95,7 +95,7 @@ export async function analyseMeal(args: { image?: string; text?: string }): Prom
     if (followUp && (!best || spread > best.spread)) best = { idx, followUp, spread };
   });
   const pick = best as { idx: number; followUp: FollowUp } | null;
-  if (pick) items[pick.idx] = { ...items[pick.idx], followUp: pick.followUp };
+  if (pick) items[pick.idx] = attachFollowUp(items[pick.idx], pick.followUp);
 
   return { items, provider, ms: Date.now() - started };
 }

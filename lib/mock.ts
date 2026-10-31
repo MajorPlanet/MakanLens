@@ -1,7 +1,7 @@
 // Mock AnalyseResponse for UI work (NEXT_PUBLIC_USE_MOCK=1).
 // Items are built through itemFromDish + withGrams, so kcal and ranges come from the real maths, not hard-coded numbers.
 import type { AnalysedItem, AnalyseResponse, FollowUp } from "./types";
-import { getDish, itemFromDish } from "./matcher";
+import { attachFollowUp, getDish, itemFromDish } from "./matcher";
 import { dishTypicalGrams, withGrams } from "./nutrition";
 
 function build(dishId: string, grams: number, spread: number, extra: Partial<AnalysedItem>): AnalysedItem | null {
@@ -31,13 +31,13 @@ const chickenFollowUp: FollowUp = {
   ],
 };
 
-const chickenRice = build("chicken-rice-steamed", 330, 0.2, {
-  followUp: chickenFollowUp,
+const chickenBase = build("chicken-rice-steamed", 330, 0.2, {
   referenceObject: "card",
   runs: 3,
   confidence: 0.88,
   label: "Hainanese chicken rice",
 });
+const chickenRice = chickenBase ? attachFollowUp(chickenBase, chickenFollowUp) : null;
 
 export const mockAnalyseResponse: AnalyseResponse = {
   provider: "mock",

@@ -262,6 +262,20 @@ export function applyFollowUpOption(item: AnalysedItem, option: FollowUp["option
   return rest;
 }
 
+/**
+ * Attach a follow-up and widen kcalRange to cover every possible answer, so the pending range is honest
+ * and answering (applyFollowUpOption → the chosen option's own range) visibly narrows it.
+ */
+export function attachFollowUp(item: AnalysedItem, followUp: FollowUp): AnalysedItem {
+  let [lo, hi] = item.kcalRange;
+  for (const o of followUp.options) {
+    const r = applyFollowUpOption(item, o).kcalRange;
+    lo = Math.min(lo, r[0]);
+    hi = Math.max(hi, r[1]);
+  }
+  return { ...item, followUp, kcalRange: [lo, hi] };
+}
+
 /** Relative kcal spread above which a question is worth asking. */
 export const FOLLOWUP_MIN_SPREAD = 0.15;
 
