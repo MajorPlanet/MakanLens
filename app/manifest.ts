@@ -2,10 +2,14 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
+    id: "/",
     name: "MakanLens",
     short_name: "MakanLens",
     description: "Snap a hawker meal and get calories and macros from published Singapore nutrition data. Free and open source.",
     start_url: "/",
+    scope: "/",
+    orientation: "portrait",
+    categories: ["health", "food", "lifestyle"],
     display: "standalone",
     background_color: "#ffffff",
     theme_color: "#f97316",

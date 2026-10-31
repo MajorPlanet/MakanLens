@@ -1,10 +1,12 @@
 import Link from "next/link";
+import InstallButton from "./InstallButton";
 
 const LINK = "flex min-h-11 items-center px-3 underline-offset-2 hover:underline";
 
 export default function Footer() {
   return (
     <footer className="px-4 pb-44 pt-6 text-center text-xs text-neutral-500 dark:text-neutral-400">
+      <InstallButton />
       <nav aria-label="Footer" className="mb-1 flex flex-wrap justify-center">
         <Link href="/search" className={LINK}>Search</Link>
         <Link href="/label" className={LINK}>Scan label</Link>
