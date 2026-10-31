@@ -12,6 +12,7 @@ import MacroCards from "@/components/dashboard/MacroCards";
 import WeekStack, { type DayMacros } from "@/components/dashboard/WeekStack";
 import BalanceDonut from "@/components/dashboard/BalanceDonut";
 import InsightCard, { weekInsight } from "@/components/dashboard/InsightCard";
+import OndehCard from "@/components/dashboard/OndehCard";
 import MealList from "@/components/MealList";
 import RecentStrip from "@/components/RecentStrip";
 import ExerciseCard from "@/components/ExerciseCard";
@@ -182,6 +183,7 @@ export default function Home() {
       )}
 
       <SummaryHeader eaten={totals.kcal} exercise={targets.exercise} goal={targets.kcal} />
+      <OndehCard entries={entries} target={targets.kcal} />
       <MacroCards totals={totals} targets={targets.macros} />
       <WeekStack days={week} goal={profile.targetKcal} />
       <BalanceDonut totals={totals} />
