@@ -23,14 +23,15 @@ function userMessage(c: NudgeContext): string {
   ].join("\n");
 }
 
-interface AnthropicResponse { content?: { type: string; text?: string }[] }
+interface AnthropicResponse { content?: { type: string; text?: string }[]; stop_reason?: string; usage?: { output_tokens?: number } }
 
 async function callClaude(key: string, model: string, system: string, user: string, signal: AbortSignal, withTemperature: boolean): Promise<Response> {
   return fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: { "content-type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01" },
     body: JSON.stringify({
-      model, max_tokens: 150, system, messages: [{ role: "user", content: user }],
+      // Thinking off: it is on by default for this model and would use the whole 150-token budget before any text.
+      model, max_tokens: 150, system, messages: [{ role: "user", content: user }], thinking: { type: "disabled" },
       ...(withTemperature ? { temperature: 0.9 } : {}),
     }),
     signal,
@@ -57,10 +58,15 @@ export async function POST(req: Request) {
     if (!res.ok) { console.error("[nudge] Claude HTTP", res.status); return none(); }
     const json = (await res.json()) as AnthropicResponse;
     const text = (json.content ?? []).filter((c) => c.type === "text").map((c) => c.text ?? "").join("").trim();
-    const raw = text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
+    // Strip ```json … ``` code fences if the model added them (anywhere in the reply), then take the JSON object.
+    const fenced = /```(?:json)?\s*([\s\S]*?)```/i.exec(text);
+    const raw = (fenced ? fenced[1] : text).replace(/```(?:json)?/gi, "").trim();
     const start = raw.indexOf("{"), end = raw.lastIndexOf("}");
-    if (start < 0 || end <= start) return none();
-    const nudge = nudgeSchema.safeParse(JSON.parse(raw.slice(start, end + 1)));
+    if (start < 0 || end <= start) { console.error("[nudge] no JSON object in reply; stop_reason:", json.stop_reason, "blocks:", (json.content ?? []).map((c) => `${c.type}(${(c.text ?? "").length})`).join(","), "out_tokens:", json.usage?.output_tokens); return none(); }
+    let parsedJson: unknown;
+    try { parsedJson = JSON.parse(raw.slice(start, end + 1)); } catch { console.error("[nudge] unparseable JSON; stop_reason:", json.stop_reason); return none(); }
+    const nudge = nudgeSchema.safeParse(parsedJson);
+    if (!nudge.success) console.error("[nudge] reply failed validation:", nudge.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; "));
     return nudge.success ? Response.json(nudge.data) : none();
   } catch {
     return none(); // timeout, network or bad JSON
