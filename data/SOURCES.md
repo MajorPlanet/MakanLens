@@ -31,3 +31,13 @@ chicken-rice-steamed is included. Dropped: roti-prata-egg, thosai, carrot-cake-b
 ## Other
 - Plain-text kcal-only sources seen but not used: NutriKaki (nutrikaki.com), Couz-Nutri (couz-nutri.com).
 - The SG FoodID back-end API was not queried.
+
+## Second pass additions (2026-10-31)
+Values in hawker.json are now rounded: kcal to whole numbers, macros to 1 dp (chicken-rice-steamed is 558 kcal).
+- char-kway-teow: source name now reads "HealthHub (HPB) kcal/fat; HealthXchange protein/carbs". Still `verified: false` because protein and carbs are not from HPB.
+- half-boiled-eggs-2: USDA FoodData Central, SR Legacy fdcId 173424 "Egg, whole, cooked, hard-boiled" (via https://api.nal.usda.gov/fdc/v1/foods/search): per 100 g 155 kcal, P 12.6, C 1.12, F 10.6. Scaled to 100 g for 2 large eggs (about 50 g each); no scaling beyond that. USDA has no soft-boiled entry, so this is the closest cooked-whole-egg match. Real soft-boiled eggs differ slightly. `verified: false`.
+- kopi-o-kosong: USDA FoodData Central, SR Legacy fdcId 171890 "Beverages, coffee, brewed, prepared with tap water": per 100 g 1 kcal, P 0.12, C 0, F 0.02. Scaled to 237 g (1 US cup): 2 kcal, P 0.3, C 0, F 0. Local kopi is robusta and cup sizes vary; the value is near zero either way. `verified: false`.
+- Not added (no values published for the item itself): kopi, teh-tarik, kopi-o, teh-peng, milo-dinosaur, bandung, sugarcane-juice, kaya-toast-set, cai-fan-2veg-1meat, thosai.
+- popiah and yong-tau-foo-soup: a SAFRA NSman page (nsman.safra.sg/?p=13904) was quoted in search results with popiah (2 rolls) 568 kcal and YTF (1 bowl) 265.7 kcal, but I could not open the page (redirects away), its data source is not named, and the YTF carbs (3.7 g) look implausible. Left out.
+- Sugar only, no macros: NUH nuhsplus.edu.sg "What's in your dabao" gives sugar in teaspoons (kopi 4, kopi siew dai 3.5, kopi C kosong 0.5, sugarcane juice 5.5). Not used.
+- HealthXchange dim sum page (https://www.healthxchange.sg/food-nutrition/food-tips/local-breakfast-choices-is-dim-sum-healthy, HPB figures) gives kcal and fat only; no dish added.

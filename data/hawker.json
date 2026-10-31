@@ -25,10 +25,10 @@
    "grams": null
   },
   "per_serving": {
-   "kcal": 557.7,
-   "protein_g": 28.05,
-   "carbs_g": 80.19,
-   "fat_g": 13.86
+   "kcal": 558,
+   "protein_g": 28.1,
+   "carbs_g": 80.2,
+   "fat_g": 13.9
   },
   "source": {
    "name": "FWD Singapore blog, figures attributed to Health Promotion Board (secondary)",
@@ -70,7 +70,7 @@
    "fat_g": 38
   },
   "source": {
-   "name": "HealthXchange (SingHealth) with KK Women's and Children's Hospital Dept of Nutrition and Dietetics",
+   "name": "HealthHub (HPB) kcal/fat; HealthXchange (SingHealth/KKH) protein/carbs",
    "url": "https://www.healthxchange.sg/food-nutrition/food-tips/best-worst-singapore-hawker-chinese-food-dim-sum-char-kway-teow",
    "verified": false
   },
@@ -552,10 +552,10 @@
    "grams": null
   },
   "per_serving": {
-   "kcal": 402.5,
-   "protein_g": 12.25,
+   "kcal": 402,
+   "protein_g": 12.2,
    "carbs_g": 15.4,
-   "fat_g": 32.55
+   "fat_g": 32.5
   },
   "source": {
    "name": "FWD Singapore blog, figures attributed to Health Promotion Board (secondary)",
@@ -1164,7 +1164,7 @@
    "grams": null
   },
   "per_serving": {
-   "kcal": 213.6,
+   "kcal": 214,
    "protein_g": 24.6,
    "carbs_g": 18,
    "fat_g": 4.9
@@ -1175,5 +1175,80 @@
    "verified": false
   },
   "tip": "Go easy on the peanut sauce and ketupat, which are not included in these figures."
+ },
+ {
+  "id": "half-boiled-eggs-2",
+  "name": "Half-boiled eggs (2)",
+  "aliases": {
+   "en": [
+    "soft-boiled eggs",
+    "soft boiled eggs",
+    "half boiled eggs",
+    "2 eggs"
+   ],
+   "zh": [
+    "半熟蛋",
+    "半生熟蛋"
+   ],
+   "ms": [
+    "telur separuh masak",
+    "telur setengah masak"
+   ],
+   "ta": []
+  },
+  "serving": {
+   "label": "2 eggs",
+   "grams": 100
+  },
+  "per_serving": {
+   "kcal": 155,
+   "protein_g": 12.6,
+   "carbs_g": 1.1,
+   "fat_g": 10.6
+  },
+  "source": {
+   "name": "USDA FoodData Central",
+   "url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/173424/nutrients",
+   "verified": false
+  },
+  "tip": "Eggs are a lean protein choice; go easy on the dark soy sauce, which adds sodium."
+ },
+ {
+  "id": "kopi-o-kosong",
+  "name": "Kopi O kosong",
+  "aliases": {
+   "en": [
+    "black coffee no sugar",
+    "kopi o kosong",
+    "kopi-o kosong",
+    "kopi o",
+    "black kopi"
+   ],
+   "zh": [
+    "咖啡乌",
+    "咖啡乌无糖"
+   ],
+   "ms": [
+    "kopi o kosong",
+    "kopi hitam tanpa gula"
+   ],
+   "ta": []
+  },
+  "serving": {
+   "label": "1 cup",
+   "grams": 237
+  },
+  "per_serving": {
+   "kcal": 2,
+   "protein_g": 0.3,
+   "carbs_g": 0.0,
+   "fat_g": 0.0
+  },
+  "source": {
+   "name": "USDA FoodData Central",
+   "url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/171890/nutrients",
+   "verified": false
+  },
+  "tip": "Already the lowest-calorie way to order kopi. Adding sugar or condensed milk is what adds calories."
  }
 ]
