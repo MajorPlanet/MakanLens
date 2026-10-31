@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { AnalysedItem, LogEntry, MealSlot, Profile } from "@/lib/types";
 import { addEntry, deleteEntry, getEntries, getProfile, localDateString, updateEntry } from "@/lib/storage";
-import { analyse, ApiClientError } from "@/lib/client";
+import { analyse, ApiClientError, getHealth } from "@/lib/client";
 import { resizeImage } from "@/lib/image";
 import CalorieRing from "@/components/CalorieRing";
 import MacroBars from "@/components/MacroBars";
@@ -12,6 +12,7 @@ import MealList from "@/components/MealList";
 import ResultsCard from "@/components/ResultsCard";
 import SnapBar from "@/components/SnapBar";
 import ErrorNotice, { type NoticeKind } from "@/components/ErrorNotice";
+import { getDish } from "@/lib/matcher";
 import { sumNutrition } from "@/components/format";
 
 type Input = { file: File } | { text: string };
@@ -25,6 +26,8 @@ export default function Home() {
   const [found, setFound] = useState<AnalysedItem[] | null>(null);
   const [editing, setEditing] = useState<LogEntry | null>(null);
   const [notice, setNotice] = useState<{ kind: NoticeKind; detail?: string } | null>(null);
+  const [unconfigured, setUnconfigured] = useState(false);
+  const [tip, setTip] = useState<string | null>(null);
   const last = useRef<Input | null>(null);
   const runId = useRef(0);
 
@@ -41,6 +44,14 @@ export default function Home() {
       setReady(true);
     });
   }, [router]);
+
+  useEffect(() => {
+    let live = true;
+    void getHealth().then((h) => {
+      if (live && h && !h.configured) setUnconfigured(true);
+    });
+    return () => { live = false; };
+  }, []);
 
   const run = useCallback(async (input: Input) => {
     last.current = input;
@@ -88,6 +99,11 @@ export default function Home() {
     );
     setEntries(getEntries());
     setFound(null);
+    const tips = items.flatMap((i) => {
+      const t = i.dishId ? getDish(i.dishId)?.tip : undefined;
+      return t ? [t] : [];
+    });
+    setTip(tips[0] ?? null);
   }
 
   function confirmEdit(items: AnalysedItem[], slot: MealSlot) {
@@ -117,6 +133,19 @@ export default function Home() {
           <Link href="/settings" className="flex h-11 items-center px-3">Settings</Link>
         </nav>
       </header>
+
+      {unconfigured && (
+        <p role="status" className="mb-4 rounded-2xl border border-neutral-200 bg-neutral-100 p-4 text-sm dark:border-neutral-800 dark:bg-neutral-900">
+          Photo analysis isn&apos;t set up on this server yet (no API key). Barcode scanning still works.
+        </p>
+      )}
+
+      {tip && (
+        <div className="mb-4 flex items-start gap-2 rounded-2xl border border-green-200 bg-green-50 p-4 text-sm dark:border-green-900 dark:bg-green-950/40">
+          <p className="flex-1"><span className="font-semibold">Lighter next time:</span> {tip}</p>
+          <button type="button" onClick={() => setTip(null)} aria-label="Dismiss tip" className="-m-2 flex h-11 w-11 shrink-0 items-center justify-center text-xl">×</button>
+        </div>
+      )}
 
       {notice && (
         <div className="mb-4">

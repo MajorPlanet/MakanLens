@@ -32,17 +32,46 @@ export function scaleNutrition(n: Nutrition, portion: number): Nutrition {
   return { kcal: Math.round(n.kcal * portion), protein_g: r1(n.protein_g * portion), carbs_g: r1(n.carbs_g * portion), fat_g: r1(n.fat_g * portion) };
 }
 
-/** Best fuse score per dish, as raw (0 best) values, sorted ascending. */
-function rank(query: string): { dish: Dish; fuseScore: number }[] {
+const MODIFIERS = new Set(["o", "c", "kosong", "peng", "siewdai", "gao", "po", "halia", "tarik"]);
+const norm = (x: string) => x.toLowerCase().replace(/[\s\-_'.,]+/g, "");
+function modifiers(x: string): string {
+  const toks = x.toLowerCase().replace(/siew\s*dai/g, "siewdai").split(/[^\p{L}\p{N}]+/u).filter((t) => MODIFIERS.has(t));
+  return [...new Set(toks)].sort().join(",");
+}
+/** Auto-match guard: exact (ignoring case/space) always ok; otherwise same kopitiam modifiers and term not much longer than query. */
+function acceptable(query: string, term: string): boolean {
+  if (norm(query) === norm(term)) return true;
+  if (modifiers(query) !== modifiers(term)) return false;
+  return norm(query).length / norm(term).length >= 0.6;
+}
+
+/** A term carrying only some of the dish name's modifiers (e.g. alias "kopi o" for "Kopi O kosong") is ambiguous, so never trusted. */
+function partialModifiers(term: string, dish: Dish): boolean {
+  const t = modifiers(term), n = modifiers(dish.name);
+  return t !== "" && t !== n && t.split(",").every((x) => n.split(",").includes(x));
+}
+
+/** Best fuse score per dish, as raw (0 best) values, sorted ascending. `guard` restricts to terms that are safe to auto-match. */
+function rank(query: string, guard = false): { dish: Dish; fuseScore: number }[] {
   const q = query.trim();
   if (!q || dishes.length === 0) return [];
   const best = new Map<string, { dish: Dish; fuseScore: number }>();
   for (const r of getFuse().search(q)) {
+    if (guard && (!acceptable(q, r.item.term) || partialModifiers(r.item.term, r.item.dish))) continue;
     const s = r.score ?? 1;
     const cur = best.get(r.item.dish.id);
     if (!cur || s < cur.fuseScore) best.set(r.item.dish.id, { dish: r.item.dish, fuseScore: s });
   }
   return [...best.values()].sort((a, b) => a.fuseScore - b.fuseScore);
+}
+
+/** False if the label's modifiers (o, c, kosong, peng, ...) contradict every similar term of the dish. */
+function modifiersConsistent(label: string, dish: Dish): boolean {
+  const m = modifiers(label);
+  const hits = getFuse().search(label.trim()).filter((r) => r.item.dish.id === dish.id);
+  if (hits.length === 0) return true; // nothing comparable; trust the model
+  if (!m && !modifiers(dish.name)) return true; // modifiers only matter for modifier-bearing dishes
+  return hits.some((r) => acceptable(label.trim(), r.item.term) && !partialModifiers(r.item.term, dish));
 }
 
 export function searchDishes(query: string, limit = 5): Candidate[] {
@@ -77,8 +106,9 @@ export function matchItem(raw: {
   const confidence = clamp(raw.confidence, 0, 1);
 
   let dish = raw.known_dish_id ? getDish(raw.known_dish_id) : undefined;
+  if (dish && !modifiersConsistent(raw.label, dish)) dish = undefined;
   if (!dish) {
-    const top = rank(raw.label)[0];
+    const top = rank(raw.label, true)[0];
     if (top && top.fuseScore <= MATCH_FUSE_MAX) dish = top.dish;
   }
   if (dish) {

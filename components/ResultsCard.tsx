@@ -23,7 +23,7 @@ export default function ResultsCard({
 
   return (
     <div className="fixed inset-0 z-40 overflow-y-auto bg-neutral-50 dark:bg-neutral-950">
-      <div className="mx-auto max-w-md px-4 pb-32 pt-4">
+      <div className="mx-auto max-w-md px-4 pb-48 pt-4">
         <h2 className="mb-3 text-xl font-bold">{mode === "add" ? "Here's what we found" : "Edit entry"}</h2>
 
         {items.length === 0 ? (
@@ -45,7 +45,7 @@ export default function ResultsCard({
 
         <fieldset className="mt-5">
           <legend className="mb-2 text-sm font-medium">Meal</legend>
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 gap-2 min-[420px]:grid-cols-4">
             {SLOTS.map((s) => (
               <button
                 key={s.id}
@@ -64,17 +64,17 @@ export default function ResultsCard({
       </div>
 
       <div className="fixed inset-x-0 bottom-0 border-t border-neutral-200 bg-white/95 p-3 backdrop-blur dark:border-neutral-800 dark:bg-neutral-900/95">
-        <div className="mx-auto flex max-w-md gap-2">
-          <button type="button" onClick={onCancel} className="h-14 rounded-2xl border border-neutral-300 px-5 font-medium dark:border-neutral-700">
-            Cancel
-          </button>
+        <div className="mx-auto flex max-w-md flex-col gap-1">
           <button
             type="button"
             disabled={items.length === 0}
             onClick={() => onConfirm(items, slot)}
-            className={`h-14 flex-1 rounded-2xl text-lg font-semibold ${ACCENT_BTN}`}
+            className={`h-14 w-full rounded-2xl px-3 text-lg font-semibold ${ACCENT_BTN}`}
           >
             {mode === "add" ? "Add to today" : "Save"} · {fmtKcal(total)} kcal
+          </button>
+          <button type="button" onClick={onCancel} className="h-11 w-full rounded-xl text-sm font-medium text-neutral-600 dark:text-neutral-300">
+            Cancel
           </button>
         </div>
       </div>

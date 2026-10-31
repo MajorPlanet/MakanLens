@@ -61,3 +61,17 @@ export async function lookupBarcode(code: string): Promise<BarcodeResponse> {
     throw new ApiClientError("provider_error");
   }
 }
+
+export interface Health { provider: string; model: string; configured: boolean; dishes: number; }
+
+/** Returns null when health is unknown (any failure). */
+export async function getHealth(): Promise<Health | null> {
+  try {
+    const res = await fetch("/api/health");
+    if (!res.ok) return null;
+    const b = (await res.json()) as Partial<Health>;
+    return typeof b.configured === "boolean" ? (b as Health) : null;
+  } catch {
+    return null;
+  }
+}

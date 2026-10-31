@@ -94,7 +94,7 @@ export default function ItemCard({
         P {fmtMacro(item.nutrition.protein_g)} g · C {fmtMacro(item.nutrition.carbs_g)} g · F {fmtMacro(item.nutrition.fat_g)} g
       </p>
 
-      <div className="mt-3 flex flex-wrap gap-2 text-xs">
+      <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
         <span className={`rounded-full px-2.5 py-1 font-medium ${badge.cls}`}>{badge.text}</span>
         {item.sourceUrl ? (
           <a
@@ -102,12 +102,12 @@ export default function ItemCard({
             target="_blank"
             rel="noopener noreferrer"
             title={src.title}
-            className="rounded-full bg-neutral-100 px-2.5 py-1 font-medium underline dark:bg-neutral-800"
+            className="inline-flex min-h-11 items-center rounded-full bg-neutral-100 px-3 font-medium underline dark:bg-neutral-800"
           >
             {src.text}
           </a>
         ) : (
-          <span title={src.title} className="rounded-full bg-neutral-100 px-2.5 py-1 font-medium dark:bg-neutral-800">{src.text}</span>
+          <span title={src.title} className="inline-flex min-h-11 items-center rounded-full bg-neutral-100 px-3 font-medium dark:bg-neutral-800">{src.text}</span>
         )}
       </div>
 
