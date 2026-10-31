@@ -4,11 +4,44 @@ Snap or describe a Singapore hawker meal and get calories and macros in seconds.
 
 ![MakanLens screenshot](docs/screenshot.png)
 
-*Screenshot placeholder: add `docs/screenshot.png` before submission.*
-
 ## Why
 
 Cal AI and MyFitnessPal charge for photo logging. Hawker food is hard for generic trackers: a plate of char kway teow or nasi lemak has no single "correct" entry. MakanLens is free and open, does not require an account, and uses published Singapore nutrition figures for local dishes wherever it can. Every number shows where it came from.
+
+## Target: Cal AI
+
+**What it is.** Cal AI is a photo calorie-tracking app: snap a meal, get calories and macros. It is free to download, but photo logging needs a paid "Unlimited" subscription.
+
+**How many people use it.**
+- Over 5 million downloads in its first eight months, and over US$2 million revenue in one month (founder's figures; TechCrunch notes it could not verify them). Source: [TechCrunch, 16 Mar 2025](https://techcrunch.com/2025/03/16/photo-calorie-app-cal-ai-downloaded-over-a-million-times-was-built-by-two-teenagers/).
+- 373K ratings (4.8 average) on the US App Store. Source: [App Store listing](https://apps.apple.com/us/app/cal-ai-calorie-tracker/id6480417616), checked 31 Oct 2026.
+
+**What it costs today.** The App Store listing shows 10 in-app purchases, with the same "Unlimited" product listed at US$2.99, $5.99, $9.99, $19.99 and $29.99 ([App Store listing](https://apps.apple.com/us/app/cal-ai-calorie-tracker/id6480417616), checked 31 Oct 2026). The commonly reported annual plan is **US$29.99/year ≈ US$2.50 per user per month** ([eesel.ai pricing summary](https://www.eesel.ai/blog/cal-ai-pricing)); weekly plans reported at US$3.99/week come to about US$207/year ([Nutrola](https://nutrola.app/en/blog/why-is-cal-ai-so-expensive)). We use the cheapest figure, US$2.50/month, so the comparison below does not overstate the saving.
+
+## What we uncovered
+
+- **Prices are not fixed.** The public listing shows one product ("Unlimited") at five different prices, which matches reports that the paywall price is tested per user. You cannot know in advance what you will be charged.
+- **The expensive part is cheap.** A photo estimate is one vision-model call. With the setup below, one photo costs about one US cent in API tokens at paid rates, and nothing on Gemini's free tier. The subscription price is not driven by running costs.
+- **Generic models guess local food.** A vision model alone invents a calorie figure. MakanLens has the model identify the dish, grams and cooking method only, then takes calories from published Singapore nutrition data (38 hawker dishes, sources in [`data/SOURCES.md`](data/SOURCES.md)), and shows the source on every number.
+- **Still to measure:** `/uncovered` compares MakanLens and Cal AI against weighed meals. The weighed test set is not complete yet, so we make no accuracy claim.
+
+## Before and after: cost per user per month
+
+| | Cal AI | MakanLens |
+|---|---|---|
+| Price to the user | US$2.50 (annual plan) to ~US$17 (weekly plan) | **US$0** (MIT, no account, no subscription) |
+| Running cost, Gemini free tier | n/a | **US$0** |
+| Running cost, Gemini paid tier, `VISION_RUNS=3` | n/a | ~US$0.97 |
+| Running cost, Gemini paid tier, `VISION_RUNS=1` | n/a | ~US$0.32 |
+| Hosting | n/a | US$0 (static + serverless on Vercel Hobby; no database) |
+
+How the running cost is worked out (estimate, stated assumptions):
+- Model `gemini-3.8-flash`, Standard paid tier: US$0.75 per 1M input tokens, US$3.75 per 1M output tokens (through 31 Dec 2026). Source: [Gemini API pricing](https://ai.google.dev/gemini-api/docs/pricing), checked 31 Oct 2026. The same page lists a free tier for this model.
+- Per call: about 2,300 input tokens (a photo resized to 1024 px, about 1,300 tokens assumed, plus the prompt) and about 500 output tokens (JSON). That is about US$0.0036 per call.
+- 3 photos a day × 30 days = 90 photos a month. With 3 runs per photo: 90 × 3 × 0.0036 ≈ US$0.97.
+- Prices on that page double from 1 Jan 2027 (about US$1.94 a month at 3 runs). Even then it stays below Cal AI's cheapest plan, and on the free tier it is US$0.
+
+**Saving:** US$2.50 to US$0 per user per month for anyone running MakanLens on the free tier (100%), and at least 61% when paying for API calls.
 
 ## Features
 
@@ -46,7 +79,7 @@ Not built yet: weight logging and an adaptive calorie target (see Roadmap).
 You need Node.js 20 or later.
 
 ```bash
-git clone <this-repo-url> makanlens
+git clone https://github.com/MajorPlanet/MakanLens.git makanlens
 cd makanlens
 npm install
 cp .env.example .env.local
@@ -92,7 +125,7 @@ npm test           # unit tests (vitest)
 
 **Important: no dish in the dataset is marked as verified HPB data.** Singapore's HPB Energy & Nutrient Composition database (FOCOS) was discontinued in November 2025, so the values here come from other published sources. Each dish shows its actual publisher in the app.
 
-- **SingHealth HealthXchange**, "Best and Worst Singapore Hawker Food" series, developed with the Dept of Nutrition and Dietetics, KK Women's and Children's Hospital. This covers 30 of the 36 dishes.
+- **SingHealth HealthXchange**, "Best and Worst Singapore Hawker Food" series, developed with the Dept of Nutrition and Dietetics, KK Women's and Children's Hospital. This covers 33 of the 38 dishes.
 - **HealthHub (HPB):** calories and fat for char kway teow. Protein and carbs for that dish come from HealthXchange.
 - **FWD Singapore blog**, which cites HPB figures: 3 dishes (steamed chicken rice, plain carrot cake, satay). The HPB original could not be checked.
 - **USDA FoodData Central:** 2 simple items (hard-boiled eggs, brewed black coffee as a stand-in for kopi-o-kosong).

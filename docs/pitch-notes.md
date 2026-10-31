@@ -7,18 +7,17 @@ Track: NUS Hackers, Autonomous SG 2026. Brief: reverse engineer an opaque, expen
 **Cost of status quo (20%)**
 - Cal AI and MyFitnessPal charge for photo logging.
 - Hawker food is hard for generic trackers: one plate can hold several dishes, and portions vary.
-- Cost per user before vs after: [TEAM TO FILL]
-- Cal AI price: [TEAM TO FILL]
+- Cal AI price: US$29.99/year (≈US$2.50/month) on the common annual plan; App Store lists "Unlimited" at 5 different prices (US$2.99 to US$29.99). Sources in README "Target: Cal AI".
 
 **Reach (15%)**
 - Free, no account, runs in a phone browser. Nothing to install.
 - Works in English, Singlish, and by typing or speaking the meal.
 - Local dish names in Chinese, Malay and Tamil aliases.
-- User numbers: [TEAM TO FILL] (only state numbers that exist)
+- Cal AI reach: 5M+ downloads in 8 months (founder via TechCrunch, unverified), 373K App Store ratings. Sources in README.
 
 **What we uncovered (evidence)**
 - Show `/uncovered`: the same hawker dishes, Cal AI's estimate vs the reference value, with error %.
-- Reference values come from published sources (see honesty note below). The Cal AI and MakanLens columns are still being filled in: [TEAM TO FILL]
+- Reference values come from published sources (see honesty note below). The weighed test set is not complete, so make no accuracy claim.
 - Do not show the page with numbers that have not been measured.
 
 **Coolness of the live demo (25%)**
@@ -27,7 +26,7 @@ Track: NUS Hackers, Autonomous SG 2026. Brief: reverse engineer an opaque, expen
 **Cost reduction (25%)**
 - The default vision provider (Gemini) has a free tier. Check current limits in Google AI Studio before quoting a per-user cost.
 - No database, no backend accounts. All user data stays in the browser.
-- Cost per user before vs after: [TEAM TO FILL]
+- Cost per user per month: Cal AI US$2.50 (cheapest plan) vs MakanLens US$0 on Gemini free tier, ~US$0.97 at paid rates with 3 runs per photo. Working in README "Before and after".
 
 **Open-source licence (15%)**
 - MIT licence (`LICENSE`), public repo, setup in `README.md`.
@@ -36,7 +35,7 @@ Track: NUS Hackers, Autonomous SG 2026. Brief: reverse engineer an opaque, expen
 ## Honesty note (say this before someone asks)
 
 - HPB's FOCOS food composition database was discontinued in November 2025. We could not use "official HPB data".
-- The 36 dishes come mainly from SingHealth HealthXchange (written with KK Women's and Children's Hospital dietitians). Char kway teow calories and fat come from HealthHub (HPB). 3 dishes come from an FWD blog citing HPB, and 2 simple items come from USDA FoodData Central.
+- The 38 dishes come mainly from SingHealth HealthXchange (written with KK Women's and Children's Hospital dietitians). Char kway teow calories and fat come from HealthHub (HPB). 3 dishes come from an FWD blog citing HPB, and 2 simple items come from USDA FoodData Central.
 - Most drinks have no published macros, so they use an AI estimate.
 - The app shows the real publisher on every number. No dish is marked as verified HPB data.
 - Replacing these with SG FoodID values is on the roadmap.
