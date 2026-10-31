@@ -23,6 +23,13 @@ function item(overrides: Partial<AnalysedItem> & { kcal?: number } = {}): Analys
     source: "hpb",
     sourceUrl: "https://www.hpb.gov.sg/",
     candidates: [],
+    grams: 330,
+    gramsRange: [280, 400],
+    method: "steamed",
+    kcalRange: [kcal, kcal],
+    per_100g: null,
+    referenceObject: "none",
+    runs: 1,
     ...rest,
   };
 }

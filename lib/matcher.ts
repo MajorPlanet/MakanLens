@@ -2,8 +2,17 @@
 import Fuse from "fuse.js";
 import hawker from "@/data/hawker.json";
 import type { AnalysedItem, Candidate, Dish, Nutrition } from "./types";
+import { dishPer100g, dishTypicalGrams } from "./nutrition";
 
-const dishes = hawker as unknown as Dish[];
+type RawDish = Omit<Dish, "per_100g" | "typical_grams" | "method"> & Partial<Pick<Dish, "per_100g" | "typical_grams" | "method">>;
+
+/** Fill Phase 8 fields for dishes the data file doesn't have them for yet (derive, never invent). */
+function normaliseDish(d: RawDish): Dish {
+  const base = { ...d, per_100g: d.per_100g ?? null, typical_grams: d.typical_grams ?? null, method: d.method ?? "unknown" } as Dish;
+  return { ...base, per_100g: dishPer100g(base), typical_grams: dishTypicalGrams(base) };
+}
+
+const dishes: Dish[] = (hawker as unknown as RawDish[]).map(normaliseDish);
 
 /** Fuse score is 0 (perfect) to 1. Accept only <= this for auto-match (strict: misses beat wrong matches). */
 const MATCH_FUSE_MAX = 0.3;
@@ -116,16 +125,23 @@ export function matchItem(raw: {
   }
   // The model's estimate is for the stated portion (the whole amount of this item), so it is used
   // as-is, NOT multiplied by portion again. Changing the portion later rescales proportionally in the UI.
+  const nutrition = scaleNutrition(raw.estimate, 1);
   const item: AnalysedItem = {
     label: raw.label, dishId: null, portion, confidence,
-    nutrition: scaleNutrition(raw.estimate, 1), source: "ai_estimate", candidates: [],
+    nutrition, source: "ai_estimate", candidates: [],
+    grams: 0, gramsRange: [0, 0], method: "unknown", kcalRange: [nutrition.kcal, nutrition.kcal],
+    per_100g: null, referenceObject: "none", runs: 1,
   };
   return withCandidates(item, raw.label, null);
 }
 
 export function itemFromDish(dish: Dish, portion: number, label = dish.name, confidence = 1): AnalysedItem {
+  const nutrition = scaleNutrition(dish.per_serving, portion);
+  const grams = dish.typical_grams ? Math.round(dish.typical_grams * portion) : 0;
   return {
-    label, dishId: dish.id, portion, confidence, nutrition: scaleNutrition(dish.per_serving, portion),
+    label, dishId: dish.id, portion, confidence, nutrition,
     source: "hpb", sourceUrl: dish.source.url, candidates: [],
+    grams, gramsRange: [grams, grams], method: dish.method, kcalRange: [nutrition.kcal, nutrition.kcal],
+    per_100g: dish.per_100g, referenceObject: "none", runs: 1,
   };
 }

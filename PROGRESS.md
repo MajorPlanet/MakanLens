@@ -15,3 +15,4 @@
 - Text "cai fan 2 veg 1 meat, less rice and kopi siew dai" → 2 items, portion 0.75 for less rice ✅
 - Chicken rice photo (Wikipedia) → chicken-rice-steamed, 558 kcal, 3.0 s ✅ (also end to end in headless Chrome through the real UI)
 - Non-food image → `items: []` in 1.3 s ✅
+| 8A. Accuracy contract | ✅ | `lib/types.ts` (CookingMethod, ReferenceObject, FollowUp, usda source, Dish per_100g/typical_grams/method/variant_of, AnalysedItem grams/ranges/method/per_100g/followUp/referenceObject/runs), `lib/nutrition.ts` client-safe maths stub, matcher normalises dishes (per_100g derived from serving grams), `.env.example` (USDA_API_KEY, VISION_RUNS), CLAUDE.md §10 | Model still returns portions (Part B) | Parts B, C, D in parallel |

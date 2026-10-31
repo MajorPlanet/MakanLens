@@ -221,3 +221,32 @@ npm run lint
 npx tsc --noEmit
 npm test           # vitest
 ```
+
+---
+
+## 10. Phase 8: accuracy upgrade (design summary; full brief in `ACCURACY_UPGRADE.md`)
+
+**Principle:** the vision model never decides calories. It identifies items, estimates **grams** (with a low/high range) and names the **cooking method**. Code looks up per-100 g values and does the maths: kcal = per_100g × grams ÷ 100, and `kcalRange` comes from the grams range.
+
+- **Contract** (`lib/types.ts`):
+  - `Source` gains `"usda"`.
+  - New types: `CookingMethod`, `ReferenceObject` and `FollowUp`.
+  - `Dish` gains `per_100g` (null when the source gives no serving weight; never invented), `typical_grams`, `method` and `variant_of?`.
+  - `AnalysedItem` gains `grams`, `gramsRange`, `method`, `kcalRange`, `per_100g`, `followUp?`, `referenceObject` and `runs`.
+  - `portion` stays, derived as grams ÷ typical_grams.
+- **Lookup order:**
+  1. `hawker.json`. The cooking method picks the variant entry; there are no oil multipliers.
+  2. USDA FoodData Central (`USDA_API_KEY`, server only, cached).
+  3. Open Food Facts (barcode only).
+  4. The model's `fallback_kcal_per_100g`, tagged `ai_estimate`.
+- **Median of `VISION_RUNS` (default 3) parallel model runs,** combined per item. Partial failure is tolerated, with a budget under 10 s.
+- **Follow-up:** at most ONE question per meal, and only when the options' kcal differ by more than 15%. It is answered client-side from local data (no new photo).
+- **Files:**
+  - `lib/nutrition.ts`: client-safe maths, `withGrams` and `applyFollowUpOption`; the UI imports it.
+  - `lib/usda.ts`: server only.
+  - `scripts/eval.ts` (run by `npm run eval`) writes `data/eval-results.json` from the hand-weighed set in `data/eval/meals.json`; `/uncovered` shows MakanLens vs Cal AI mean absolute % error and the "truth inside our range" hit rate.
+- **Ownership additions:**
+  - api-builder: `lib/nutrition.ts`, `lib/usda.ts`, `scripts/**`.
+  - data-curator: `data/eval/**`.
+  - frontend-builder: portion learning in `lib/storage.ts` (per-dish rolling ratio of user grams ÷ model grams over the last 5 edits, applied after 2+ edits, with undo).
+- **Part E** (Web Bluetooth scale) is skipped unless the team confirms it has a scale.

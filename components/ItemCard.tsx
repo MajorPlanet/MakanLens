@@ -1,10 +1,10 @@
 "use client";
 import { useState } from "react";
-import type { AnalysedItem, Dish, Nutrition } from "@/lib/types";
+import type { AnalysedItem, Dish, Nutrition, Source } from "@/lib/types";
 import { getDish, itemFromDish, scaleNutrition, searchDishes } from "@/lib/matcher";
 import { fmtKcal, fmtMacro } from "./format";
 
-const SOURCE_LABEL = { hpb: "HPB", off: "Open Food Facts", ai_estimate: "AI estimate" } as const;
+const SOURCE_LABEL: Record<Source, string> = { hpb: "HPB", usda: "USDA FoodData Central", off: "Open Food Facts", ai_estimate: "AI estimate" };
 
 /** Curated dishes are typed "hpb", but only verified ones are HPB; otherwise name the real publisher. */
 function sourceLabel(item: AnalysedItem, dish: Dish | undefined): { text: string; title: string } {

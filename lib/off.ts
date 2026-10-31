@@ -48,6 +48,9 @@ export async function lookupOff(code: string): Promise<BarcodeResponse | null> {
     item: {
       label: name, dishId: null, portion: 1, confidence: 1, nutrition, source: "off",
       sourceUrl: `https://world.openfoodfacts.org/product/${code}`, candidates: [],
+      grams: perServing ? 0 : 100, gramsRange: perServing ? [0, 0] : [100, 100], method: "unknown",
+      kcalRange: [nutrition.kcal, nutrition.kcal], per_100g: perServing ? null : nutrition,
+      referenceObject: "none", runs: 0,
     },
   };
 }
