@@ -16,7 +16,7 @@ export interface SearchResult {
   typicalGrams: number | null;
 }
 
-const SOURCES: Source[] = ["hpb", "usda", "off", "label", "ai_estimate"];
+const SOURCES: Source[] = ["hpb", "usda", "off", "label", "custom", "user_edit", "ai_estimate"];
 
 function num(v: unknown): number | null {
   return typeof v === "number" && isFinite(v) ? v : null;

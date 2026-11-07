@@ -1,4 +1,4 @@
-export type Source = "hpb" | "usda" | "off" | "label" | "ai_estimate";
+export type Source = "hpb" | "usda" | "off" | "label" | "custom" | "user_edit" | "ai_estimate";
 
 export type CookingMethod =
   | "steamed" | "boiled" | "soup" | "grilled" | "roasted"
@@ -150,4 +150,55 @@ export interface LabelResponse {
   item: AnalysedItem;                  // source "label", portion 1, candidates []
   provider: string;
   ms: number;
+}
+
+// ---- Features v2: custom foods, overrides, goal plan ----
+
+/** One food for the whole app: built-in dishes (with overrides applied) and the user's own foods. */
+export interface FoodRecord {
+  id: string;                          // built-in dish id, or "custom-<id>"
+  origin: "builtin" | "custom";
+  name: string;
+  aliases: string[];                   // any language, free text
+  serving: { label: string; grams: number | null };   // "1 plate", 350
+  per_serving: Nutrition;              // kcal, protein_g, carbs_g, fat_g (+ optional sodium_mg, fibre_g, satfat_g)
+  per_100g: Nutrition | null;          // auto-derived when serving.grams is set
+  notes?: string;
+  source: { name: string; url?: string };             // custom → "Your food"
+  createdAt: number; updatedAt: number;
+  /** Built-in dishes only: true when a FoodOverride is applied. */
+  edited?: boolean;
+}
+
+/** An edit to a built-in dish, stored as an override; hawker.json is never modified. */
+export interface FoodOverride {
+  dishId: string;
+  changes: Partial<Pick<FoodRecord, "name" | "aliases" | "serving" | "per_serving" | "notes">>;
+  updatedAt: number;
+}
+
+export interface GoalPlan {
+  direction: "lose" | "gain" | "maintain";
+  kgPerWeek: number;                   // 0 for maintain
+  weeks: number;
+  startDate: string;                   // YYYY-MM-DD
+  startWeightKg: number;
+  maintenanceKcal: number;             // TDEE from the profile at plan start
+  dailyKcal: number;                   // computed
+  weeklyKcal: number;                  // dailyKcal × 7
+  capped: boolean;                     // true if safety limits changed the request
+}
+
+/** Settings → Export backup (JSON). Import restores it (merge or replace). */
+export interface BackupFile {
+  app: "makanlens";
+  version: 1;
+  exportedAt: string;
+  profile: Profile | null;
+  entries: LogEntry[];
+  savedMeals: SavedMeal[];
+  exercises: ExerciseEntry[];
+  customFoods: FoodRecord[];
+  foodOverrides: FoodOverride[];
+  goalPlan: GoalPlan | null;
 }

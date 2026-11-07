@@ -6,6 +6,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { AnalysedItem, LogEntry, MealSlot, Profile } from "@/lib/types";
 import { deleteEntry, exerciseKcalFor, getEntries, getProfile, localDateString, logItems, updateEntry } from "@/lib/storage";
 import { dayTargets, type DayTargets } from "@/lib/targets";
+import { useGoalPlan } from "@/lib/plan";
+import { resolveLocalFoods, useFoods, userFoodsForPrompt } from "@/lib/foods";
+import GoalCard from "@/components/goal/GoalCard";
+import WeeklyBudget from "@/components/goal/WeeklyBudget";
 import { analyse, ApiClientError, getHealth } from "@/lib/client";
 import { resizeImage } from "@/lib/image";
 import SummaryHeader from "@/components/dashboard/SummaryHeader";
@@ -41,6 +45,8 @@ export default function Home() {
   const [day, setDay] = useState<DayTargets | null>(null);
   /** Bumped whenever meals are logged so the "Log again" strip re-reads storage. */
   const [recentVersion, setRecentVersion] = useState(0);
+  const plan = useGoalPlan();
+  useFoods(); // loads custom foods and edits from IndexedDB, used when resolving analysis results
   const last = useRef<Input | null>(null);
   const runId = useRef(0);
 
@@ -91,10 +97,10 @@ export default function Home() {
       }
       const t = setTimeout(() => setLoading("Matching local dish data…"), 2500);
       try {
-        const res = await analyse({ image, text });
+        const res = await analyse({ image, text, userFoods: userFoodsForPrompt() });
         if (id !== runId.current) return;
         if (res.items.length === 0) setNotice({ kind: "no_food" });
-        else setFound(res.items);
+        else setFound(resolveLocalFoods(res.items));
       } finally {
         clearTimeout(t);
       }
@@ -148,7 +154,7 @@ export default function Home() {
   const today = entries.filter((e) => e.date === todayDate);
   const totals = sumNutrition(today.map((e) => e.item.nutrition));
   // Exercise-adjusted targets: ExerciseCard reports changes; before it does, compute from storage.
-  const targets = day ?? dayTargets(profile, exerciseKcalFor(todayDate));
+  const targets = day ?? dayTargets(profile, exerciseKcalFor(todayDate), plan);
   const week: DayMacros[] = Array.from({ length: 7 }, (_, i) => {
     const d = new Date();
     d.setDate(d.getDate() - (6 - i));
@@ -204,12 +210,14 @@ export default function Home() {
       <SummaryHeader eaten={totals.kcal} exercise={targets.exercise} goal={targets.kcal} />
       <OndehCard entries={entries} target={targets.kcal} />
       <SnapBar disabled={loading !== null} onFile={(file) => run({ file })} onText={(text) => run({ text })} />
+      <GoalCard profile={profile} plan={plan} entries={entries} />
       <MacroCards totals={totals} targets={targets.macros} />
+      <WeeklyBudget plan={plan} entries={entries} dailyKcal={targets.base} />
       <WeekStack days={week} goal={profile.targetKcal} />
       <BalanceDonut totals={totals} />
       <InsightCard text={weekInsight(week, profile.targetKcal)} />
 
-      <div className="mt-4"><ExerciseCard profile={profile} date={todayDate} onChange={setDay} /></div>
+      <div className="mt-4"><ExerciseCard profile={profile} plan={plan} date={todayDate} onChange={setDay} /></div>
 
       <RecentStrip key={recentVersion} onLogged={() => setEntries(getEntries())} />
 

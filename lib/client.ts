@@ -36,7 +36,7 @@ async function request(url: string, init?: RequestInit): Promise<Response> {
   return res;
 }
 
-export async function analyse(input: { image?: string; text?: string }): Promise<AnalyseResponse> {
+export async function analyse(input: { image?: string; text?: string; userFoods?: { id: string; name: string; aliases: string[] }[] }): Promise<AnalyseResponse> {
   if (process.env.NEXT_PUBLIC_USE_MOCK === "1") {
     await new Promise((r) => setTimeout(r, 1200));
     return structuredClone(mockAnalyseResponse);

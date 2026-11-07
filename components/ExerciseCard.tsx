@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { ACCENT_BTN } from "@/components/format";
 import { addExerciseEntry, deleteExerciseEntry, getExercisesFor, sumExerciseKcal } from "@/lib/storage";
 import { dayTargets, type DayTargets } from "@/lib/targets";
-import type { ExerciseEntry, Profile } from "@/lib/types";
+import type { ExerciseEntry, GoalPlan, Profile } from "@/lib/types";
 
 const field = "h-12 w-full rounded-xl border border-neutral-300 bg-transparent px-3 text-base dark:border-neutral-700";
 const fmt = (n: number) => n.toLocaleString("en-SG");
@@ -16,13 +16,15 @@ function newId(): string {
 
 interface Props {
   profile: Profile;
+  /** Active goal plan; its daily target replaces the profile target. */
+  plan?: GoalPlan | null;
   /** Local date, YYYY-MM-DD. */
   date: string;
   /** Called after mount and whenever exercise changes, with the adjusted day target. */
   onChange?: (t: DayTargets) => void;
 }
 
-export default function ExerciseCard({ profile, date, onChange }: Props) {
+export default function ExerciseCard({ profile, plan = null, date, onChange }: Props) {
   const [list, setList] = useState<ExerciseEntry[]>([]);
   const [open, setOpen] = useState(false);
   const [label, setLabel] = useState("");
@@ -34,7 +36,7 @@ export default function ExerciseCard({ profile, date, onChange }: Props) {
   }, [date]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
-  const t = dayTargets(profile, sumExerciseKcal(list));
+  const t = dayTargets(profile, sumExerciseKcal(list), plan);
   useEffect(() => {
     onChange?.(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- notify only when the numbers change

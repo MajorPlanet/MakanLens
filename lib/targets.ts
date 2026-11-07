@@ -1,5 +1,5 @@
 // Mifflin-St Jeor BMR × activity, goal adjustment, 30/40/30 macro split.
-import type { Profile } from "./types";
+import type { GoalPlan, Profile } from "./types";
 
 export type MacroPrefs = Pick<Profile, "macroMode" | "macroSplit" | "macroGrams" | "addBackExercise">;
 export type ProfileInput = Omit<Profile, "targetKcal" | "macroTargets" | keyof MacroPrefs>;
@@ -93,10 +93,13 @@ export interface DayTargets {
   macros: MacroGrams;
 }
 
-/** The day's targets: base kcal plus exercise when add-back is on (default). Grams mode keeps fixed macros; split mode scales with the day's kcal. */
-export function dayTargets(profile: Profile, exerciseKcal: number): DayTargets {
+/**
+ * The day's targets: the base is the goal plan's daily target when a plan exists, else the profile target; plus
+ * exercise when add-back is on (default). Grams mode keeps fixed macros; split mode scales with the day's kcal.
+ */
+export function dayTargets(profile: Profile, exerciseKcal: number, plan: GoalPlan | null = null): DayTargets {
   const p = normaliseProfile(profile);
-  const base = p.targetKcal;
+  const base = plan && plan.dailyKcal > 0 ? plan.dailyKcal : p.targetKcal;
   const exercise = p.addBackExercise ? Math.max(0, Math.round(exerciseKcal)) : 0;
   const kcal = base + exercise;
   const macros = p.macroMode === "grams" && p.macroGrams ? p.macroGrams : macroTargets(kcal, p.macroSplit);
@@ -104,8 +107,8 @@ export function dayTargets(profile: Profile, exerciseKcal: number): DayTargets {
 }
 
 /** The day's kcal target (see dayTargets). */
-export function dayTarget(profile: Profile, exerciseKcal: number): number {
-  return dayTargets(profile, exerciseKcal).kcal;
+export function dayTarget(profile: Profile, exerciseKcal: number, plan: GoalPlan | null = null): number {
+  return dayTargets(profile, exerciseKcal, plan).kcal;
 }
 
 /** Macro targets for Today's bars (see dayTargets). */

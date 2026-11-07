@@ -1,6 +1,7 @@
 // Typed, SSR-safe localStorage helpers.
 import type { AnalysedItem, ExerciseEntry, LogEntry, MealSlot, Profile, SavedMeal } from "./types";
 import { normaliseProfile } from "./targets";
+import { DATA_CLEARED_EVENT, dbClearAll } from "./db";
 
 // crypto.randomUUID only exists on HTTPS/localhost; fall back so phones on a LAN IP work.
 function newId(): string {
@@ -128,6 +129,9 @@ export function clearAll(): void {
   } catch {
     /* ignore */
   }
+  // Foods, overrides and the goal plan live in IndexedDB.
+  void dbClearAll().catch(() => undefined);
+  window.dispatchEvent(new Event(DATA_CLEARED_EVENT));
 }
 
 /** Local (not UTC) date as YYYY-MM-DD. */

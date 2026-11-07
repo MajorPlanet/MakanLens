@@ -6,6 +6,8 @@ import { clearAll, getEntries, getProfile, localDateString, saveProfile } from "
 import { entriesToCsv } from "@/lib/history";
 import PageHeader from "@/components/PageHeader";
 import ProfileForm from "@/components/ProfileForm";
+import GoalPlanner from "@/components/goal/GoalPlanner";
+import BackupPanel from "@/components/BackupPanel";
 import MacroGoals from "@/components/MacroGoals";
 import ExerciseSetting from "@/components/ExerciseSetting";
 import { gramsToSplit, splitToGrams } from "@/lib/targets";
@@ -87,12 +89,14 @@ export default function SettingsPage() {
             <>
               <MacroGoals key={`m${formKey}`} profile={profile} onSave={persist} />
               <ExerciseSetting profile={profile} onSave={persist} />
+              <GoalPlanner profile={profile} />
             </>
           )}
 
           <section className="mt-8 space-y-3">
             <h2 className="text-sm font-semibold">Your data</h2>
             <button type="button" onClick={exportCsv} className={btn}>Export CSV</button>
+            <BackupPanel onRestored={() => setProfile(getProfile())} />
             {note && <p role="status" className="text-sm text-neutral-600 dark:text-neutral-300">{note}</p>}
             {confirming ? (
               <div className="rounded-3xl border border-red-300 p-4 dark:border-red-900" role="alertdialog" aria-label="Confirm clearing data">

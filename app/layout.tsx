@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Nunito } from "next/font/google";
 import Footer from "@/components/Footer";
 import TabBar from "@/components/TabBar";
+import FoodsSideButton from "@/components/foods/FoodsSideButton";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -53,6 +54,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <div className="flex-1">{children}</div>
         <Footer />
         <TabBar />
+        <FoodsSideButton />
       </body>
     </html>
   );
