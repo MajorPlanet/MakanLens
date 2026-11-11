@@ -117,3 +117,9 @@ Per-serving kcal is per100 x HPB default grams from the snapshot, rounded.
 - Other common hawker items present: Bak kut teh (soup) (F06100003) and (dry), claypot chicken rice (F05100022), soya sauce chicken rice (F05100131), braised duck rice set (F05100007), sliced fish hor fun, satay beehoon, Penang prawn noodles, char siew / prawn / you tiao chee cheong fun, chicken satay with sauce (F11020021), pork, beef and mutton satay, and Yong tau foo laksa versions.
 
 Not checked: fruit juice, other desserts and the long tail of the 2,692 items. This section was produced offline from the snapshot with text searches; the snapshot file itself was not modified.
+
+## Switch to HPB values (2026-11-11)
+37 of the 38 curated dishes in `hawker.json` now use HPB SG FoodID values and are marked `verified: true`: `per_100g`, the serving (HPB's default portion, edible grams), `typical_grams` and `per_serving` (= per_100g × grams). Sodium, fibre and saturated fat are HPB's where reported. `source.name` names the HPB item and its crId. Ids, aliases, `method`, `variant_of` and tips are kept. The five "close" matches take HPB's item name as the display name: Nasi lemak (egg, ikan bilis, peanut set), Mee goreng, Nasi briyani (mutton), Egg fried rice, Sliced fish beehoon soup (no milk). The satay and egg servings are HPB per-item weights × 10 sticks and × 2 eggs.
+- Not switched: `duck-rice-skin-removed` (HPB has no skinless item), which stays HealthXchange and `verified: false`.
+- Tips re-checked against the new values. Only the bak chor mee tip quoted numbers (now HPB's 518 vs 538 kcal). The comparative claims (steamed beats roasted chicken rice, white beats black carrot cake) still hold in HPB's data.
+- `hawker-sgfoodid.json` keeps the pre-switch comparison ("ours" = the old HealthXchange values) as a record.

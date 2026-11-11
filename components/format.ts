@@ -37,7 +37,7 @@ export function sumNutrition(list: Nutrition[]): Nutrition {
 export const ACCENT_BTN =
   "bg-accent text-white active:bg-accent-pressed disabled:opacity-40";
 
-export const SOURCE_LABEL: Record<Source, string> = { hpb: "HPB", sgfoodid: "HPB SG FoodID", usda: "USDA FoodData Central", off: "Open Food Facts", label: "Nutrition label", custom: "Your food", user_edit: "Edited by you", ai_estimate: "AI estimate" };
+export const SOURCE_LABEL: Record<Source, string> = { hpb: "HPB SG FoodID", sgfoodid: "HPB SG FoodID", usda: "USDA FoodData Central", off: "Open Food Facts", label: "Nutrition label", custom: "Your food", user_edit: "Edited by you", ai_estimate: "AI estimate" };
 
 /** Curated dishes are typed "hpb", but only verified ones are HPB; otherwise name the real publisher. */
 export function sourceLabel(source: Source, dish?: Dish): { text: string; title: string } {
