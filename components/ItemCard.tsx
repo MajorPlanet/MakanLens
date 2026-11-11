@@ -1,19 +1,21 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import type { AnalysedItem, CookingMethod, Dish, FollowUp, Nutrition } from "@/lib/types";
 import { applyFollowUpOption, getDish, scaleNutrition, swapDish } from "@/lib/matcher";
 import { dishTypicalGrams, withGrams } from "@/lib/nutrition";
 import { getFood, searchAllFoods, suggestCustomFood, swapToFood, useFoods, CUSTOM_PREFIX, YOUR_FOOD } from "@/lib/foods";
-import { Check, ChevronDown, ChevronUp, ExternalLink, X } from "lucide-react";
+import { ArrowLeftRight, Check, ExternalLink, Trash2 } from "lucide-react";
 import { fmtKcal, fmtMacro, sourceLabel } from "./format";
-import { ICON } from "./icons";
+import { MACRO_COLOURS } from "./dashboard/colours";
+import { Button, Chip, FIELD } from "./ui/Controls";
+import { Row } from "./ui/List";
 
 const sourceLabelFor = (item: AnalysedItem, dish: Dish | undefined) => sourceLabel(item.source, dish);
 
-function confidenceBadge(c: number): { text: string; cls: string } {
-  if (c >= 0.75) return { text: "High confidence", cls: "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300" };
-  if (c >= 0.5) return { text: "Medium confidence", cls: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300" };
-  return { text: "Low confidence", cls: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300" };
+function confidenceChip(c: number): { text: string; tone: "green" | "yellow" | "red" } {
+  if (c >= 0.75) return { text: "High confidence", tone: "green" };
+  if (c >= 0.5) return { text: "Medium confidence", tone: "yellow" };
+  return { text: "Low confidence", tone: "red" };
 }
 
 const METHOD_LABEL: Record<CookingMethod, string> = {
@@ -51,20 +53,24 @@ function RangeBar({ low, high, mid }: { low: number; high: number; mid: number }
   const width = Math.max(((high - low) / max) * 100, 1.5);
   const at = (mid / max) * 100;
   return (
-    <div aria-hidden className="relative mt-3 h-2.5 w-full rounded-full bg-neutral-100 dark:bg-white/10">
+    <div aria-hidden className="relative mt-3 h-2 w-full rounded-full bg-fill">
       <div
-        className="absolute inset-y-0 rounded-full bg-orange-300 transition-all duration-700 ease-out motion-reduce:transition-none dark:bg-orange-500/70"
+        className="absolute inset-y-0 rounded-full bg-accent/60 transition-all duration-700 ease-out motion-reduce:transition-none"
         style={{ left: `${left}%`, width: `${width}%` }}
       />
       {/* Midpoint (best guess) marker. */}
       <div
-        className="absolute -top-1 h-[18px] w-1 -translate-x-1/2 rounded-full bg-orange-600 ring-2 ring-[var(--card)] transition-all duration-700 ease-out motion-reduce:transition-none dark:bg-orange-400"
+        className="absolute -top-1 h-4 w-1 -translate-x-1/2 rounded-full bg-accent-text transition-all duration-700 ease-out motion-reduce:transition-none"
         style={{ left: `${at}%` }}
       />
     </div>
   );
 }
 
+/**
+ * One analysed item as a grouped card: name, kcal, macros, chips, weight slider, optional questions,
+ * then Swap Dish and Remove as rows. `nested` darkens the card for use on a sheet's surface.
+ */
 export default function ItemCard({
   item,
   onChange,
@@ -73,6 +79,7 @@ export default function ItemCard({
   onFollowUp,
   adjustedGrams,
   onUndoAdjust,
+  nested = false,
 }: {
   item: AnalysedItem;
   onChange: (item: AnalysedItem) => void;
@@ -84,15 +91,19 @@ export default function ItemCard({
   /** Set when portion learning adjusted the grams. */
   adjustedGrams?: number | null;
   onUndoAdjust?: () => void;
+  /** Sits on a sheet (surface) rather than on the black page. */
+  nested?: boolean;
 }) {
   const foods = useFoods();
+  const uid = useId();
   const [swapping, setSwapping] = useState(false);
   const [query, setQuery] = useState("");
   const dish = item.dishId ? getDish(item.dishId) : undefined;
   const food = item.dishId ? getFood(item.dishId) : undefined;
   const own = food?.origin === "custom" || !!food?.edited;
+  // A custom or edited food shows its own name; the model's label drops to the subtitle.
   const title = food?.name ?? dish?.name ?? item.label;
-  const subtitle = food && item.label && item.label !== food.name ? item.label : null;
+  const subtitle = (food || dish) && item.label && item.label.toLowerCase() !== title.toLowerCase() ? item.label : null;
   const servingLabel = food?.serving.label ?? dish?.serving.label ?? "serving";
   // "Use your food" suggestion: a close custom food for what the model saw (never applied automatically).
   const suggestion = useMemo(
@@ -101,7 +112,7 @@ export default function ItemCard({
     [item.dishId, item.label, foods],
   );
   const src = sourceLabelFor(item, dish);
-  const badge = confidenceBadge(item.confidence);
+  const conf = confidenceChip(item.confidence);
 
   const options = query.trim()
     ? searchAllFoods(query, 8).map((r) => ({ dishId: r.food.id, name: r.food.name, score: r.score }))
@@ -135,198 +146,211 @@ export default function ItemCard({
   }
   const sliderVal = Math.min(G_MAX, Math.max(G_MIN, item.grams));
   const tickPct = typical && typical >= G_MIN && typical <= G_MAX ? ((typical - G_MIN) / (G_MAX - G_MIN)) * 100 : null;
+  const n = item.nutrition;
+  const macros = [
+    { key: "protein", label: "Protein", v: n.protein_g },
+    { key: "carbs", label: "Carbs", v: n.carbs_g },
+    { key: "fat", label: "Fat", v: n.fat_g },
+  ] as const;
+  const tinted = "rounded-xl bg-accent-tint";
 
   return (
-    <div className="p-4 card">
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <h3 className="break-words text-lg font-semibold leading-tight">{title}</h3>
-          {subtitle && <p className="break-words text-sm text-neutral-500 dark:text-neutral-400">{subtitle}</p>}
-        </div>
-        <button
-          type="button"
-          onClick={onRemove}
-          aria-label={`Remove ${title}`}
-          className="-mr-2 -mt-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800"
-        >
-          <X {...ICON} aria-hidden />
-        </button>
-      </div>
+    <article aria-label={title} className={`overflow-hidden rounded-xl ${nested ? "bg-surface-2" : "bg-surface"}`}>
+      <div className="p-4">
+        <h3 className="break-words type-headline">{title}</h3>
+        {subtitle && <p className="break-words text-label-2 type-footnote">{subtitle}</p>}
 
-      {hasRange ? (
-        <>
-          <p className="mt-2 font-display text-4xl font-extrabold tabular-nums text-orange-600 dark:text-orange-400" aria-label={`${fmtKcal(low)} to ${fmtKcal(high)} kilocalories`}>
-            {fmtKcal(low)}–{fmtKcal(high)}
-            <span className="ml-1 text-base font-medium text-neutral-500 dark:text-neutral-400">kcal</span>
-          </p>
-          <RangeBar low={low} high={high} mid={item.nutrition.kcal} />
-          <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">Best guess {fmtKcal(item.nutrition.kcal)} kcal</p>
-        </>
-      ) : (
-        <p className="mt-2 font-display text-5xl font-extrabold tabular-nums text-orange-600 dark:text-orange-400">
-          {fmtKcal(item.nutrition.kcal)}
-          <span className="ml-1 text-base font-medium text-neutral-500 dark:text-neutral-400">kcal</span>
-        </p>
-      )}
-      <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-300">
-        P {fmtMacro(item.nutrition.protein_g)} g · C {fmtMacro(item.nutrition.carbs_g)} g · F {fmtMacro(item.nutrition.fat_g)} g
-      </p>
-
-      <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-        <span className={`rounded-full px-2.5 py-1 font-medium ${badge.cls}`}>{badge.text}</span>
-        {hasGrams && <span className="rounded-full bg-neutral-100 px-2.5 py-1 text-neutral-600 dark:bg-white/10 dark:text-neutral-300 tabular-nums">≈{Math.round(item.grams)} g</span>}
-        {methodText && <span className="rounded-full bg-neutral-100 px-2.5 py-1 text-neutral-600 dark:bg-white/10 dark:text-neutral-300">{methodText}</span>}
-        {item.referenceObject !== "none" && (
-          <span className="rounded-full bg-green-100 px-2.5 py-1 font-medium text-green-800 dark:bg-green-950 dark:text-green-300">
-            Size reference: {item.referenceObject} <Check size={14} strokeWidth={2} aria-hidden className="inline align-[-2px]" />
-          </span>
-        )}
-        {item.sourceUrl ? (
-          <a
-            href={item.sourceUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            title={src.title}
-            className="inline-flex min-h-11 items-center gap-1 rounded-full bg-neutral-100 px-3 text-neutral-600 dark:bg-white/10 dark:text-neutral-300"
-          >
-            {src.text}
-            <ExternalLink size={12} strokeWidth={1.75} aria-hidden />
-          </a>
+        {hasRange ? (
+          <>
+            <p className="num mt-2 text-[40px] font-bold leading-[46px]" aria-label={`${fmtKcal(low)} to ${fmtKcal(high)} kilocalories`}>
+              {fmtKcal(low)}–{fmtKcal(high)}
+              <span className="ml-1.5 text-label-2 type-callout font-medium">kcal</span>
+            </p>
+            <RangeBar low={low} high={high} mid={n.kcal} />
+            <p className="mt-1.5 text-label-2 type-footnote">Best guess {fmtKcal(n.kcal)} kcal</p>
+          </>
         ) : (
-          <span title={src.title} className="inline-flex min-h-11 items-center rounded-full bg-neutral-100 px-3 text-neutral-600 dark:bg-white/10 dark:text-neutral-300">{src.text}</span>
+          <p className="num mt-2 text-[40px] font-bold leading-[46px]">
+            {fmtKcal(n.kcal)}
+            <span className="ml-1.5 text-label-2 type-callout font-medium">kcal</span>
+          </p>
         )}
+
+        <dl className="mt-3 flex gap-5">
+          {macros.map((m) => (
+            <div key={m.key}>
+              <dt className="flex items-center gap-1.5 text-label-2 type-caption">
+                <span aria-hidden className="h-2 w-2 rounded-full" style={{ background: MACRO_COLOURS[m.key] }} />
+                {m.label}
+              </dt>
+              <dd className="num type-callout font-semibold">{fmtMacro(m.v)} g</dd>
+            </div>
+          ))}
+        </dl>
+
+        <div className="mt-3 flex flex-wrap items-center gap-1.5">
+          <Chip tone={conf.tone}>{conf.text}</Chip>
+          {hasGrams && <Chip>≈{Math.round(item.grams)} g</Chip>}
+          {methodText && <Chip>{methodText}</Chip>}
+          {item.referenceObject !== "none" && (
+            <Chip tone="green">
+              Size reference: {item.referenceObject} <Check size={12} strokeWidth={2.5} aria-hidden />
+            </Chip>
+          )}
+          {item.sourceUrl ? (
+            <a
+              href={item.sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              title={src.title}
+              aria-label={`Source: ${src.text} (opens in a new tab)`}
+              className="pressable -my-1.5 inline-flex min-h-11 items-center"
+            >
+              <Chip tone="accent">
+                {src.text}
+                <ExternalLink size={11} strokeWidth={2} aria-hidden />
+              </Chip>
+            </a>
+          ) : (
+            <span title={src.title}>
+              <Chip tone={own ? "accent" : "gray"}>{src.text}</Chip>
+            </span>
+          )}
+        </div>
       </div>
 
       {followUp && (
-        <div className="mt-4 rounded-xl border border-orange-200 bg-orange-50 p-3 dark:border-orange-900 dark:bg-orange-950/40">
-          <p className="text-sm font-semibold">{followUp.question}</p>
-          <p className="text-xs text-neutral-600 dark:text-neutral-300">Answer to narrow the estimate.</p>
+        <div className={`mx-3 mb-3 p-3 ${tinted}`}>
+          <p className="type-subhead font-semibold">{followUp.question}</p>
+          <p className="text-label-2 type-caption">Answer to narrow the estimate.</p>
           <div className="mt-2 flex flex-wrap gap-2">
             {followUp.options.map((o) => (
-              <button
-                key={o.label}
-                type="button"
-                onClick={() => answer(o)}
-                className="min-h-11 rounded-full border border-orange-400 bg-card px-4 text-sm font-medium hover:bg-orange-100 dark:border-orange-700 dark:hover:bg-neutral-800"
-              >
+              <Button key={o.label} variant="tinted" size="medium" onClick={() => answer(o)} className="bg-accent/30">
                 {o.label}
-              </button>
+              </Button>
             ))}
           </div>
         </div>
       )}
 
       {adjustedGrams != null && onUndoAdjust && (
-        <p className="mt-3 flex items-center justify-between gap-2 rounded-xl bg-neutral-100 px-3 text-sm dark:bg-neutral-800">
-          <span className="py-2">Adjusted to your usual portion ({Math.round(adjustedGrams)} g)</span>
-          <button type="button" onClick={onUndoAdjust} className="h-11 shrink-0 px-2 font-medium text-orange-600 underline dark:text-orange-400">
+        <div className={`mx-3 mb-3 flex items-center justify-between gap-2 pl-3 ${tinted}`}>
+          <span className="py-2 type-footnote">Adjusted to your usual portion ({Math.round(adjustedGrams)} g)</span>
+          <button type="button" onClick={onUndoAdjust} className="pressable min-h-11 shrink-0 px-3 text-accent-text type-subhead font-semibold">
             Undo
           </button>
-        </p>
+        </div>
       )}
 
-      {hasGrams ? (
-        <div className="mt-4">
-          <label htmlFor={`grams-${item.label}`} className="mb-1 block text-sm font-medium">
-            Weight: {Math.round(item.grams)} g
-          </label>
-          <input
-            id={`grams-${item.label}`}
-            type="range"
-            min={G_MIN}
-            max={G_MAX}
-            step={G_STEP}
-            value={sliderVal}
-            onChange={(e) => onChange(withGrams(item, Number(e.target.value), typical))}
-            className="h-11 w-full accent-orange-500"
-          />
-          <div className="relative h-8 text-xs text-neutral-500 dark:text-neutral-400">
-            <span className="absolute left-0">{G_MIN} g</span>
-            <span className="absolute right-0">{G_MAX} g</span>
-            {tickPct !== null && (
-              <span className="absolute top-0 flex -translate-x-1/2 flex-col items-center" style={{ left: `${tickPct}%` }}>
-                <span aria-hidden className="h-2 w-0.5 bg-orange-500" />
-                <span className="whitespace-nowrap">Standard plate {Math.round(typical ?? 0)} g</span>
-              </span>
-            )}
-          </div>
-        </div>
-      ) : (
-        <div className="mt-4">
-          <label htmlFor={`portion-${item.label}`} className="mb-1 block text-sm font-medium">
-            Portion: {item.portion} × {servingLabel}
-          </label>
-          <input
-            id={`portion-${item.label}`}
-            type="range"
-            min={0.5}
-            max={2}
-            step={0.25}
-            value={item.portion}
-            onChange={(e) => onChange(withPortion(item, Number(e.target.value)))}
-            className="h-11 w-full accent-orange-500"
-          />
-          <div className="flex justify-between text-xs text-neutral-500 dark:text-neutral-400">
-            <span>0.5×</span>
-            <span>1×</span>
-            <span>2×</span>
-          </div>
-        </div>
-      )}
+      <div className="px-4 pb-3">
+        {hasGrams ? (
+          <>
+            <div className="flex items-baseline justify-between">
+              <label htmlFor={`${uid}-grams`} className="type-subhead font-semibold">Weight</label>
+              <span className="num text-label-2 type-subhead">{Math.round(item.grams)} g</span>
+            </div>
+            <input
+              id={`${uid}-grams`}
+              type="range"
+              min={G_MIN}
+              max={G_MAX}
+              step={G_STEP}
+              value={sliderVal}
+              aria-label={`Weight of ${title} in grams`}
+              aria-valuetext={`${Math.round(item.grams)} grams`}
+              onChange={(e) => onChange(withGrams(item, Number(e.target.value), typical))}
+              className="h-11 w-full"
+            />
+            <div className="relative h-8 text-label-2 type-caption">
+              <span className="absolute left-0">{G_MIN} g</span>
+              <span className="absolute right-0">{G_MAX} g</span>
+              {tickPct !== null && (
+                <span className="absolute top-0 flex -translate-x-1/2 flex-col items-center" style={{ left: `${tickPct}%` }}>
+                  <span aria-hidden className="h-2 w-0.5 bg-accent-text" />
+                  <span className="whitespace-nowrap">Standard {Math.round(typical ?? 0)} g</span>
+                </span>
+              )}
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="flex items-baseline justify-between">
+              <label htmlFor={`${uid}-portion`} className="type-subhead font-semibold">Portion</label>
+              <span className="num text-label-2 type-subhead">{item.portion} × {servingLabel}</span>
+            </div>
+            <input
+              id={`${uid}-portion`}
+              type="range"
+              min={0.5}
+              max={2}
+              step={0.25}
+              value={item.portion}
+              aria-label={`Portion of ${title}, in multiples of ${servingLabel}`}
+              onChange={(e) => onChange(withPortion(item, Number(e.target.value)))}
+              className="h-11 w-full"
+            />
+            <div className="flex justify-between text-label-2 type-caption">
+              <span>0.5×</span>
+              <span>1×</span>
+              <span>2×</span>
+            </div>
+          </>
+        )}
+      </div>
 
       {suggestion && suggestion.id !== item.dishId && (
         <button
           type="button"
           onClick={() => swap(suggestion.id)}
-          className="mt-3 flex min-h-11 w-full items-center justify-between gap-2 rounded-xl border border-orange-400 bg-orange-50 px-3 py-2 text-left text-sm font-medium dark:border-orange-700 dark:bg-orange-950/40"
+          className={`pressable mx-3 mb-3 flex min-h-11 w-[calc(100%-1.5rem)] items-center justify-between gap-2 px-3 py-2 text-left ${tinted}`}
         >
-          <span className="min-w-0 break-words">Use your food: {suggestion.name}?</span>
-          <span className="shrink-0 rounded-full bg-orange-100 px-2 py-1 text-xs text-orange-800 dark:bg-orange-950 dark:text-orange-300">{YOUR_FOOD}</span>
+          <span className="min-w-0 break-words type-subhead font-medium text-accent-text">Use your food: {suggestion.name}?</span>
+          <Chip tone="accent">{YOUR_FOOD}</Chip>
         </button>
       )}
 
-      <button
-        type="button"
-        onClick={() => setSwapping((s) => !s)}
-        aria-expanded={swapping}
-        className="mt-3 flex h-11 w-full items-center justify-between rounded-xl border border-neutral-300 px-3 text-sm font-medium dark:border-neutral-700"
-      >
-        Not right? Swap dish
-        {swapping ? <ChevronUp {...ICON} aria-hidden /> : <ChevronDown {...ICON} aria-hidden />}
-      </button>
-      {swapping && (
-        <div className="mt-2 rounded-xl border border-neutral-200 p-2 dark:border-neutral-800">
-          <input
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search dishes…"
-            aria-label="Search dishes"
-            className="h-11 w-full rounded-xl border border-neutral-300 bg-transparent px-3 text-base dark:border-neutral-700"
-          />
-          <ul className="mt-1">
-            {options.map((c) => (
-              <li key={c.dishId}>
-                <button
-                  type="button"
-                  onClick={() => swap(c.dishId)}
-                  className="flex min-h-11 w-full items-center justify-between rounded-xl px-2 text-left text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                >
-                  <span className="break-words">{c.name}</span>
-                  {c.dishId.startsWith(CUSTOM_PREFIX) ? (
-                    <span className="ml-2 shrink-0 rounded-full bg-orange-100 px-2 py-1 text-xs font-medium text-orange-800 dark:bg-orange-950 dark:text-orange-300">{YOUR_FOOD}</span>
-                  ) : (
-                    <span className="ml-2 shrink-0 text-xs text-neutral-500">{Math.round(c.score * 100)}%</span>
-                  )}
-                </button>
-              </li>
-            ))}
-            {options.length === 0 && (
-              <li className="px-2 py-3 text-sm text-neutral-500">No other dishes found.</li>
-            )}
-          </ul>
-        </div>
-      )}
-    </div>
+      <div className="border-t border-separator [&>*:first-child_.row-sep]:border-t-0">
+        <Row
+          icon={<ArrowLeftRight size={17} />}
+          iconBg="bg-accent"
+          title="Not right? Swap dish"
+          onClick={() => setSwapping((s) => !s)}
+          chevron
+          ariaLabel={swapping ? "Hide dish options" : "Swap dish"}
+        />
+        {swapping && (
+          <div className="border-t border-separator px-3 pb-2 pt-3">
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search dishes"
+              aria-label="Search dishes"
+              className={nested ? FIELD.replace("bg-surface-2", "bg-surface-3") : FIELD}
+            />
+            <ul className="mt-1">
+              {options.map((c) => (
+                <li key={c.dishId}>
+                  <button
+                    type="button"
+                    onClick={() => swap(c.dishId)}
+                    className="flex min-h-11 w-full items-center justify-between gap-2 rounded-lg px-2 text-left type-subhead active:bg-fill"
+                  >
+                    <span className="break-words">{c.name}</span>
+                    {c.dishId.startsWith(CUSTOM_PREFIX) ? (
+                      <Chip tone="accent">{YOUR_FOOD}</Chip>
+                    ) : (
+                      <span className="num shrink-0 text-label-3 type-caption">{Math.round(c.score * 100)}%</span>
+                    )}
+                  </button>
+                </li>
+              ))}
+              {options.length === 0 && <li className="px-2 py-3 text-label-2 type-subhead">No other dishes found.</li>}
+            </ul>
+          </div>
+        )}
+        <Row icon={<Trash2 size={17} />} iconBg="bg-ios-red" title="Remove" destructive onClick={onRemove} ariaLabel={`Remove ${title}`} />
+      </div>
+    </article>
   );
 }

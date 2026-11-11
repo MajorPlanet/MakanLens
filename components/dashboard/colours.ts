@@ -1,1 +1,2 @@
-export const MACRO_COLOURS = { carbs: "#38bdf8", protein: "#a78bfa", fat: "#fbbf24" } as const;
+// Macro colours: Apple system colours (cyan / pink / yellow), matching the CSS tokens --macro-*.
+export const MACRO_COLOURS = { carbs: "#64d2ff", protein: "#ff375f", fat: "#ffd60a" } as const;

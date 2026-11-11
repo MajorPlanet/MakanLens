@@ -1,62 +1,67 @@
 "use client";
-import { Star } from "lucide-react";
-import { ICON } from "@/components/icons";
 import { useEffect, useState } from "react";
+import { Star } from "lucide-react";
 import { defaultSlot, fmtKcal } from "@/components/format";
 import { getFavouriteMeals, logSavedMeal, setFavourite } from "@/lib/storage";
 import type { SavedMeal } from "@/lib/types";
+import { Chip } from "@/components/ui/Controls";
+import { Row, Section } from "@/components/ui/List";
 
 const hasOwn = (m: SavedMeal) => m.items.some((i) => i.source === "custom");
 const mealKcal = (m: SavedMeal) => m.items.reduce((sum, i) => sum + i.nutrition.kcal, 0);
 
-/** Favourites list for the Search screen. One tap logs the meal to the current slot. */
+/** "Log again" favourites for the Search screen. Tapping a row logs the meal to the current slot; the star removes it. */
 export default function FavouriteList({ onLogged }: { onLogged?: (name: string) => void }) {
   const [favs, setFavs] = useState<SavedMeal[]>([]);
   // read localStorage after mount (SSR-safe)
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => setFavs(getFavouriteMeals()), []);
 
+  if (favs.length === 0) {
+    return (
+      <div className="mt-10 flex flex-col items-center px-6 text-center">
+        <Star size={44} strokeWidth={1.5} aria-hidden className="text-label-3" />
+        <p className="mt-3 type-title3">No favourites yet</p>
+        <p className="mt-1 text-label-2 type-subhead">Tap the star on a meal under “Log again” on Today to keep it here.</p>
+      </div>
+    );
+  }
+
   return (
-    <section aria-label="Favourites" className="mt-6">
-      <h2 className="mb-2 text-sm font-semibold text-neutral-500 dark:text-neutral-400"><Star size={16} strokeWidth={1.75} aria-hidden className="mr-1 inline align-[-3px]" />Favourites</h2>
-      {favs.length === 0 ? (
-        <p className="rounded-3xl border border-dashed border-neutral-300 p-4 text-sm text-neutral-500 dark:border-neutral-700 dark:text-neutral-400">
-          No favourites yet. Tap the star on a meal under “Log again” on Today.
-        </p>
-      ) : (
-        <ul className="space-y-2">
-          {favs.map((f) => (
-            <li key={f.id} className="flex items-stretch rounded-xl border border-neutral-200 bg-card dark:border-neutral-800">
-              <button
-                type="button"
-                onClick={() => {
-                  logSavedMeal(f, defaultSlot());
-                  setFavs(getFavouriteMeals());
-                  onLogged?.(f.name);
-                }}
-                className="min-h-11 min-w-0 flex-1 px-3 py-2 text-left"
-              >
+    <Section header="Favourites" footer="Tap a favourite to log it again to the current meal.">
+      {favs.map((f) => (
+        <div key={f.id} className="group flex items-stretch">
+          <div className="min-w-0 flex-1">
+            <Row
+              title={
                 <span className="flex items-center gap-2">
-                  <span className="truncate text-sm font-medium">{f.name}</span>
-                  {hasOwn(f) && <span className="shrink-0 rounded-full bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-800 dark:bg-orange-950 dark:text-orange-300">Your food</span>}
+                  <span className="truncate">{f.name}</span>
+                  {hasOwn(f) && <Chip tone="accent">Your food</Chip>}
                 </span>
-                <span className="block text-xs text-neutral-500 dark:text-neutral-400">{fmtKcal(mealKcal(f))} kcal · tap to log</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setFavourite(f.id, false);
-                  setFavs(getFavouriteMeals());
-                }}
-                aria-label={`Remove ${f.name} from favourites`}
-                className="flex min-h-11 min-w-11 items-center justify-center text-xl text-orange-500"
-              >
-                <Star {...ICON} fill="currentColor" aria-hidden />
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
+              }
+              subtitle="Tap to log"
+              value={`${fmtKcal(mealKcal(f))} kcal`}
+              ariaLabel={`Log ${f.name} again, ${fmtKcal(mealKcal(f))} kilocalories`}
+              onClick={() => {
+                logSavedMeal(f, defaultSlot());
+                setFavs(getFavouriteMeals());
+                onLogged?.(f.name);
+              }}
+            />
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setFavourite(f.id, false);
+              setFavs(getFavouriteMeals());
+            }}
+            aria-label={`Remove ${f.name} from favourites`}
+            className="pressable flex min-h-11 w-12 shrink-0 items-center justify-center border-t border-separator text-ios-yellow group-first:border-t-0"
+          >
+            <Star size={20} strokeWidth={1.75} fill="currentColor" aria-hidden />
+          </button>
+        </div>
+      ))}
+    </Section>
   );
 }

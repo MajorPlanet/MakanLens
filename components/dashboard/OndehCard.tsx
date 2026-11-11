@@ -85,7 +85,7 @@ export default function OndehCard({ entries, target }: { entries: LogEntry[]; ta
 
   if (!nudge || !img) return null;
   return (
-    <section aria-label="Ondeh" className="mt-4 flex items-center gap-3 rounded-3xl border border-emerald-200 bg-card p-3 dark:border-emerald-900">
+    <section aria-label="Ondeh" className="surface mt-4 flex items-center gap-3 p-3">
       {/* eslint-disable-next-line @next/next/no-img-element -- small local mascot, no optimisation needed */}
       <img
         src={img}
@@ -95,8 +95,8 @@ export default function OndehCard({ entries, target }: { entries: LogEntry[]; ta
         className="h-14 w-14 shrink-0 object-contain"
         onError={() => { if (img !== FALLBACK_IMG) setImg(FALLBACK_IMG); }}
       />
-      <p className="min-w-0 text-sm leading-snug">
-        <span className="font-semibold text-emerald-700 dark:text-emerald-400">Ondeh: </span>
+      <p className="min-w-0 type-subhead">
+        <span className="font-semibold text-ios-green">Ondeh: </span>
         {nudge.message}
       </p>
     </section>

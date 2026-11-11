@@ -1,6 +1,6 @@
 "use client";
 import { Download, Share } from "lucide-react";
-import { ICON } from "@/components/icons";
+import { Row } from "@/components/ui/List";
 import { useEffect, useState } from "react";
 
 interface BeforeInstallPromptEvent extends Event {
@@ -9,7 +9,7 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 /** Registers the service worker (production only) and offers "Install app" where the browser supports it. */
-export default function InstallButton() {
+export default function InstallButton({ variant = "none" }: { variant?: "none" | "row" }) {
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
   const [iosTip, setIosTip] = useState(false);
   const [installed, setInstalled] = useState(false);
@@ -35,20 +35,24 @@ export default function InstallButton() {
     };
   }, []);
 
-  if (installed) return null;
+  // Only the Profile screen shows the install row; elsewhere this component just registers the service worker.
+  if (variant !== "row" || installed) return null;
   if (deferred) {
     return (
-      <button
-        type="button"
+      <Row
+        icon={<Download size={18} strokeWidth={2.25} />} iconBg="bg-accent" title="Install MakanLens" subtitle="Add to your home screen"
         onClick={async () => { await deferred.prompt(); const r = await deferred.userChoice; if (r.outcome === "accepted") setDeferred(null); }}
-        className="mx-auto mb-2 flex min-h-11 items-center gap-2 rounded-full bg-emerald-500 px-5 text-sm font-semibold text-white shadow"
-      >
-        <Download {...ICON} aria-hidden /> Install MakanLens
-      </button>
+        chevron
+      />
     );
   }
   if (iosTip) {
-    return <p className="mb-2"><Share size={14} strokeWidth={1.75} aria-hidden className="mr-1 inline align-[-2px]" />To install: tap <strong>Share</strong>, then <strong>Add to Home Screen</strong>.</p>;
+    return (
+      <Row
+        icon={<Share size={18} strokeWidth={2.25} />} iconBg="bg-accent" title="Add to Home Screen"
+        subtitle="Tap Share, then Add to Home Screen"
+      />
+    );
   }
   return null;
 }

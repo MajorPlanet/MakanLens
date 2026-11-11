@@ -1,118 +1,73 @@
 "use client";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import type { Profile } from "@/lib/types";
-import { clearAll, getEntries, getProfile, localDateString, saveProfile } from "@/lib/storage";
-import { entriesToCsv } from "@/lib/history";
-import PageHeader from "@/components/PageHeader";
-import ProfileForm from "@/components/ProfileForm";
-import GoalPlanner from "@/components/goal/GoalPlanner";
+import { Activity, Database, HeartPulse, PieChart, Target } from "lucide-react";
+import NavBar from "@/components/ui/NavBar";
+import { Section, Row } from "@/components/ui/List";
+import { Button } from "@/components/ui/Controls";
 import BackupPanel from "@/components/BackupPanel";
-import MacroGoals from "@/components/MacroGoals";
 import ExerciseSetting from "@/components/ExerciseSetting";
-import { gramsToSplit, splitToGrams } from "@/lib/targets";
+import InstallButton from "@/components/InstallButton";
+import { useGoalPlan } from "@/lib/plan";
+import { useProfile } from "./useProfile";
 
-export default function SettingsPage() {
-  const router = useRouter();
-  const [ready, setReady] = useState(false);
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [formKey, setFormKey] = useState(0);
-  const [saved, setSaved] = useState(false);
-  const [confirming, setConfirming] = useState(false);
-  const [note, setNote] = useState<string | null>(null);
+const GOAL_LABEL = { lose: "Lose weight", maintain: "Maintain weight", gain: "Gain weight" } as const;
+const n = (v: number) => Math.round(v).toLocaleString("en-GB");
 
-  /* eslint-disable react-hooks/set-state-in-effect -- read localStorage after mount (SSR-safe) */
-  useEffect(() => {
-    setProfile(getProfile());
-    setReady(true);
-  }, []);
-  /* eslint-enable react-hooks/set-state-in-effect */
+export default function ProfilePage() {
+  const { ready, profile, persist, reload } = useProfile();
+  const plan = useGoalPlan();
 
-  function persist(p: Profile) {
-    saveProfile(p as Profile);
-    setProfile(p);
-  }
-
-  /** ProfileForm rebuilds the profile from scratch, so carry the custom macro and exercise settings across. */
-  function saveFromForm(p: Profile) {
-    const old = profile;
-    const merged: Profile = { ...p, macroMode: old?.macroMode ?? "split", macroSplit: old?.macroSplit, macroGrams: old?.macroGrams, addBackExercise: old?.addBackExercise ?? true };
-    if (old?.macroMode === "grams" && old.macroGrams) merged.macroTargets = old.macroGrams;
-    else if (old) merged.macroTargets = splitToGrams(p.targetKcal, old.macroSplit ?? gramsToSplit(old.macroTargets));
-    persist(merged);
-    setFormKey((k) => k + 1);
-    setSaved(true);
-  }
-
-  function exportCsv() {
-    const entries = getEntries();
-    if (entries.length === 0) { setNote("No entries to export yet."); return; }
-    const blob = new Blob([entriesToCsv(entries)], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `makanlens-${localDateString()}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-    setNote(`Exported ${entries.length} ${entries.length === 1 ? "entry" : "entries"}.`);
-  }
-
-  function wipe() {
-    clearAll();
-    router.push("/onboarding");
-  }
-
-  const btn = "min-h-12 w-full rounded-xl border border-neutral-300 px-4 font-semibold dark:border-neutral-700";
+  const goal = profile ? GOAL_LABEL[plan?.direction ?? profile.goal] : "";
+  const planKcal = plan && plan.dailyKcal > 0 ? plan.dailyKcal : profile?.targetKcal ?? 0;
 
   return (
-    <main className="mx-auto max-w-md px-4 pb-8 pt-4">
-      <PageHeader title="Settings" />
+    <main className="mx-auto max-w-xl px-4 pb-8">
+      <NavBar title="Profile" />
       {!ready ? (
         <div aria-busy="true" aria-label="Loading" className="space-y-3">
-          <div className="skeleton h-12" /><div className="skeleton h-12" /><div className="skeleton h-12" /><div className="skeleton h-40 rounded-3xl" />
+          <div className="skeleton h-24" /><div className="skeleton h-44" /><div className="skeleton h-32" />
         </div>
       ) : (
         <>
-          <h2 className="text-sm font-semibold">Your profile</h2>
-          <ProfileForm
-            initial={profile}
-            submitLabel="Save"
-            allowOverride
-            savedMessage={saved ? "Saved" : null}
-            onEdit={() => setSaved(false)}
-            onSave={saveFromForm}
-          />
+          {profile ? (
+            <section className="surface mt-2 flex items-center gap-4 p-4" aria-label="Your plan">
+              <span aria-hidden className="num flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-accent text-[28px] font-semibold text-white">
+                {profile.sex === "female" ? "F" : "M"}
+              </span>
+              <div className="min-w-0">
+                <p className="text-label-2 type-footnote uppercase">Your plan</p>
+                <p className="num type-title2">{n(planKcal)} <span className="text-label-2 type-callout font-normal">kcal a day</span></p>
+                <p className="truncate text-label-2 type-subhead">{goal}{plan && plan.weeks > 0 ? ` · ${plan.weeks} weeks` : ""}</p>
+              </div>
+            </section>
+          ) : (
+            <section className="surface mt-2 p-5 text-center">
+              <p className="type-title3">No plan yet</p>
+              <p className="mb-4 mt-1 text-label-2 type-subhead">Tell us about yourself to get a daily calorie target.</p>
+              <Button href="/onboarding" variant="tinted" size="medium">Set up your profile</Button>
+            </section>
+          )}
 
           {profile && (
             <>
-              <MacroGoals key={`m${formKey}`} profile={profile} onSave={persist} />
+              <Section header="Your goals">
+                <Row icon={<HeartPulse size={18} strokeWidth={2.25} />} iconBg="bg-ios-pink" title="Health Details" value={`${profile.heightCm} cm · ${profile.weightKg} kg`} href="/settings/details" />
+                <Row icon={<Target size={18} strokeWidth={2.25} />} iconBg="bg-ios-green" title="Weight Goal" value={plan ? `${GOAL_LABEL[plan.direction].split(" ")[0]}` : "Not set"} href="/settings/goal" />
+                <Row icon={<PieChart size={18} strokeWidth={2.25} />} iconBg="bg-ios-blue" title="Macro Goals" value={`${profile.macroTargets.protein_g} · ${profile.macroTargets.carbs_g} · ${profile.macroTargets.fat_g} g`} href="/settings/macros" />
+              </Section>
               <ExerciseSetting profile={profile} onSave={persist} />
-              <GoalPlanner profile={profile} />
             </>
           )}
 
-          <section className="mt-8 space-y-3">
-            <h2 className="text-sm font-semibold">Your data</h2>
-            <button type="button" onClick={exportCsv} className={btn}>Export CSV</button>
-            <BackupPanel onRestored={() => setProfile(getProfile())} />
-            {note && <p role="status" className="text-sm text-neutral-600 dark:text-neutral-300">{note}</p>}
-            {confirming ? (
-              <div className="rounded-3xl border border-red-300 p-4 dark:border-red-900" role="alertdialog" aria-label="Confirm clearing data">
-                <p className="text-sm">This permanently deletes your profile and every logged meal from this device. It cannot be undone.</p>
-                <div className="mt-3 flex gap-2">
-                  <button type="button" onClick={() => setConfirming(false)} className="min-h-12 flex-1 rounded-xl border border-neutral-300 font-semibold dark:border-neutral-700">Cancel</button>
-                  <button type="button" onClick={wipe} className="min-h-12 flex-1 rounded-xl bg-red-600 font-semibold text-white hover:bg-red-700">Yes, delete</button>
-                </div>
-              </div>
-            ) : (
-              <button type="button" onClick={() => setConfirming(true)} className={`${btn} border-red-300 text-red-600 dark:border-red-900 dark:text-red-400`}>Clear all data</button>
-            )}
-            <p className="pt-2 text-xs text-neutral-500 dark:text-neutral-400">
-              Your data stays on this device. Nothing is uploaded except the photo or text you analyse.
-            </p>
-          </section>
+          <BackupPanel onRestored={reload} />
+
+          <Section
+            header="About"
+            footer="MakanLens is free and open source under the MIT licence. Estimates only. Not medical advice."
+          >
+            <Row icon={<Database size={18} strokeWidth={2.25} />} iconBg="bg-ios-purple" title="About our data" href="/uncovered" />
+            <InstallButton variant="row" />
+          </Section>
+          <p className="mt-2 flex items-center justify-center gap-1 text-label-3 type-footnote"><Activity size={12} aria-hidden /> MakanLens 1.0</p>
         </>
       )}
     </main>

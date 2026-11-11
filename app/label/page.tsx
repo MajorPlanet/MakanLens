@@ -7,10 +7,14 @@ import { ApiClientError } from "@/lib/client";
 import { resizeImage } from "@/lib/image";
 import { roundNutrition, scaleAll, withGrams } from "@/lib/nutrition";
 import NutritionRow from "@/components/NutritionRow";
-import PageHeader from "@/components/PageHeader";
 import SearchSlotPicker from "@/components/SearchSlotPicker";
 import { readLabel, type LabelRead } from "@/components/LabelApi";
-import { ACCENT_BTN, defaultSlot, fmtKcal } from "@/components/format";
+import { ScanText } from "lucide-react";
+import { defaultSlot, fmtKcal } from "@/components/format";
+import NavBar from "@/components/ui/NavBar";
+import { Section } from "@/components/ui/List";
+import { Button, Chip, Segmented } from "@/components/ui/Controls";
+import AmountStepper from "@/components/foods/AmountStepper";
 
 const STEPS = [0.5, 1, 1.5, 2, 2.5, 3];
 
@@ -83,103 +87,85 @@ export default function LabelPage() {
   }
 
   return (
-    <main className="mx-auto max-w-md px-4 pb-8 pt-4">
-      <PageHeader title="Scan label" />
+    <main className="mx-auto max-w-xl px-4 pb-8">
+      <NavBar title="Scan Label" back={{ href: "/", label: "Today" }} />
 
-      <section className="p-4 card">
-        <p className="mb-3 text-sm text-neutral-600 dark:text-neutral-300">
-          Photograph a printed nutrition panel. We copy only what is printed, and you can check it before logging.
-        </p>
-        <input ref={fileRef} type="file" accept="image/*" capture="environment" className="sr-only" id="label-file" onChange={(e) => void onFile(e.target.files?.[0])} />
-        <button type="button" disabled={loading} onClick={() => fileRef.current?.click()} className={`h-12 w-full rounded-xl font-semibold ${ACCENT_BTN}`}>
-          {read ? "Scan another label" : "Take or upload a label photo"}
-        </button>
-      </section>
+      <div className="surface mt-2 p-3">
+        <div className="flex flex-col items-center px-3 py-6 text-center">
+          <ScanText size={44} strokeWidth={1.5} aria-hidden className="text-label-3" />
+          <p className="mt-2 type-headline">Photograph a nutrition panel</p>
+          <p className="mt-1 text-label-2 type-subhead">We copy only what is printed, and you can check it before logging.</p>
+        </div>
+        <input ref={fileRef} type="file" accept="image/*" capture="environment" className="sr-only" id="label-file" aria-label="Label photo" tabIndex={-1} onChange={(e) => void onFile(e.target.files?.[0])} />
+        <Button variant={read ? "tinted" : "filled"} disabled={loading} onClick={() => fileRef.current?.click()}>
+          {read ? "Scan Another Label" : "Take or Upload Photo"}
+        </Button>
+      </div>
 
       {loading && (
-        <div role="status" aria-live="polite" className="card mt-4 p-4">
-          <p className="mb-3 text-sm text-neutral-500 dark:text-neutral-400">Reading the label…</p>
+        <div role="status" aria-live="polite" className="surface mt-6 p-4">
+          <p className="mb-3 text-label-2 type-subhead">Reading the label…</p>
           <div className="space-y-2">
             <div className="skeleton h-5 w-2/3" />
             <div className="skeleton h-9 w-1/3" />
-            <div className="skeleton h-3 w-full rounded-full" />
+            <div className="skeleton h-3 w-full" />
           </div>
         </div>
       )}
-      {error && (
-        <p role="alert" className="mt-4 rounded-3xl border border-orange-200 bg-orange-50 p-4 text-sm dark:border-orange-900 dark:bg-orange-950/40">{error}</p>
-      )}
+      {error && <p role="alert" className="mt-6 rounded-xl bg-ios-red/15 p-3 text-ios-red type-subhead">{error}</p>}
 
       {read && base && (
-        <section className="mt-4 space-y-4">
-          <div className="p-4 card">
+        <div className="mt-6">
+          <div className="surface p-4">
             <div className="flex gap-3">
               {photo && (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={photo} alt="Your label photo" className="h-32 w-24 shrink-0 rounded-xl bg-neutral-100 object-cover dark:bg-neutral-800" />
+                <img src={photo} alt="Your label photo" className="h-32 w-24 shrink-0 rounded-[10px] bg-surface-2 object-cover" />
               )}
               <div className="min-w-0 flex-1">
-                <h2 className="break-words text-lg font-semibold leading-tight">{base.label || "Packaged food"}</h2>
-                <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+                <h2 className="break-words type-headline">{base.label || "Packaged food"}</h2>
+                <p className="mt-0.5 text-label-2 type-footnote">
                   Printed per {read.servingLabel}
                   {read.servingsPerPack ? ` · ${read.servingsPerPack} per pack` : ""}
                 </p>
-                <p className="mt-2 text-4xl font-bold tabular-nums text-orange-600 dark:text-orange-400">
+                <p className="mt-2 num text-[40px] font-bold leading-none">
                   {fmtKcal(base.nutrition.kcal)}
-                  <span className="ml-1 text-sm font-medium text-neutral-500 dark:text-neutral-400">kcal</span>
+                  <span className="ml-1 text-label-2 type-subhead font-medium">kcal</span>
                 </p>
                 <NutritionRow n={base.nutrition} showKcal={false} className="mt-1" />
               </div>
             </div>
-            <span className="mt-3 inline-flex min-h-8 items-center rounded-full bg-neutral-100 px-3 text-xs font-medium dark:bg-neutral-800">Printed label</span>
-            <p className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">Compare these numbers with your photo before you log.</p>
-          </div>
-
-          <div className="p-4 card">
-            <div className="mb-2 flex items-center justify-between">
-              <h3 className="text-sm font-medium">{byGrams ? "Amount eaten (grams)" : "Servings eaten"}</h3>
-              {canGrams && (
-                <button type="button" onClick={() => setByGrams((v) => !v)} className="min-h-11 px-2 text-sm font-medium text-orange-600 dark:text-orange-400">
-                  {byGrams ? "Use servings" : "Use grams"}
-                </button>
-              )}
+            <div className="mt-3 flex items-center gap-2">
+              <Chip>Printed label</Chip>
+              <span className="text-label-2 type-caption">Compare with your photo before you log.</span>
             </div>
-            {byGrams && canGrams ? (
-              <input
-                aria-label="Grams eaten"
-                value={gramsText}
-                onChange={(e) => setGramsText(e.target.value.replace(/[^\d.]/g, ""))}
-                inputMode="decimal"
-                className="h-11 w-full rounded-xl border border-neutral-300 bg-transparent px-3 text-base dark:border-neutral-700"
-              />
-            ) : (
-              <div className="grid grid-cols-3 gap-2 min-[420px]:grid-cols-6">
-                {STEPS.map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => setServings(s)}
-                    aria-pressed={servings === s}
-                    className={`h-11 rounded-xl text-sm font-medium ${servings === s ? "bg-orange-500 text-white" : "border border-neutral-300 dark:border-neutral-700"}`}
-                  >
-                    {s}×
-                  </button>
-                ))}
-              </div>
-            )}
-            {final && m !== 1 && (
-              <div className="mt-2 flex gap-1 text-sm text-neutral-600 dark:text-neutral-300">
-                <span aria-hidden>=</span>
-                <NutritionRow n={final.nutrition} />
-              </div>
-            )}
           </div>
 
-          <SearchSlotPicker slot={slot} onChange={setSlot} />
-          <button type="button" onClick={add} disabled={!final} className={`h-14 w-full rounded-xl text-lg font-semibold ${ACCENT_BTN}`}>
-            Add to today{final ? ` · ${fmtKcal(final.nutrition.kcal)} kcal` : ""}
-          </button>
-        </section>
+          <Section header="Amount eaten" footer={final && m !== 1 ? <span className="flex gap-1"><span aria-hidden>=</span><NutritionRow n={final.nutrition} /></span> : undefined}>
+            {canGrams && (
+              <div className="p-2">
+                <Segmented<"srv" | "g"> label="Amount unit" value={byGrams ? "g" : "srv"} onChange={(u) => setByGrams(u === "g")} options={[{ value: "srv", label: "Servings" }, { value: "g", label: "Grams" }]} />
+              </div>
+            )}
+            {byGrams && canGrams ? (
+              <AmountStepper id="label-grams" label="Eaten" value={gramsText} onChange={setGramsText} step={10} unit="g" />
+            ) : (
+              <div className="p-2">
+                <Segmented<string> label="Servings eaten" value={String(servings)} onChange={(v) => setServings(Number(v))} options={STEPS.map((s) => ({ value: String(s), label: `${s}×` }))} />
+              </div>
+            )}
+          </Section>
+
+          <Section header="Meal">
+            <div className="p-2"><SearchSlotPicker slot={slot} onChange={setSlot} /></div>
+          </Section>
+
+          <div className="mt-6">
+            <Button onClick={add} disabled={!final}>
+              Add to Today{final ? ` · ${fmtKcal(final.nutrition.kcal)} kcal` : ""}
+            </Button>
+          </div>
+        </div>
       )}
     </main>
   );

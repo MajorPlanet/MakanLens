@@ -1,12 +1,18 @@
 "use client";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import type { AnalysedItem, BarcodeResponse, MealSlot, Nutrition } from "@/lib/types";
 import { logItems } from "@/lib/storage";
 import { ApiClientError, lookupBarcode } from "@/lib/client";
 import ItemCard from "@/components/ItemCard";
-import { ACCENT_BTN, SLOTS, defaultSlot, fmtKcal, fmtMacro } from "@/components/format";
+import { ScanBarcode } from "lucide-react";
+import { defaultSlot, fmtKcal, fmtMacro } from "@/components/format";
+import { MACRO_COLOURS } from "@/components/dashboard/colours";
+import NavBar from "@/components/ui/NavBar";
+import { Row, Section } from "@/components/ui/List";
+import { Button, Chip } from "@/components/ui/Controls";
+import SearchSlotPicker from "@/components/SearchSlotPicker";
+import AmountStepper from "@/components/foods/AmountStepper";
 
 const READER_ID = "barcode-reader";
 
@@ -157,38 +163,41 @@ export default function ScanPage() {
   }
 
   return (
-    <main className="mx-auto max-w-md px-4 pb-8 pt-4">
-      <header className="mb-4 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-orange-600 dark:text-orange-400">Scan barcode</h1>
-        <Link href="/" className="flex h-11 items-center px-3 text-sm font-medium">Back</Link>
-      </header>
+    <main className="mx-auto max-w-xl px-4 pb-8">
+      <NavBar title="Scan Barcode" back={{ href: "/", label: "Today" }} />
 
-      <section className="p-4 card">
-        <div id={READER_ID} className={cameraOn ? "mb-3 w-full overflow-hidden rounded-xl" : "hidden"} />
-        {cameraOn ? (
-          <button type="button" onClick={() => void stopCamera()} className="h-11 w-full rounded-xl border border-neutral-300 font-medium dark:border-neutral-700">
-            Stop camera
-          </button>
-        ) : (
-          <button type="button" onClick={() => void startCamera()} disabled={loading} className={`h-12 w-full rounded-xl font-semibold ${ACCENT_BTN}`}>
-            Start camera
-          </button>
+      <div className="surface mt-2 overflow-hidden">
+        <div id={READER_ID} className={cameraOn ? "w-full overflow-hidden rounded-t-xl" : "hidden"} />
+        {!cameraOn && (
+          <div className="flex flex-col items-center px-6 py-8 text-center">
+            <ScanBarcode size={44} strokeWidth={1.5} aria-hidden className="text-label-3" />
+            <p className="mt-2 type-headline">Point at a barcode</p>
+            <p className="mt-1 text-label-2 type-subhead">Packaged food only. Nutrition comes from Open Food Facts.</p>
+          </div>
         )}
-        {cameraError && (
-          <p role="alert" className="mt-3 text-sm text-red-700 dark:text-red-300">
-            Camera error: {cameraError}. The live camera needs HTTPS or localhost, so you can type the barcode below instead.
-          </p>
-        )}
+        <div className="p-3">
+          {cameraOn ? (
+            <Button variant="gray" onClick={() => void stopCamera()}>Stop Camera</Button>
+          ) : (
+            <Button variant="tinted" onClick={() => void startCamera()} disabled={loading}>Start Camera</Button>
+          )}
+        </div>
+      </div>
+      {cameraError && (
+        <p role="alert" className="mt-3 rounded-xl bg-ios-red/15 p-3 text-ios-red type-subhead">
+          Camera error: {cameraError}. The live camera needs HTTPS or localhost, so you can type the barcode below instead.
+        </p>
+      )}
 
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            void lookup(manual);
-          }}
-          className="mt-4"
-        >
-          <label htmlFor="manual-code" className="mb-1 block text-sm font-medium">Or type the barcode number</label>
-          <div className="flex gap-2">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          void lookup(manual);
+        }}
+      >
+        <Section header="Or enter the number" footer="The 8 to 14 digits printed under the bars.">
+          <div className="flex min-h-12 items-center gap-2 px-4">
+            <label htmlFor="manual-code" className="sr-only">Barcode number</label>
             <input
               id="manual-code"
               value={manual}
@@ -197,91 +206,71 @@ export default function ScanPage() {
               pattern="[0-9]*"
               maxLength={14}
               placeholder="e.g. 9556001234567"
-              className="h-11 min-w-0 flex-1 rounded-xl border border-neutral-300 bg-transparent px-3 text-base dark:border-neutral-700"
+              autoComplete="off"
+              className="h-11 min-w-0 flex-1 bg-transparent type-body text-label placeholder:text-label-3 outline-none"
             />
-            <button type="submit" disabled={loading || !manual} className={`h-11 rounded-xl px-4 font-medium ${ACCENT_BTN}`}>
-              Look up
+            <button type="submit" disabled={loading || !manual} className="pressable h-11 shrink-0 px-1 text-accent-text type-body font-semibold disabled:text-label-3">
+              Look Up
             </button>
           </div>
-        </form>
-      </section>
+        </Section>
+      </form>
 
       {loading && (
-        <div role="status" aria-live="polite" className="card mt-4 p-4">
-          <p className="mb-3 text-sm text-neutral-500 dark:text-neutral-400">Looking up barcode…</p>
+        <div role="status" aria-live="polite" className="surface mt-6 p-4">
+          <p className="mb-3 text-label-2 type-subhead">Looking up barcode…</p>
           <div className="space-y-2">
             <div className="skeleton h-5 w-2/3" />
             <div className="skeleton h-9 w-1/3" />
-            <div className="skeleton h-3 w-full rounded-full" />
+            <div className="skeleton h-3 w-full" />
           </div>
         </div>
       )}
 
       {message && (
-        <p role="alert" className="mt-4 rounded-3xl border border-orange-200 bg-orange-50 p-4 text-sm dark:border-orange-900 dark:bg-orange-950/40">
-          {message}
+        <p role="alert" className="mt-6 rounded-xl bg-ios-red/15 p-3 text-ios-red type-subhead">
+          {message}. Check the number, or enter it again above.
         </p>
       )}
 
       {product && item && finalItem && (
-        <section className="mt-4 space-y-4">
+        <div className="mt-6">
           {product.basis === "serving" ? (
             <ItemCard item={item} onChange={setItem} onRemove={() => { setProduct(null); setItem(null); }} />
           ) : (
-            <div className="p-4 card">
-              <h2 className="break-words text-lg font-semibold leading-tight">{product.productName}</h2>
-              <p className="mt-2 text-5xl font-bold tabular-nums text-orange-600 dark:text-orange-400">
-                {fmtKcal(finalItem.nutrition.kcal)}
-                <span className="ml-1 text-base font-medium text-neutral-500 dark:text-neutral-400">kcal</span>
-              </p>
-              <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-300">
-                P {fmtMacro(finalItem.nutrition.protein_g)} g · C {fmtMacro(finalItem.nutrition.carbs_g)} g · F {fmtMacro(finalItem.nutrition.fat_g)} g
-              </p>
-              {item.sourceUrl ? (
-                <a href={item.sourceUrl} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex min-h-11 items-center rounded-full bg-neutral-100 px-3 text-xs font-medium underline dark:bg-neutral-800">
-                  Open Food Facts
-                </a>
-              ) : (
-                <span className="mt-3 inline-flex min-h-11 items-center rounded-full bg-neutral-100 px-3 text-xs font-medium dark:bg-neutral-800">Open Food Facts</span>
-              )}
-              <label htmlFor="grams" className="mt-3 block text-sm font-medium">Amount eaten (grams)</label>
-              <input
-                id="grams"
-                value={grams}
-                onChange={(e) => setGrams(e.target.value.replace(/[^\d.]/g, ""))}
-                inputMode="decimal"
-                className="mt-1 h-11 w-full rounded-xl border border-neutral-300 bg-transparent px-3 text-base dark:border-neutral-700"
-              />
-              <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">Nutrition is per 100 g on the label, scaled to your amount.</p>
-            </div>
+            <>
+              <div className="surface p-4 text-center">
+                <h2 className="break-words type-title3">{product.productName}</h2>
+                <p className="mt-2 num text-[44px] font-bold leading-none" aria-live="polite">
+                  {fmtKcal(finalItem.nutrition.kcal)}
+                  <span className="ml-1 text-label-2 type-headline font-medium">kcal</span>
+                </p>
+                <p className="mt-2 num type-subhead">
+                  <span style={{ color: MACRO_COLOURS.protein }}>P {fmtMacro(finalItem.nutrition.protein_g)} g</span>
+                  <span className="text-label-3"> · </span>
+                  <span style={{ color: MACRO_COLOURS.carbs }}>C {fmtMacro(finalItem.nutrition.carbs_g)} g</span>
+                  <span className="text-label-3"> · </span>
+                  <span style={{ color: MACRO_COLOURS.fat }}>F {fmtMacro(finalItem.nutrition.fat_g)} g</span>
+                </p>
+                <div className="mt-3"><Chip>Open Food Facts</Chip></div>
+              </div>
+              <Section header="Amount" footer="Nutrition is per 100 g on the label, scaled to your amount.">
+                <AmountStepper id="grams" label="Eaten" value={grams} onChange={setGrams} step={10} unit="g" />
+                {item.sourceUrl && <Row title="View on Open Food Facts" chevron onClick={() => window.open(item.sourceUrl, "_blank", "noopener,noreferrer")} />}
+              </Section>
+            </>
           )}
 
-          <fieldset>
-            <legend className="mb-2 text-sm font-medium">Meal</legend>
-            <div className="grid grid-cols-2 gap-2 min-[420px]:grid-cols-4">
-              {SLOTS.map((s) => (
-                <button
-                  key={s.id}
-                  type="button"
-                  onClick={() => setSlot(s.id)}
-                  aria-pressed={slot === s.id}
-                  className={`h-11 rounded-xl text-sm font-medium ${slot === s.id ? "bg-orange-500 text-white" : "border border-neutral-300 dark:border-neutral-700"}`}
-                >
-                  {s.label}
-                </button>
-              ))}
-            </div>
-          </fieldset>
+          <Section header="Meal">
+            <div className="p-2"><SearchSlotPicker slot={slot} onChange={setSlot} /></div>
+          </Section>
 
-          <button
-            type="button"
-            onClick={add}
-            disabled={product.basis === "100g" && !(gramsNum > 0)}
-            className={`h-14 w-full rounded-xl text-lg font-semibold ${ACCENT_BTN}`}
-          >
-            Add to today · {fmtKcal(finalItem.nutrition.kcal)} kcal
-          </button>
-        </section>
+          <div className="mt-6">
+            <Button onClick={add} disabled={product.basis === "100g" && !(gramsNum > 0)}>
+              Add to Today · {fmtKcal(finalItem.nutrition.kcal)} kcal
+            </Button>
+          </div>
+        </div>
       )}
     </main>
   );

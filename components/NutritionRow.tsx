@@ -20,17 +20,17 @@ export default function NutritionRow({
   if (typeof n.satfat_g === "number") micros.push(`Sat fat ${fmtMacro(n.satfat_g)} g`);
 
   return (
-    <div className={`text-sm text-neutral-600 dark:text-neutral-300 ${className}`}>
-      <p className="tabular-nums">
+    <div className={`text-label-2 type-subhead ${className}`}>
+      <p className="num">
         {showKcal && (
           <>
-            <span className="font-semibold text-neutral-900 dark:text-neutral-100">{fmtKcal(n.kcal)} kcal</span>
+            <span className="font-semibold text-label">{fmtKcal(n.kcal)} kcal</span>
             {" · "}
           </>
         )}
         P {fmtMacro(n.protein_g)} g · C {fmtMacro(n.carbs_g)} g · F {fmtMacro(n.fat_g)} g
       </p>
-      {micros.length > 0 && <p className="mt-0.5 text-xs tabular-nums text-neutral-500 dark:text-neutral-400">{micros.join(" · ")}</p>}
+      {micros.length > 0 && <p className="num mt-0.5 text-label-3 type-caption">{micros.join(" · ")}</p>}
     </div>
   );
 }

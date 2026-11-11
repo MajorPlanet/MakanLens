@@ -1,6 +1,5 @@
 "use client";
-import { X } from "lucide-react";
-import { ICON } from "@/components/icons";
+import { Lightbulb, LoaderCircle, TriangleAlert, UtensilsCrossed, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { AnalysedItem, LogEntry, MealSlot, Profile } from "@/lib/types";
@@ -22,7 +21,9 @@ import MealList from "@/components/MealList";
 import RecentStrip from "@/components/RecentStrip";
 import ExerciseCard from "@/components/ExerciseCard";
 import ResultsCard from "@/components/ResultsCard";
-import SnapBar from "@/components/SnapBar";
+import NavBar from "@/components/ui/NavBar";
+import { Button } from "@/components/ui/Controls";
+import { openLogSheet, useLogInput } from "@/components/log/logBus";
 import ErrorNotice, { type NoticeKind } from "@/components/ErrorNotice";
 import { getDish } from "@/lib/matcher";
 import { sumNutrition } from "@/components/format";
@@ -112,6 +113,14 @@ export default function Home() {
     }
   }, []);
 
+  // Photos and descriptions arrive from the ＋ Log sheet in the tab bar.
+  useLogInput((input) => void run(input));
+
+  function cancelRun() {
+    runId.current += 1;
+    setLoading(null);
+  }
+
   function confirmAdd(items: AnalysedItem[], slot: MealSlot) {
     logItems(items, slot);
     setEntries(getEntries());
@@ -137,15 +146,11 @@ export default function Home() {
 
   if (!ready || !profile) {
     return (
-      <main aria-busy="true" aria-label="Loading" className="mx-auto max-w-md space-y-4 px-4 pt-6">
-        <div className="skeleton h-8 w-40" />
-        <div className="skeleton h-72 rounded-3xl" />
-        <div className="grid grid-cols-3 gap-2">
-          <div className="skeleton h-24 rounded-3xl" />
-          <div className="skeleton h-24 rounded-3xl" />
-          <div className="skeleton h-24 rounded-3xl" />
-        </div>
-        <div className="skeleton h-48 rounded-3xl" />
+      <main aria-busy="true" aria-label="Loading" className="mx-auto max-w-xl px-4">
+        <NavBar title="Today" />
+        <div className="skeleton mt-2 h-[180px] rounded-xl" />
+        <div className="skeleton mt-4 h-24 rounded-xl" />
+        <div className="skeleton mt-6 h-40 rounded-xl" />
       </main>
     );
   }
@@ -162,24 +167,29 @@ export default function Home() {
     const n = sumNutrition(entries.filter((e) => e.date === date).map((e) => e.item.nutrition));
     return { date, label: d.toLocaleDateString("en-GB", { weekday: "narrow" }), carbs: n.carbs_g * 4, protein: n.protein_g * 4, fat: n.fat_g * 9 };
   });
+  const subtitle = new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
 
   return (
-    <main className="mx-auto max-w-md px-4 pt-4">
-      <header className="mb-4 flex items-center justify-between pt-2">
-        <h1 className="font-display text-2xl font-extrabold text-orange-600 dark:text-orange-400">MakanLens</h1>
-      </header>
+    <main className="mx-auto max-w-xl px-4">
+      <NavBar title="Today" subtitle={subtitle} />
 
       {unconfigured && (
-        <p role="status" className="card mb-4 p-4 text-sm text-neutral-600 dark:text-neutral-300">
+        <p role="status" className="surface mb-4 flex items-start gap-3 p-4 text-label-2 type-subhead">
+          <TriangleAlert size={20} strokeWidth={1.75} aria-hidden className="mt-0.5 shrink-0 text-ios-yellow" />
           Photo analysis isn&apos;t set up on this server yet (no API key). Barcode scanning still works.
         </p>
       )}
 
       {tip && (
-        <div className="mb-4 flex items-start gap-2 rounded-3xl border border-green-200 bg-green-50 p-4 text-sm dark:border-green-900 dark:bg-green-950/40">
-          <p className="flex-1"><span className="font-semibold">Lighter next time:</span> {tip}</p>
-          <button type="button" onClick={() => setTip(null)} aria-label="Dismiss tip" className="-m-2 flex h-11 w-11 shrink-0 items-center justify-center"><X {...ICON} aria-hidden /></button>
-        </div>
+        <aside aria-label="Tip" className="surface mb-4 flex items-start gap-3 py-3 pl-4 pr-1">
+          <span aria-hidden className="mt-0.5 flex h-[29px] w-[29px] shrink-0 items-center justify-center rounded-[7px] bg-ios-teal text-white">
+            <Lightbulb size={18} strokeWidth={2} />
+          </span>
+          <p className="min-w-0 flex-1 py-0.5 type-subhead"><span className="font-semibold">Lighter next time:</span> <span className="text-label-2">{tip}</span></p>
+          <button type="button" onClick={() => setTip(null)} aria-label="Dismiss tip" className="pressable -my-1 flex h-11 w-11 shrink-0 items-center justify-center text-label-2">
+            <X size={18} strokeWidth={2} aria-hidden />
+          </button>
+        </aside>
       )}
 
       {notice && (
@@ -194,46 +204,42 @@ export default function Home() {
       )}
 
       {loading && (
-        <div role="status" aria-live="polite" className="card mb-4 p-4">
-          <p className="mb-3 text-sm text-neutral-500 dark:text-neutral-400">{loading}</p>
-          <div className="flex gap-3">
-            <div className="skeleton h-20 w-20 shrink-0" />
-            <div className="flex-1 space-y-2">
-              <div className="skeleton h-5 w-2/3" />
-              <div className="skeleton h-8 w-1/2" />
-              <div className="skeleton h-3 w-full rounded-full" />
-            </div>
-          </div>
+        <div role="status" aria-live="polite" className="surface mb-4 flex items-center gap-3 p-4">
+          <LoaderCircle size={24} strokeWidth={2} aria-hidden className="shrink-0 animate-spin text-accent-text motion-reduce:animate-none" />
+          <p className="min-w-0 flex-1 type-body">{loading}</p>
+          <button type="button" onClick={cancelRun} className="pressable flex h-11 shrink-0 items-center px-2 text-accent-text type-body">
+            Cancel
+          </button>
         </div>
       )}
 
       <SummaryHeader eaten={totals.kcal} exercise={targets.exercise} goal={targets.kcal} />
-      <OndehCard entries={entries} target={targets.kcal} />
-      <SnapBar disabled={loading !== null} onFile={(file) => run({ file })} onText={(text) => run({ text })} />
-      <GoalCard profile={profile} plan={plan} entries={entries} />
       <MacroCards totals={totals} targets={targets.macros} />
-      <WeeklyBudget plan={plan} entries={entries} dailyKcal={targets.base} />
-      <WeekStack days={week} goal={targets.base} />
-      <BalanceDonut totals={totals} />
-      <InsightCard text={weekInsight(week, targets.base)} />
+      <GoalCard profile={profile} plan={plan} entries={entries} />
 
-      <div className="mt-4"><ExerciseCard profile={profile} plan={plan} date={todayDate} onChange={setDay} /></div>
+      {today.length === 0 ? (
+        <section className="mt-6 flex flex-col items-center px-6 py-8 text-center" aria-label="No meals logged">
+          <UtensilsCrossed size={40} strokeWidth={1.5} aria-hidden className="text-label-3" />
+          <h2 className="mt-3 type-title3">Nothing logged yet</h2>
+          <p className="mt-1 text-label-2 type-subhead">Snap or describe your next meal and we&apos;ll work out the calories.</p>
+          <Button variant="tinted" size="medium" onClick={openLogSheet} className="mt-4">Log Food</Button>
+        </section>
+      ) : (
+        <MealList entries={today} onEdit={setEditing} />
+      )}
 
       <RecentStrip key={recentVersion} onLogged={() => setEntries(getEntries())} />
 
-      <section className="mt-5">
-        {today.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-neutral-300 p-6 text-center dark:border-neutral-700">
-            <p className="text-lg font-semibold">Nothing logged yet today</p>
-            <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-              Snap your next meal and we&apos;ll work out the calories.
-            </p>
-          </div>
-        ) : (
-          <MealList entries={today} onEdit={setEditing} onDelete={remove} />
-        )}
-      </section>
+      <ExerciseCard profile={profile} plan={plan} date={todayDate} onChange={setDay} />
 
+      <h2 className="mt-8 px-1 type-title3">Highlights</h2>
+      <div className="-mt-1">
+        <OndehCard entries={entries} target={targets.kcal} />
+        <WeeklyBudget plan={plan} entries={entries} dailyKcal={targets.base} />
+        <WeekStack days={week} goal={targets.base} />
+        <BalanceDonut totals={totals} />
+        <InsightCard text={weekInsight(week, targets.base)} />
+      </div>
 
       {found && (
         <ResultsCard mode="add" photo={photo} initialItems={found} onConfirm={confirmAdd} onCancel={() => { setFound(null); setPhoto(null); }} />
@@ -246,6 +252,7 @@ export default function Home() {
           initialSlot={editing.slot}
           onConfirm={confirmEdit}
           onCancel={() => setEditing(null)}
+          onDelete={() => { remove(editing); setEditing(null); }}
         />
       )}
     </main>

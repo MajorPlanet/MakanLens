@@ -1,13 +1,15 @@
 "use client";
 import { useState } from "react";
-import { ACCENT_BTN } from "@/components/format";
+import NavBar, { NavButton } from "@/components/ui/NavBar";
+import { Section } from "@/components/ui/List";
+import { Segmented } from "@/components/ui/Controls";
+import { NumberRow, SliderRow, SummaryRow } from "@/app/settings/_components/FormRows";
 import {
   applyMacroSettings, gramsToKcal, gramsToSplit, rebalance, splitToGrams,
   type MacroGrams, type MacroMode, type MacroSplit,
 } from "@/lib/targets";
 import type { Profile } from "@/lib/types";
 
-const field = "h-12 w-full rounded-xl border border-neutral-300 bg-transparent px-3 text-base dark:border-neutral-700";
 const ROWS: { key: keyof MacroSplit; g: keyof MacroGrams; label: string }[] = [
   { key: "protein", g: "protein_g", label: "Protein" },
   { key: "carbs", g: "carbs_g", label: "Carbs" },
@@ -19,7 +21,7 @@ interface Props {
   onSave: (p: Profile) => void;
 }
 
-/** Settings section: macro goals as a % split (always 100%) or fixed grams. Remount with a new key when the profile changes. */
+/** Macro goals page: a % split (always 100%) or fixed grams. Save lives in the nav bar. */
 export default function MacroGoals({ profile, onSave }: Props) {
   const [mode, setMode] = useState<MacroMode>(profile.macroMode ?? "split");
   const [split, setSplit] = useState<MacroSplit>(() => profile.macroSplit ?? gramsToSplit(profile.macroTargets));
@@ -34,9 +36,6 @@ export default function MacroGoals({ profile, onSave }: Props) {
   const splitGrams = splitToGrams(profile.targetKcal, split);
   const canSave = mode === "split" || gramsValid;
 
-  const seg = (on: boolean) =>
-    `h-12 flex-1 rounded-xl text-sm font-medium ${on ? "bg-orange-500 text-white" : "border border-neutral-300 dark:border-neutral-700"}`;
-
   function save() {
     if (!canSave) return;
     onSave(applyMacroSettings(profile, mode, split, { protein_g: Math.round(g.protein_g), carbs_g: Math.round(g.carbs_g), fat_g: Math.round(g.fat_g) }));
@@ -44,55 +43,53 @@ export default function MacroGoals({ profile, onSave }: Props) {
   }
 
   return (
-    <section className="mt-8 space-y-3" aria-label="Macro goals">
-      <h2 className="text-sm font-semibold">Macro goals</h2>
-      <div className="flex gap-2">
-        <button type="button" aria-pressed={mode === "split"} onClick={() => { setMode("split"); setSaved(false); }} className={seg(mode === "split")}>% split</button>
-        <button type="button" aria-pressed={mode === "grams"} onClick={() => { setMode("grams"); setSaved(false); }} className={seg(mode === "grams")}>Grams</button>
+    <>
+      <NavBar
+        title="Macro Goals" back={{ href: "/settings", label: "Profile" }}
+        trailing={<NavButton onClick={save} bold label="Save macro goals">Save</NavButton>}
+      />
+      <div className="p-0">
+        <Segmented
+          label="Macro goal mode" value={mode}
+          onChange={(m) => { setMode(m); setSaved(false); }}
+          options={[{ value: "split", label: "% split" }, { value: "grams", label: "Grams" }]}
+        />
       </div>
 
       {mode === "split" ? (
-        <div className="space-y-3">
+        <Section
+          header="Share of daily calories"
+          footer={`Total ${split.protein + split.carbs + split.fat}% of ${profile.targetKcal.toLocaleString("en-GB")} kcal. Moving one slider rebalances the others.`}
+        >
           {ROWS.map((r) => (
-            <label key={r.key} className="block text-sm font-medium">
-              <span className="flex justify-between">
-                <span>{r.label}</span>
-                <span className="tabular-nums text-neutral-500 dark:text-neutral-400">{split[r.key]}% · {splitGrams[r.g]} g</span>
-              </span>
-              <input
-                type="range" min={5} max={90} step={1} value={split[r.key]}
-                onChange={(e) => { setSplit(rebalance(split, r.key, Number(e.target.value))); setSaved(false); }}
-                className="mt-1 h-11 w-full accent-orange-500"
-              />
-            </label>
+            <SliderRow
+              key={r.key} label={r.label} min={5} max={90} step={1} value={split[r.key]}
+              display={`${split[r.key]}% · ${splitGrams[r.g]} g`}
+              onChange={(v) => { setSplit(rebalance(split, r.key, v)); setSaved(false); }}
+            />
           ))}
-          <p className="text-xs text-neutral-500 dark:text-neutral-400">
-            Total {split.protein + split.carbs + split.fat}% of {profile.targetKcal} kcal. Moving one slider rebalances the others.
-          </p>
-        </div>
+        </Section>
       ) : (
-        <div className="space-y-2">
-          <div className="grid grid-cols-3 gap-2">
-            {ROWS.map((r) => (
-              <label key={r.g} className="text-sm font-medium">{r.label} (g)
-                <input
-                  type="number" inputMode="numeric" min={0} value={grams[r.g]}
-                  onChange={(e) => { setGrams({ ...grams, [r.g]: e.target.value }); setSaved(false); }}
-                  className={`${field} mt-1`}
-                />
-              </label>
-            ))}
-          </div>
-          <p className="text-sm tabular-nums" aria-live="polite">
-            {gramsValid
-              ? <>These add up to <strong>{gramsToKcal(g)} kcal</strong> (your target is {profile.targetKcal} kcal).</>
-              : "Enter grams between 0 and 1000 for each."}
-          </p>
-        </div>
+        <Section
+          header="Daily grams"
+          footer={
+            <span aria-live="polite">
+              {gramsValid
+                ? `These add up to ${gramsToKcal(g)} kcal (your target is ${profile.targetKcal.toLocaleString("en-GB")} kcal).`
+                : <span className="text-ios-red">Enter grams between 0 and 1000 for each.</span>}
+            </span>
+          }
+        >
+          {ROWS.map((r) => (
+            <NumberRow
+              key={r.g} label={r.label} value={grams[r.g]} unit="g" inputMode="numeric" min={0}
+              onChange={(v) => { setGrams({ ...grams, [r.g]: v }); setSaved(false); }}
+            />
+          ))}
+          <SummaryRow label="Total" value={gramsValid ? `${gramsToKcal(g)} kcal` : "–"} strong />
+        </Section>
       )}
-
-      <button type="button" onClick={save} disabled={!canSave} className={`h-12 w-full rounded-xl font-semibold ${ACCENT_BTN}`}>Save macro goals</button>
-      {saved && <p role="status" className="text-center text-sm font-medium text-green-700 dark:text-green-400">Saved</p>}
-    </section>
+      <p role="status" className="mt-3 min-h-5 px-4 type-footnote text-ios-green">{saved ? "Saved" : ""}</p>
+    </>
   );
 }

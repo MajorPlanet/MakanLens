@@ -1,7 +1,2 @@
-export default function PageHeader({ title }: { title: string }) {
-  return (
-    <header className="mb-4 pt-2">
-      <h1 className="text-2xl font-bold">{title}</h1>
-    </header>
-  );
-}
+// Back-compat: pages now use the iOS large-title nav bar.
+export { default } from "./ui/NavBar";

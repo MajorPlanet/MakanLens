@@ -1,5 +1,6 @@
+import { TriangleAlert, UtensilsCrossed } from "lucide-react";
 import type { ApiErrorCode } from "@/lib/types";
-import { ACCENT_BTN } from "./format";
+import { Button } from "@/components/ui/Controls";
 
 export type NoticeKind = ApiErrorCode | "network" | "no_food" | "image";
 
@@ -46,6 +47,7 @@ const COPY: Record<NoticeKind, { title: string; body: string; retry: boolean }> 
   },
 };
 
+/** Inline alert card: icon, title, one line of copy, and at most Try Again plus Dismiss. */
 export default function ErrorNotice({
   kind,
   detail,
@@ -58,19 +60,25 @@ export default function ErrorNotice({
   onDismiss: () => void;
 }) {
   const c = COPY[kind];
+  const Icon = kind === "no_food" ? UtensilsCrossed : TriangleAlert;
   return (
-    <div role="alert" className="rounded-3xl border border-orange-200 bg-orange-50 p-4 dark:border-orange-900 dark:bg-orange-950/40">
-      <p className="font-semibold">{c.title}</p>
-      <p className="mt-1 text-sm">{kind === "image" && detail ? detail : c.body}</p>
+    <div role="alert" className="surface p-4">
+      <div className="flex items-start gap-3">
+        <Icon size={22} strokeWidth={1.75} aria-hidden className={`mt-0.5 shrink-0 ${kind === "no_food" ? "text-label-3" : "text-ios-yellow"}`} />
+        <div className="min-w-0">
+          <p className="type-headline">{c.title}</p>
+          <p className="mt-0.5 text-label-2 type-subhead">{kind === "image" && detail ? detail : c.body}</p>
+        </div>
+      </div>
       <div className="mt-3 flex gap-2">
         {c.retry && onRetry && (
-          <button type="button" onClick={onRetry} className={`h-11 rounded-xl px-4 font-medium ${ACCENT_BTN}`}>
-            Try again
-          </button>
+          <Button variant="tinted" size="medium" onClick={onRetry} className="flex-1">
+            Try Again
+          </Button>
         )}
-        <button type="button" onClick={onDismiss} className="h-11 rounded-xl border border-neutral-300 px-4 text-sm font-medium dark:border-neutral-700">
+        <Button variant="gray" size="medium" onClick={onDismiss} className="flex-1">
           Dismiss
-        </button>
+        </Button>
       </div>
     </div>
   );

@@ -1,63 +1,163 @@
 @import "tailwindcss";
 
+/*
+ * MakanLens design system: iOS dark appearance, always dark.
+ * Colours are Apple's dark-mode system colours. The accent (tint) is systemIndigo.
+ * Use the theme names below (bg-surface, text-label-2, bg-accent …) instead of raw palette colours.
+ */
 :root {
-  /* Coconut cream page, white cards. */
-  --background: #fbf8f1;
-  --foreground: #171717;
-  --card: #ffffff;
-  --card-line: transparent;
-  --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 16px rgba(0, 0, 0, 0.06);
-  --skeleton: #ece8de;
-}
+  color-scheme: dark;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    /* Warm charcoal page, slightly lighter cards; a hairline border instead of a shadow. */
-    --background: #151513;
-    --foreground: #ededed;
-    --card: #1e1e1b;
-    --card-line: rgba(255, 255, 255, 0.08);
-    --card-shadow: none;
-    --skeleton: #2a2a26;
-  }
+  --bg: #000000;                         /* systemGroupedBackground */
+  --surface: #1c1c1e;                    /* secondarySystemGroupedBackground: cards, list sections */
+  --surface-2: #2c2c2e;                  /* tertiary: inputs, nested cards, pressed rows */
+  --surface-3: #3a3a3c;
+  --label: #ffffff;
+  --label-2: rgba(235, 235, 245, 0.6);   /* secondaryLabel */
+  --label-3: rgba(235, 235, 245, 0.3);   /* tertiaryLabel */
+  --separator: rgba(84, 84, 88, 0.6);
+  --fill: rgba(118, 118, 128, 0.24);     /* tertiarySystemFill: tracks, chips, segmented background */
+  --bar: rgba(22, 22, 24, 0.82);         /* translucent nav and tab bars */
+
+  --accent: #5e5ce6;                     /* systemIndigo */
+  --accent-pressed: #4b49c9;
+  --accent-tint: rgba(94, 92, 230, 0.22);
+  --accent-text: #7d7aff;                /* indigo text that stays readable on black */
+
+  --ios-red: #ff453a;
+  --ios-green: #30d158;
+  --ios-blue: #0a84ff;
+  --ios-cyan: #64d2ff;
+  --ios-teal: #40c8e0;
+  --ios-mint: #66d4cf;
+  --ios-yellow: #ffd60a;
+  --ios-pink: #ff375f;
+  --ios-purple: #bf5af2;
+  --ios-gray: #8e8e93;
+
+  /* Macros (charts, bars, dots). */
+  --macro-carbs: #64d2ff;
+  --macro-protein: #ff375f;
+  --macro-fat: #ffd60a;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-page: var(--background);
-  --color-card: var(--card);
-  --color-skeleton: var(--skeleton);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-display: var(--font-nunito);
+  --color-bg: var(--bg);
+  --color-page: var(--bg);
+  --color-background: var(--bg);
+  --color-foreground: var(--label);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-card: var(--surface);
+  --color-skeleton: var(--surface-2);
+  --color-label: var(--label);
+  --color-label-2: var(--label-2);
+  --color-label-3: var(--label-3);
+  --color-separator: var(--separator);
+  --color-fill: var(--fill);
+  --color-bar: var(--bar);
+  --color-accent: var(--accent);
+  --color-accent-pressed: var(--accent-pressed);
+  --color-accent-tint: var(--accent-tint);
+  --color-accent-text: var(--accent-text);
+  --color-ios-red: var(--ios-red);
+  --color-ios-green: var(--ios-green);
+  --color-ios-blue: var(--ios-blue);
+  --color-ios-cyan: var(--ios-cyan);
+  --color-ios-teal: var(--ios-teal);
+  --color-ios-mint: var(--ios-mint);
+  --color-ios-yellow: var(--ios-yellow);
+  --color-ios-pink: var(--ios-pink);
+  --color-ios-purple: var(--ios-purple);
+  --color-ios-gray: var(--ios-gray);
+  --color-macro-carbs: var(--macro-carbs);
+  --color-macro-protein: var(--macro-protein);
+  --color-macro-fat: var(--macro-fat);
+
+  /* San Francisco on Apple devices; the closest system face elsewhere. */
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", "Segoe UI", Roboto, system-ui, sans-serif;
+  /* SF Pro Rounded for big numbers, as in Fitness and Health. */
+  --font-rounded: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-display: var(--font-rounded);
+  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
 }
 
-/* One card style everywhere: rounded-3xl, soft shadow (light) or hairline border (dark). */
-@utility card {
-  background-color: var(--card);
-  border-radius: var(--radius-3xl);
-  border: 1px solid var(--card-line);
-  box-shadow: var(--card-shadow);
+/* ---- iOS text styles (Dynamic Type "Large" sizes). ---- */
+@utility type-large-title { font-size: 34px; line-height: 41px; font-weight: 700; letter-spacing: 0.37px; }
+@utility type-title1 { font-size: 28px; line-height: 34px; font-weight: 700; letter-spacing: 0.36px; }
+@utility type-title2 { font-size: 22px; line-height: 28px; font-weight: 700; letter-spacing: 0.35px; }
+@utility type-title3 { font-size: 20px; line-height: 25px; font-weight: 600; letter-spacing: 0.38px; }
+@utility type-headline { font-size: 17px; line-height: 22px; font-weight: 600; letter-spacing: -0.41px; }
+@utility type-body { font-size: 17px; line-height: 22px; font-weight: 400; letter-spacing: -0.41px; }
+@utility type-callout { font-size: 16px; line-height: 21px; font-weight: 400; letter-spacing: -0.32px; }
+@utility type-subhead { font-size: 15px; line-height: 20px; font-weight: 400; letter-spacing: -0.24px; }
+@utility type-footnote { font-size: 13px; line-height: 18px; font-weight: 400; letter-spacing: -0.08px; }
+@utility type-caption { font-size: 12px; line-height: 16px; font-weight: 400; letter-spacing: 0; }
+@utility type-caption2 { font-size: 11px; line-height: 13px; font-weight: 400; letter-spacing: 0.07px; }
+
+/* Big rounded figures (kcal, grams). */
+@utility num { font-family: var(--font-rounded); font-variant-numeric: tabular-nums; }
+
+/* One card / grouped-section surface everywhere (iOS inset grouped: 12 px corners, no border, no shadow). */
+@utility surface { background-color: var(--surface); border-radius: 12px; }
+/* Back-compat alias for older components while they migrate. */
+@utility card { background-color: var(--surface); border-radius: 12px; }
+
+/* Touch feedback: iOS dims tapped controls. */
+@utility pressable {
+  transition: opacity 120ms ease, background-color 120ms ease, transform 160ms ease;
+  -webkit-tap-highlight-color: transparent;
+  &:active { opacity: 0.55; }
 }
 
-/* Skeleton placeholder: grey rounded shape with a gentle pulse (no pulse under reduced motion). */
+/* Translucent bar material (nav bar, tab bar, toolbars). */
+@utility material-bar {
+  background-color: var(--bar);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+}
+
 @utility skeleton {
-  background-color: var(--skeleton);
-  border-radius: var(--radius-xl);
+  background-color: var(--surface-2);
+  border-radius: 10px;
   animation: skeleton-pulse 1.4s ease-in-out infinite;
-  @media (prefers-reduced-motion: reduce) {
-    animation: none;
-  }
+  @media (prefers-reduced-motion: reduce) { animation: none; }
 }
 
-@keyframes skeleton-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.55; }
+@keyframes skeleton-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+
+/* Sheet presentation (slide up) and backdrop fade. */
+@keyframes sheet-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@utility animate-sheet-up {
+  animation: sheet-up 380ms cubic-bezier(0.32, 0.72, 0, 1);
+  @media (prefers-reduced-motion: reduce) { animation: none; }
 }
+@utility animate-fade-in {
+  animation: fade-in 240ms ease-out;
+  @media (prefers-reduced-motion: reduce) { animation: none; }
+}
+
+html { background: var(--bg); }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--label);
+  font-family: var(--font-sans);
+  font-size: 17px;
+  line-height: 22px;
+  letter-spacing: -0.41px;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
 }
+
+::selection { background: var(--accent-tint); }
+
+/* Focus ring for keyboard users only (iOS draws none for touch). */
+:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 2px; border-radius: 8px; }
+
+/* Native controls pick up the tint. */
+input, textarea, select { accent-color: var(--accent); caret-color: var(--accent-text); }
+input[type="range"] { accent-color: var(--accent); }

@@ -1,13 +1,8 @@
 "use client";
 import type { FoodRecord } from "@/lib/types";
-import FoodForm from "./FoodForm";
-import Sheet from "./Sheet";
+import FoodSheet from "./FoodSheet";
 
-/** "New food" in its own sheet (used from search). */
+/** "New food" in its own sheet (used from search and the Foods tab). */
 export default function NewFoodSheet({ initialName, onCreated, onClose }: { initialName?: string; onCreated: (f: FoodRecord) => void; onClose: () => void }) {
-  return (
-    <Sheet title="New food" onClose={onClose}>
-      <FoodForm initialName={initialName} onSaved={(f) => (f ? onCreated(f) : onClose())} onCancel={onClose} />
-    </Sheet>
-  );
+  return <FoodSheet initialName={initialName} onClose={onClose} onSaved={(f) => (f ? onCreated(f) : onClose())} />;
 }

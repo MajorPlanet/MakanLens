@@ -35,7 +35,7 @@ export function sumNutrition(list: Nutrition[]): Nutrition {
 }
 
 export const ACCENT_BTN =
-  "bg-orange-500 text-white hover:bg-orange-600 active:bg-orange-700 disabled:opacity-50";
+  "bg-accent text-white active:bg-accent-pressed disabled:opacity-40";
 
 export const SOURCE_LABEL: Record<Source, string> = { hpb: "HPB", usda: "USDA FoodData Central", off: "Open Food Facts", label: "Nutrition label", custom: "Your food", user_edit: "Edited by you", ai_estimate: "AI estimate" };
 

@@ -3,7 +3,7 @@ import type { Nutrition, Profile } from "@/lib/types";
 import { MACRO_COLOURS } from "./colours";
 import { useMounted } from "./motion";
 
-/** Three macro cards in a row: coloured dot, progress bar, "120 / 250 g". */
+/** Macro progress: three compact columns (label, big number, bar) in one grouped card. */
 export default function MacroCards({ totals, targets }: { totals: Nutrition; targets: Profile["macroTargets"] }) {
   const rows = [
     { key: "carbs", label: "Carbs", v: totals.carbs_g, t: targets.carbs_g },
@@ -12,25 +12,32 @@ export default function MacroCards({ totals, targets }: { totals: Nutrition; tar
   ] as const;
   const mounted = useMounted();
   return (
-    <div className="mt-4 grid grid-cols-3 gap-2">
+    <section aria-label="Macros today" className="surface mt-4 grid grid-cols-3 gap-4 p-4">
       {rows.map((m) => {
         const pct = m.t > 0 ? Math.min(100, (m.v / m.t) * 100) : 0;
         return (
-          <div key={m.key} className="min-w-0 p-3 card">
-            <p className="flex items-center gap-1.5 text-xs text-neutral-500 dark:text-neutral-400">
-              <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: MACRO_COLOURS[m.key] }} />
-              {m.label}
+          <div key={m.key} className="min-w-0">
+            <p className="type-footnote font-semibold" style={{ color: MACRO_COLOURS[m.key] }}>{m.label}</p>
+            <p className="num mt-0.5 truncate text-[20px] font-bold leading-6">
+              {Math.round(m.v)}
+              <span className="ml-0.5 text-label-2 type-footnote font-medium">/ {Math.round(m.t)} g</span>
             </p>
-            <div className="mt-2 h-2 overflow-hidden rounded-full bg-neutral-100 dark:bg-neutral-800">
-              <div className="h-full rounded-full transition-[width] duration-700 ease-out motion-reduce:transition-none" style={{ width: `${mounted ? pct : 0}%`, background: MACRO_COLOURS[m.key] }} />
+            <div
+              role="progressbar"
+              aria-label={`${m.label} progress`}
+              aria-valuemin={0}
+              aria-valuemax={Math.round(m.t)}
+              aria-valuenow={Math.round(m.v)}
+              className="mt-2 h-1.5 overflow-hidden rounded-full bg-fill"
+            >
+              <div
+                className="h-full rounded-full transition-[width] duration-700 ease-out motion-reduce:transition-none"
+                style={{ width: `${mounted ? pct : 0}%`, background: MACRO_COLOURS[m.key] }}
+              />
             </div>
-            <p className="mt-2 truncate text-sm tabular-nums">
-              <span className="font-display text-base font-bold">{Math.round(m.v)}</span>
-              <span className="text-neutral-500 dark:text-neutral-400"> / {Math.round(m.t)} g</span>
-            </p>
           </div>
         );
       })}
-    </div>
+    </section>
   );
 }

@@ -1,22 +1,24 @@
 "use client";
-import Link from "next/link";
 import { useEffect, useState } from "react";
+import { ChartColumn } from "lucide-react";
 import type { LogEntry, Profile } from "@/lib/types";
 import { getEntries, getProfile, localDateString } from "@/lib/storage";
 import { averageLoggedKcal, currentStreak, lastDays } from "@/lib/history";
 import { useGoalPlan } from "@/lib/plan";
 import { dayTargets } from "@/lib/targets";
 import WeeklyBudget from "@/components/goal/WeeklyBudget";
-import PageHeader from "@/components/PageHeader";
 import WeekChart from "@/components/WeekChart";
-import { ACCENT_BTN } from "@/components/format";
+import NavBar from "@/components/ui/NavBar";
+import { Button, Segmented } from "@/components/ui/Controls";
 
 const DEFAULT_TARGET = 2000;
+type Range = "week" | "month";
 
 export default function HistoryPage() {
   const [ready, setReady] = useState(false);
   const [entries, setEntries] = useState<LogEntry[]>([]);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [range, setRange] = useState<Range>("week");
 
   /* eslint-disable react-hooks/set-state-in-effect -- read localStorage after mount (SSR-safe) */
   useEffect(() => {
@@ -28,49 +30,62 @@ export default function HistoryPage() {
 
   const plan = useGoalPlan();
   const target = profile ? dayTargets(profile, 0, plan).base : DEFAULT_TARGET;
-  const days = lastDays(entries, 7);
+  const count = range === "week" ? 7 : 30;
+  const days = lastDays(entries, count);
   const average = averageLoggedKcal(days, localDateString());
   const streak = currentStreak(entries);
+  const period = range === "week" ? "this week" : "in the last 30 days";
 
   return (
-    <main className="mx-auto max-w-md px-4 pb-8 pt-4">
-      <PageHeader title="History" />
+    <main className="mx-auto max-w-xl px-4 pb-8">
+      <NavBar title="Trends" />
       {!ready ? (
-        <div aria-busy="true" aria-label="Loading" className="space-y-4">
-          <div className="grid grid-cols-2 gap-2"><div className="skeleton h-20 rounded-3xl" /><div className="skeleton h-20 rounded-3xl" /></div>
-          <div className="skeleton h-56 rounded-3xl" />
+        <div aria-busy="true" aria-label="Loading" className="space-y-3">
+          <div className="grid grid-cols-2 gap-3"><div className="skeleton h-24" /><div className="skeleton h-24" /></div>
+          <div className="skeleton h-64" />
         </div>
       ) : entries.length === 0 ? (
-        <div className="p-6 text-center card">
-          <p className="text-lg font-semibold">Nothing logged yet</p>
-          <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">Snap your first meal and your week will show up here.</p>
-          <Link href="/" className={`mt-4 inline-flex min-h-12 items-center rounded-xl px-6 font-semibold ${ACCENT_BTN}`}>Log a meal</Link>
+        <div className="mt-16 flex flex-col items-center px-6 text-center">
+          <ChartColumn size={48} strokeWidth={1.5} aria-hidden className="text-label-3" />
+          <p className="mt-3 type-title3">Nothing logged yet</p>
+          <p className="mb-5 mt-1 text-label-2 type-subhead">Log your first meal and your trends will show up here.</p>
+          <Button href="/" variant="tinted" size="medium">Go to Today</Button>
         </div>
       ) : (
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-3xl border border-orange-200 bg-orange-50 p-4 dark:border-orange-900 dark:bg-orange-950/40">
-              <p className="text-sm text-neutral-500 dark:text-neutral-400">Logging streak</p>
-              <p className="font-display text-4xl font-extrabold tabular-nums text-orange-600 dark:text-orange-400">{streak}<span className="ml-1 text-base font-medium">{streak === 1 ? "day" : "days"}</span></p>
-            </div>
-            <div className="p-4 card">
-              <p className="text-sm text-neutral-500 dark:text-neutral-400">Average of logged days</p>
-              <p className="font-display text-4xl font-extrabold tabular-nums">{average ? average.avg : "–"}<span className="ml-1 text-base font-medium">kcal</span></p>
-              <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                {average ? `${average.count} ${average.count === 1 ? "day" : "days"}${average.includesToday ? ", today so far" : ", today excluded"}` : "No days logged this week"}
+            <section className="surface p-4" aria-label="Logging streak">
+              <p className="text-label-2 type-footnote">Logging streak</p>
+              <p className="num mt-1 text-[34px] font-bold leading-10 text-accent-text">
+                {streak}<span className="ml-1 text-label-2 type-callout font-normal">{streak === 1 ? "day" : "days"}</span>
               </p>
-            </div>
+            </section>
+            <section className="surface p-4" aria-label="Average of logged days">
+              <p className="text-label-2 type-footnote">Daily average</p>
+              <p className="num mt-1 text-[34px] font-bold leading-10">
+                {average ? average.avg.toLocaleString("en-GB") : "–"}<span className="ml-1 text-label-2 type-callout font-normal">kcal</span>
+              </p>
+              <p className="text-label-2 type-caption">
+                {average ? `${average.count} ${average.count === 1 ? "day" : "days"} logged${average.includesToday ? ", today so far" : ""}` : `No days logged ${period}`}
+              </p>
+            </section>
           </div>
-          {profile && <div className="-mt-4"><WeeklyBudget plan={plan} entries={entries} dailyKcal={target} /></div>}
-          <section className="p-4 card">
-            <h2 className="mb-2 text-sm font-semibold">Last 7 days</h2>
-            <WeekChart days={days} target={target} />
-            <p className="mt-2 flex flex-wrap gap-x-4 text-xs text-neutral-500 dark:text-neutral-400">
-              <span><span className="mr-1 inline-block size-2 rounded-sm bg-orange-500" />Within target</span>
-              <span><span className="mr-1 inline-block size-2 rounded-sm bg-red-500" />Over target</span>
+
+          <section className="surface p-4" aria-label="Calories per day">
+            <Segmented
+              label="Chart range" value={range} onChange={setRange}
+              options={[{ value: "week", label: "Week" }, { value: "month", label: "Month" }]}
+            />
+            <h2 className="mt-3 type-headline">{range === "week" ? "Last 7 days" : "Last 30 days"}</h2>
+            <div className="mt-2"><WeekChart days={days} target={target} /></div>
+            <p className="mt-2 flex flex-wrap gap-x-4 text-label-2 type-caption">
+              <span><span aria-hidden className="mr-1 inline-block size-2 rounded-sm bg-ios-green" />Within target</span>
+              <span><span aria-hidden className="mr-1 inline-block size-2 rounded-sm bg-ios-red" />Over target</span>
               {!profile && <span>Using a default target of {DEFAULT_TARGET} kcal</span>}
             </p>
           </section>
+
+          {profile && <div className="-mt-4"><WeeklyBudget plan={plan} entries={entries} dailyKcal={target} /></div>}
         </div>
       )}
     </main>
