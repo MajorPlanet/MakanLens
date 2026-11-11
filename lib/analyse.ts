@@ -5,7 +5,10 @@ import { analyseWithVision, currentProvider, MissingApiKeyError, ProviderError }
 import { attachFollowUp, buildFollowUp, followUpSpread, getDishes, itemFromPer100g, matchModelItem } from "./matcher";
 import { combineRuns, itemGrams, type CombinedItem } from "./combine";
 import { lookupUsda } from "./usda";
-import type { AnalyseResponse, AnalysedItem, FollowUp, Nutrition } from "./types";
+import { createSgIndex, type SgIndex } from "./sgmatch";
+import { getSgFile } from "./sgfoodid.server";
+import { SG_SITE, isSgId } from "./sgfoodid";
+import type { AnalyseResponse, AnalysedItem, Candidate, FollowUp, Nutrition } from "./types";
 
 /** Time allowed for the model runs; USDA lookups (<= 1.5 s) come after, keeping the total under 10 s. */
 export const VISION_BUDGET_MS = 8_500;
@@ -14,6 +17,29 @@ const USDA_TIMEOUT_MS = 1_500;
 const DEFAULT_GRAMS = 200;
 /** Used only when the model gave neither a known dish nor fallback kcal (kcal per 100 g of a generic mixed hawker dish). */
 const GENERIC_KCAL_PER_100G = 150;
+
+/** Total swap candidates per item, and how many may be curated (hawker.json) before SG FoodID ones are added. */
+const CANDIDATES_TOTAL = 6;
+const CANDIDATES_CURATED_MAX = 4;
+const CANDIDATES_SG_MIN = 2;
+
+let sgIndex: SgIndex | null = null;
+let sgIndexFor: unknown = null;
+/** SG FoodID index, built once per loaded snapshot (empty before data/sgfoodid.json exists). */
+export function getSgIndex(): SgIndex {
+  const file = getSgFile();
+  if (!sgIndex || sgIndexFor !== file) { sgIndex = createSgIndex(file.foods); sgIndexFor = file; }
+  return sgIndex;
+}
+
+/** Curated candidates first (up to 4), then the best SG FoodID suggestions, about 6 in all. The item's own id stays first. */
+function withSgCandidates(item: AnalysedItem, label: string, own?: Candidate): AnalysedItem {
+  const keepCurated = item.candidates.filter((c) => !isSgId(c.dishId)).slice(0, CANDIDATES_CURATED_MAX);
+  const slots = Math.max(CANDIDATES_SG_MIN, CANDIDATES_TOTAL - keepCurated.length - (own ? 1 : 0));
+  const sg = getSgIndex().suggest(label, slots + 1, own?.dishId).slice(0, slots);
+  const list = [...(own ? [own] : []), ...keepCurated, ...sg];
+  return { ...item, candidates: list.slice(0, CANDIDATES_TOTAL) };
+}
 
 export function visionRuns(): number {
   const n = Number.parseInt(process.env.VISION_RUNS ?? "", 10);
@@ -55,7 +81,22 @@ async function resolveItem(c: CombinedItem, runs: number, userIds: ReadonlySet<s
     return { ...item, dishId: c.known_dish_id };
   }
   const hawker = matchModelItem(c, runs);
-  if (hawker) return hawker;
+  if (hawker) return withSgCandidates(hawker, c.label);
+
+  const sg = getSgIndex().match(c.label, c.method);
+  if (sg) {
+    const serving = sg.food.servings[0];
+    const typical = serving && serving.grams > 0 ? serving.grams : null;
+    const g = itemGrams(c) > 0 ? itemGrams(c) : typical ?? DEFAULT_GRAMS;
+    const { sugar_g: _sugar, ...per100 } = sg.food.per100;
+    void _sugar;
+    const item = itemFromPer100g({
+      label: sg.food.name, grams: g, gramsLow: c.grams_low, gramsHigh: c.grams_high, method: c.method,
+      confidence: c.confidence, referenceObject: c.reference_object, runs, per100, source: "sgfoodid", sourceUrl: SG_SITE,
+    });
+    const portion = typical ? Math.round((item.grams / typical) * 100) / 100 : 1;
+    return withSgCandidates({ ...item, dishId: sg.id, portion }, c.label, { dishId: sg.id, name: sg.food.name, score: sg.score });
+  }
 
   const grams = itemGrams(c) > 0 ? itemGrams(c) : DEFAULT_GRAMS;
   const common = {
@@ -67,12 +108,12 @@ async function resolveItem(c: CombinedItem, runs: number, userIds: ReadonlySet<s
   const fb = c.fallback_kcal_per_100g;
   const usdaOk = usda && !(fb && fb > 0 && (usda.per_100g.kcal > fb * 2 || usda.per_100g.kcal < fb / 2));
   if (usda && usdaOk) {
-    return itemFromPer100g({ ...common, per100: usda.per_100g, source: "usda", sourceUrl: usda.url });
+    return withSgCandidates(itemFromPer100g({ ...common, per100: usda.per_100g, source: "usda", sourceUrl: usda.url }), c.label);
   }
-  return itemFromPer100g({
+  return withSgCandidates(itemFromPer100g({
     ...common, per100: fallbackPer100(c), source: "ai_estimate",
     confidence: fb ? c.confidence : Math.min(c.confidence, 0.3),
-  });
+  }), c.label);
 }
 
 /** Run the full pipeline. Throws MissingApiKeyError or ProviderError; non-food returns items: []. */

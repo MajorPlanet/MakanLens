@@ -58,9 +58,12 @@ export default function ServingSheet({
   onAdd: (item: AnalysedItem) => void;
   onClose: () => void;
 }) {
-  const [unit, setUnit] = useState<Unit>(r.per_100g ? "g" : "srv");
-  const [amountText, setAmountText] = useState(startAmount(r, r.per_100g ? "g" : "srv"));
+  // SG FoodID starts at HPB's own serving (grams are one tap away); other foods with per-100 g start in grams.
+  const initialUnit: Unit = r.per_100g && r.source !== "sgfoodid" ? "g" : "srv";
+  const [unit, setUnit] = useState<Unit>(initialUnit);
+  const [amountText, setAmountText] = useState(startAmount(r, initialUnit));
   const grams = unit === "g" && !!r.per_100g;
+  const isSg = r.source === "sgfoodid";
   const preview = buildFor(r, Number(amountText), unit);
   const tag = tagFor(r);
 
@@ -122,9 +125,9 @@ export default function ServingSheet({
           <div className="p-2"><SearchSlotPicker slot={slot} onChange={onSlot} /></div>
         </Section>
 
-        <Section footer={r.sourceUrl ? undefined : "Estimates only."}>
+        <Section footer={isSg ? "HPB does not endorse MakanLens. SG FoodID is used as a data source only." : r.sourceUrl ? undefined : "Estimates only."}>
           {r.sourceUrl ? (
-            <Row title={`Source: ${tag.title}`} onClick={() => window.open(r.sourceUrl, "_blank", "noopener,noreferrer")} chevron ariaLabel={`Open source: ${tag.title}`} />
+            <Row title={isSg ? "Data: HPB SG FoodID" : `Source: ${tag.title}`} onClick={() => window.open(r.sourceUrl, "_blank", "noopener,noreferrer")} chevron ariaLabel={`Open source: ${tag.title}`} />
           ) : (
             <Row title="Source" value={tag.text} />
           )}

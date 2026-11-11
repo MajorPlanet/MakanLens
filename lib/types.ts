@@ -1,4 +1,4 @@
-export type Source = "hpb" | "usda" | "off" | "label" | "custom" | "user_edit" | "ai_estimate";
+export type Source = "hpb" | "sgfoodid" | "usda" | "off" | "label" | "custom" | "user_edit" | "ai_estimate";
 
 export type CookingMethod =
   | "steamed" | "boiled" | "soup" | "grilled" | "roasted"
@@ -156,8 +156,8 @@ export interface LabelResponse {
 
 /** One food for the whole app: built-in dishes (with overrides applied) and the user's own foods. */
 export interface FoodRecord {
-  id: string;                          // built-in dish id, or "custom-<id>"
-  origin: "builtin" | "custom";
+  id: string;                          // built-in dish id, "custom-<id>", or "sgf-<SG FoodID crId>"
+  origin: "builtin" | "custom" | "sgfoodid";
   name: string;
   aliases: string[];                   // any language, free text
   serving: { label: string; grams: number | null };   // "1 plate", 350
@@ -168,6 +168,32 @@ export interface FoodRecord {
   createdAt: number; updatedAt: number;
   /** Built-in dishes only: true when a FoodOverride is applied. */
   edited?: boolean;
+  /** SG FoodID only: the food group, e.g. "Grains and staples / Rice-based dishes". */
+  category?: string;
+}
+
+// ---- SG FoodID (HPB Singapore Food Insights Database) snapshot: data/sgfoodid.json ----
+
+/** One SG FoodID item as stored in data/sgfoodid.json (written by scripts/fetch-sgfoodid.mjs). */
+export interface SgFood {
+  id: string;                          // HPB crId, e.g. "F05100133"
+  name: string;
+  desc?: string;
+  group?: string;                      // l1 category, e.g. "Grains and staples"
+  sub?: string;                        // l2 category, e.g. "Rice-based dishes"
+  drink?: true;
+  per100: Nutrition & { sugar_g?: number };   // per 100 g edible portion
+  servings: { label: string; grams: number }[]; // first is HPB's default portion (edible grams)
+  year?: number;
+  basis?: string;                      // e.g. "Lab Analysis"
+}
+
+export interface SgFoodFile {
+  name: string; publisher: string; accessed: string;
+  source_url: string; licence_url: string;
+  attribution: string;                 // the notice SG FoodID's licence requires; show it conspicuously
+  basis: string; count: number;
+  foods: SgFood[];
 }
 
 /** An edit to a built-in dish, stored as an override; hawker.json is never modified. */

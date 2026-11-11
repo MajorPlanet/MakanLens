@@ -43,6 +43,7 @@ Rules:
 - "method" is how it was cooked. Steaming and boiling add little fat; frying and roasting add a lot, so look carefully (oil sheen, crispy skin).
 - "ambiguity": at most ONE item in the whole meal may have a non-null ambiguity, and only when the cooking method or portion is genuinely unclear AND the options would differ a lot in calories. Options must use ids from the known list. Otherwise null.
 - "fallback_kcal_per_100g": set this (and macros per 100 g) only when "known_dish_id" is null, as your best estimate of the dish's energy per 100 g. Otherwise null.
+- Labels for items with no known dish: describe local dishes plainly in English with the main ingredient and cooking method (e.g. "steamed chicken rice", "kopi C", "teh tarik"), no brand or embellishment, so they can be looked up in a food database.
 - "confidence" is 0 to 1.
 - Parse Singlish and modifiers: "less rice" lowers the rice grams (about 25%); "more"/"extra" raises them; "small" is about 75% of standard; "kosong" = no sugar, no milk where relevant; "siew dai" = less sugar; "gao" = stronger; "peng" = iced; "cai fan 2 veg 1 meat" = one mixed-rice item with 2 vegetable dishes and 1 meat dish.
 - Example: "kopi siew dai" -> one item, label "Kopi siew dai (coffee with milk, less sugar)", about 250 g.

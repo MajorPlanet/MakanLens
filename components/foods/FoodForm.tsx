@@ -2,10 +2,12 @@
 import { useMemo, useState } from "react";
 import { Plus, X } from "lucide-react";
 import type { FoodRecord } from "@/lib/types";
-import { createCustomFood, deleteCustomFood, duplicateFood, getOriginalFood, resetOverride, saveOverride, updateCustomFood } from "@/lib/foods";
+import { createCustomFood, deleteCustomFood, duplicateFood, getOriginalFood, getReferenceMeta, resetOverride, saveOverride, updateCustomFood } from "@/lib/foods";
 import { fmtKcal, fmtMacro } from "@/components/format";
 import { MACRO_COLOURS } from "@/components/dashboard/colours";
 import { Chip, FIELD } from "@/components/ui/Controls";
+import { SG_SITE, SG_LICENCE } from "@/lib/sgfoodid";
+import { SG_DATA_LABEL, SG_NO_ENDORSEMENT, sgCategory } from "./sgDisplay";
 import { Row, Section } from "@/components/ui/List";
 import { InfoRow, InputRow } from "./FormRows";
 import {
@@ -36,9 +38,10 @@ export function FoodSummary({ food }: { food: FoodRecord }) {
       </dl>
       <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
         {food.origin === "custom" && <Chip tone="accent">Your food</Chip>}
-        {food.origin === "builtin" && <Chip>Built-in</Chip>}
+        {food.origin === "builtin" && <Chip>Hawker</Chip>}
+        {food.origin === "sgfoodid" && <Chip>HPB</Chip>}
         {food.edited && <Chip tone="accent">Edited by you</Chip>}
-        <span className="text-label-2 type-caption">Source: {food.source.name}</span>
+        <span className="text-label-2 type-caption">{food.origin === "sgfoodid" ? SG_DATA_LABEL : `Source: ${food.source.name}`}</span>
       </div>
     </div>
   );
@@ -63,7 +66,8 @@ export default function FoodForm({
   /** After Duplicate: open the new copy. */
   onOpenFood?: (f: FoodRecord) => void;
 }) {
-  const builtin = food?.origin === "builtin";
+  const sg = food?.origin === "sgfoodid";
+  const builtin = !!food && food.origin !== "custom"; // built-in dishes and SG FoodID items save overrides
   const original = useMemo(() => (builtin && food ? getOriginalFood(food.id) : undefined), [builtin, food]);
   const [v, setV] = useState<FoodFormValues>(() => valuesFromFood(food, initialName));
   const [aliasDraft, setAliasDraft] = useState("");
@@ -204,13 +208,34 @@ export default function FoodForm({
         <InputRow id="ff-satfat" label="Saturated fat" numeric unit="g" value={v.satfat} onChange={set("satfat")} error={errors.satfat} placeholder="Optional" />
       </Section>
 
-      <Section header="Notes">
-        <label htmlFor="ff-notes" className="sr-only">Notes</label>
-        <textarea id="ff-notes" value={v.notes} onChange={(e) => set("notes")(e.target.value)} rows={3} placeholder="Optional" className={`${FIELD} resize-none rounded-none bg-transparent py-2.5`} />
-      </Section>
+      {sg && food ? (
+        <>
+          <Section header="HPB data" footer={`${SG_NO_ENDORSEMENT}${getReferenceMeta()?.basis ? ` Basis: ${getReferenceMeta()?.basis}.` : ""}`}>
+            {sgCategory(food) && <InfoRow label="Category">{food.category}</InfoRow>}
+            {food.per_100g && (
+              <>
+                <InfoRow label="Per 100 g">{fmtKcal(food.per_100g.kcal)} kcal</InfoRow>
+                <InfoRow label="P · C · F per 100 g">{fmtMacro(food.per_100g.protein_g)} · {fmtMacro(food.per_100g.carbs_g)} · {fmtMacro(food.per_100g.fat_g)} g</InfoRow>
+              </>
+            )}
+            <Row title={SG_DATA_LABEL} onClick={() => window.open(SG_SITE, "_blank", "noopener,noreferrer")} chevron ariaLabel={`${SG_DATA_LABEL} (opens in a new tab)`} />
+            <Row title="Licence and terms of use" onClick={() => window.open(SG_LICENCE, "_blank", "noopener,noreferrer")} chevron ariaLabel="SG FoodID licence (opens in a new tab)" />
+          </Section>
+          {food.notes && (
+            <Section header="HPB description">
+              <p className="p-4 text-label-2 type-subhead">{food.notes}</p>
+            </Section>
+          )}
+        </>
+      ) : (
+        <Section header="Notes">
+          <label htmlFor="ff-notes" className="sr-only">Notes</label>
+          <textarea id="ff-notes" value={v.notes} onChange={(e) => set("notes")(e.target.value)} rows={3} placeholder="Optional" className={`${FIELD} resize-none rounded-none bg-transparent py-2.5`} />
+        </Section>
+      )}
 
       {original && food?.edited && (
-        <Section header="Original values" footer={`Source: ${original.source.name}`}>
+        <Section header="Original values" footer={sg ? SG_DATA_LABEL : `Source: ${original.source.name}`}>
           <InfoRow label="Dish">{original.name}</InfoRow>
           <InfoRow label="Serving">{original.serving.label}{original.serving.grams ? ` (${original.serving.grams} g)` : ""}</InfoRow>
           <InfoRow label="Calories">{Math.round(original.per_serving.kcal)} kcal</InfoRow>

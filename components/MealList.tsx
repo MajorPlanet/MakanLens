@@ -3,6 +3,7 @@ import type { LogEntry } from "@/lib/types";
 import { SLOTS, fmtKcal, fmtMacro } from "./format";
 import { getDish } from "@/lib/matcher";
 import { getFood, useFoods } from "@/lib/foods";
+import { SG_SHORT } from "@/lib/sgfoodid";
 import { Row, Section } from "@/components/ui/List";
 
 /** Display name of a logged item: a custom or edited food's own name wins over the model's label. */
@@ -37,7 +38,7 @@ export default function MealList({ entries, onEdit }: { entries: LogEntry[]; onE
                 <Row
                   key={e.id}
                   title={name}
-                  subtitle={`${e.item.grams > 0 ? `${Math.round(e.item.grams)} g` : `${e.item.portion}×`} · P ${fmtMacro(n.protein_g)} · C ${fmtMacro(n.carbs_g)} · F ${fmtMacro(n.fat_g)}`}
+                  subtitle={`${e.item.grams > 0 ? `${Math.round(e.item.grams)} g` : `${e.item.portion}×`} · P ${fmtMacro(n.protein_g)} · C ${fmtMacro(n.carbs_g)} · F ${fmtMacro(n.fat_g)}${e.item.source === "sgfoodid" ? ` · ${SG_SHORT}` : ""}`}
                   value={<span className="num font-semibold text-label">{fmtKcal(n.kcal)}</span>}
                   onClick={() => onEdit(e)}
                   chevron

@@ -44,3 +44,6 @@ next-env.d.ts
 
 # Local assets and notes (not part of the app)
 assets-and-notes/
+
+# SG FoodID fetch cache (the snapshot data/sgfoodid.json is committed)
+data/cache/

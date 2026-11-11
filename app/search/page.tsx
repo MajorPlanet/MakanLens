@@ -6,7 +6,8 @@ import type { MealSlot } from "@/lib/types";
 import { logItems } from "@/lib/storage";
 import { ApiClientError } from "@/lib/client";
 import { foodToSearchResult, mergeSearchResults, searchFoods, type SearchResult } from "@/components/SearchApi";
-import { searchAllFoods, useFoods } from "@/lib/foods";
+import { getFood, searchAllFoods, useFoods } from "@/lib/foods";
+import { sgSubtitle } from "@/components/foods/sgDisplay";
 import { defaultSlot, fmtKcal } from "@/components/format";
 import FavouriteList from "@/components/FavouriteList";
 import NavBar from "@/components/ui/NavBar";
@@ -67,22 +68,26 @@ export default function SearchPage() {
   }, [q]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
-  // Device results (built-in dishes with your edits, and your own foods) come first, then the server's.
-  const results = useMemo(() => {
+  // Ranking: your foods and curated hawker dishes first, then HPB SG FoodID, then the server's USDA results.
+  const groups = useMemo(() => {
     const term = q.trim();
-    const local = term.length >= 2 ? searchAllFoods(term, 20).map((r) => foodToSearchResult(r.food)) : [];
-    return mergeSearchResults(local, remote);
+    const hits = term.length >= 2 ? searchAllFoods(term, 80).map((r) => foodToSearchResult(r.food)) : [];
+    const yours = hits.filter((r) => r.source === "custom").slice(0, 10);
+    const hawker = hits.filter((r) => r.source === "hpb" || r.source === "user_edit").slice(0, 10);
+    const sg = hits.filter((r) => r.source === "sgfoodid").slice(0, 10);
+    const rest = mergeSearchResults([...yours, ...hawker, ...sg], remote, 100).filter((r) => !r.localId);
+    return { yours, hawker, sg: [...sg, ...rest.filter((r) => r.source === "sgfoodid")], usda: rest.filter((r) => r.source !== "sgfoodid") };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- recompute when the food list changes
   }, [q, remote, foods]);
 
-  const localResults = results.filter((r) => r.localId);
-  const serverResults = results.filter((r) => !r.localId);
+  const results = [...groups.yours, ...groups.hawker, ...groups.sg, ...groups.usda];
   const term = q.trim();
   const searching = term.length >= 2;
 
   function resultRow(r: SearchResult) {
     const shown = r.per_100g ?? r.per_serving;
     const own = r.source === "custom" || r.source === "user_edit";
+    const sgFood = r.source === "sgfoodid" && r.localId ? getFood(r.localId) : undefined;
     return (
       <Row
         key={r.id}
@@ -90,16 +95,17 @@ export default function SearchPage() {
           <span className="flex items-center gap-2">
             <span className="truncate">{r.name}</span>
             {own && <Chip tone="accent">{r.source === "custom" ? "Your food" : "Edited"}</Chip>}
+            {r.source === "sgfoodid" && <Chip>HPB</Chip>}
           </span>
         }
-        subtitle={shown ? `${r.per_100g ? "Per 100 g" : `Per ${r.servingLabel}`} · ${tagFor(r).text}` : tagFor(r).text}
-        value={shown ? `${fmtKcal(shown.kcal)} kcal` : undefined}
+        subtitle={sgFood ? sgSubtitle(sgFood) : shown ? `${r.per_100g ? "Per 100 g" : `Per ${r.servingLabel}`} · ${tagFor(r).text}` : tagFor(r).text}
+        value={sgFood ? `${fmtKcal(sgFood.per_serving.kcal)} kcal` : shown ? `${fmtKcal(shown.kcal)} kcal` : undefined}
         chevron
         onClick={() => {
           setNotice(null);
           setPicked(r);
         }}
-        ariaLabel={`${r.name}${shown ? `, ${fmtKcal(shown.kcal)} kilocalories` : ""}`}
+        ariaLabel={`${r.name}${sgFood ? `, ${fmtKcal(sgFood.per_serving.kcal)} kilocalories per ${sgFood.serving.label}` : shown ? `, ${fmtKcal(shown.kcal)} kilocalories` : ""}`}
       />
     );
   }
@@ -127,8 +133,10 @@ export default function SearchPage() {
         </p>
       )}
 
-      {localResults.length > 0 && <Section header="On this device">{localResults.map(resultRow)}</Section>}
-      {serverResults.length > 0 && <Section header="USDA FoodData Central">{serverResults.map(resultRow)}</Section>}
+      {groups.yours.length > 0 && <Section header="Your foods">{groups.yours.map(resultRow)}</Section>}
+      {groups.hawker.length > 0 && <Section header="Hawker favourites">{groups.hawker.map(resultRow)}</Section>}
+      {groups.sg.length > 0 && <Section header="HPB SG FoodID">{groups.sg.map(resultRow)}</Section>}
+      {groups.usda.length > 0 && <Section header="USDA FoodData Central">{groups.usda.map(resultRow)}</Section>}
 
       {searching && searched && !loading && !error && results.length === 0 && (
         <p className="mt-6 px-4 text-center text-label-2 type-subhead">Nothing found for “{term}”. Try another spelling or a simpler name.</p>

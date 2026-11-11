@@ -4,6 +4,9 @@ import experiment from "@/data/experiment.json";
 import evalData from "@/data/eval-results.json";
 import type { EvalMealResult, EvalResults } from "@/lib/types";
 import NavBar from "@/components/ui/NavBar";
+import { getSgFile } from "@/lib/sgfoodid.server";
+import { SG_LICENCE, SG_SHORT, SG_SITE } from "@/lib/sgfoodid";
+import { SG_NO_ENDORSEMENT, accessedLabel } from "@/components/foods/sgDisplay";
 
 interface Row {
   dish: string;
@@ -99,6 +102,36 @@ function err(est: number | null, ref: number | null): string {
   return `${p > 0 ? "+" : p < 0 ? "−" : ""}${Math.abs(p)}%`;
 }
 
+const FALLBACK_ATTRIBUTION = "Contains data from HPB SG FoodID (Singapore Food Insights Database), used under its Terms of Use.";
+const link = "font-medium text-accent-text underline-offset-2 hover:underline";
+
+function DataSources() {
+  const sg = getSgFile();
+  return (
+    <section id="sources" className="mt-6 scroll-mt-20" aria-labelledby="sources-h">
+      <h2 id="sources-h" className="px-4 pb-1.5 uppercase text-label-2 type-footnote">Data sources</h2>
+      <div className="surface p-4 type-subhead">
+        <p className="type-headline">{SG_SHORT}</p>
+        <p className="mt-2" data-testid="sg-attribution">{sg.attribution || FALLBACK_ATTRIBUTION}</p>
+        <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-label-2">
+          <dt>Publisher</dt>
+          <dd className="text-right text-label">{sg.publisher || "Health Promotion Board, Singapore"}</dd>
+          {sg.accessed && (<><dt>Accessed</dt><dd className="text-right text-label">{accessedLabel(sg.accessed)}</dd></>)}
+          {sg.count > 0 && (<><dt>Items</dt><dd className="num text-right text-label">{sg.count.toLocaleString("en-GB")}</dd></>)}
+        </dl>
+        <p className="mt-3 flex flex-wrap gap-x-5">
+          <a href={SG_SITE} target="_blank" rel="noopener noreferrer" className={`${link} inline-flex min-h-11 items-center`}>SG FoodID website</a>
+          <a href={SG_LICENCE} target="_blank" rel="noopener noreferrer" className={`${link} inline-flex min-h-11 items-center`}>Licence and terms of use</a>
+        </p>
+        <p className="mt-1 text-label-2">{SG_NO_ENDORSEMENT}</p>
+      </div>
+      <p className="px-4 pt-1.5 text-label-2 type-footnote">
+        Other sources: our curated hawker dishes (see each dish for its publisher), USDA FoodData Central and Open Food Facts.
+      </p>
+    </section>
+  );
+}
+
 export default function UncoveredPage() {
   const noCalai = rows.every((r) => r.calai_kcal === null || r.calai_kcal === undefined);
 
@@ -151,6 +184,8 @@ export default function UncoveredPage() {
         </div>
         <p className="px-4 pt-1.5 text-label-2 type-footnote">Error % = (estimate − reference) ÷ reference.</p>
       </section>
+
+      <DataSources />
 
       <section className="mt-6" aria-labelledby="note-h">
         <h2 id="note-h" className="px-4 pb-1.5 uppercase text-label-2 type-footnote">A note on the data</h2>

@@ -2,6 +2,7 @@
 import type { FoodRecord, Nutrition, Source } from "@/lib/types";
 import { ApiClientError } from "@/lib/client";
 import { searchLocal } from "@/lib/search";
+import { SG_SITE } from "@/lib/sgfoodid";
 
 export interface SearchResult {
   id: string;
@@ -23,8 +24,8 @@ export function foodToSearchResult(f: FoodRecord): SearchResult {
   return {
     id: f.id,
     name: f.name,
-    source: f.origin === "custom" ? "custom" : f.edited ? "user_edit" : "hpb",
-    sourceUrl: f.source.url,
+    source: f.origin === "custom" ? "custom" : f.edited ? "user_edit" : f.origin === "sgfoodid" ? "sgfoodid" : "hpb",
+    sourceUrl: f.origin === "sgfoodid" ? SG_SITE : f.source.url,
     dishId: f.origin === "builtin" ? f.id : null,
     per_100g: f.per_100g,
     per_serving: f.per_serving,
@@ -45,7 +46,7 @@ export function mergeSearchResults(local: SearchResult[], remote: SearchResult[]
   return [...local, ...rest].slice(0, limit);
 }
 
-const SOURCES: Source[] = ["hpb", "usda", "off", "label", "custom", "user_edit", "ai_estimate"];
+const SOURCES: Source[] = ["hpb", "sgfoodid", "usda", "off", "label", "custom", "user_edit", "ai_estimate"];
 
 function num(v: unknown): number | null {
   return typeof v === "number" && isFinite(v) ? v : null;

@@ -6,6 +6,7 @@ import { dishTypicalGrams, withGrams } from "@/lib/nutrition";
 import { getFood, searchAllFoods, suggestCustomFood, swapToFood, useFoods, CUSTOM_PREFIX, YOUR_FOOD } from "@/lib/foods";
 import { ArrowLeftRight, Check, ExternalLink, Trash2 } from "lucide-react";
 import { fmtKcal, fmtMacro, sourceLabel } from "./format";
+import { SG_SITE } from "@/lib/sgfoodid";
 import { MACRO_COLOURS } from "./dashboard/colours";
 import { Button, Chip, FIELD } from "./ui/Controls";
 import { Row } from "./ui/List";
@@ -112,6 +113,7 @@ export default function ItemCard({
     [item.dishId, item.label, foods],
   );
   const src = sourceLabelFor(item, dish);
+  const srcUrl = item.sourceUrl ?? (item.source === "sgfoodid" ? SG_SITE : undefined);
   const conf = confidenceChip(item.confidence);
 
   const options = query.trim()
@@ -197,9 +199,9 @@ export default function ItemCard({
               Size reference: {item.referenceObject} <Check size={12} strokeWidth={2.5} aria-hidden />
             </Chip>
           )}
-          {item.sourceUrl ? (
+          {srcUrl ? (
             <a
-              href={item.sourceUrl}
+              href={srcUrl}
               target="_blank"
               rel="noopener noreferrer"
               title={src.title}

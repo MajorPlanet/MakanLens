@@ -1,4 +1,5 @@
-// One food lookup for the whole app: built-in dishes (hawker.json, with the user's overrides applied) + custom foods.
+// One food lookup for the whole app: built-in dishes (hawker.json, with the user's overrides applied) + custom foods
+// + the SG FoodID reference list (HPB, ~3,000 items, fetched once from /api/foods/sgfoodid and cached by the browser).
 // Reads are synchronous from an in-memory cache (call useFoods()/loadFoods() once on the client to fill it from
 // IndexedDB); writes go to IndexedDB and notify subscribers. Client-only data: server code must not import this.
 import { useEffect, useSyncExternalStore } from "react";
@@ -6,7 +7,8 @@ import Fuse from "fuse.js";
 import { getDishes } from "./matcher";
 import { nutritionForGrams, roundNutrition, scaleAll } from "./nutrition";
 import { DATA_CLEARED_EVENT, dbClearAll, dbDeleteCustomFood, dbDeleteOverride, dbGetCustomFoods, dbGetOverrides, dbPutCustomFood, dbPutCustomFoods, dbPutOverride } from "./db";
-import type { AnalysedItem, Candidate, Dish, FoodOverride, FoodRecord, Nutrition, Source } from "./types";
+import { sgToFood } from "./sgfoodid";
+import type { AnalysedItem, Candidate, Dish, FoodOverride, FoodRecord, Nutrition, SgFoodFile, Source } from "./types";
 
 export const CUSTOM_PREFIX = "custom-";
 export const YOUR_FOOD = "Your food";
@@ -57,17 +59,42 @@ let overrides = new Map<string, FoodOverride>();
 let loaded = false;
 let loading: Promise<void> | null = null;
 let snapshot: FoodRecord[] | null = null;
+let byId: Map<string, FoodRecord> | null = null;
+/** SG FoodID items (empty until fetched). */
+let reference: FoodRecord[] = [];
+let refLoading: Promise<void> | null = null;
+let refMeta: Omit<SgFoodFile, "foods"> | null = null;
 const listeners = new Set<() => void>();
 const builtins = () => getDishes().map(dishToFood);
 let builtinSnapshot: FoodRecord[] | null = null;
 
 function changed() {
   snapshot = null;
+  byId = null;
   listeners.forEach((l) => l());
 }
 
+/** Fetch the SG FoodID list once (non-blocking; foods appear when it arrives). Offline/failed → stays empty. */
+export function loadReferenceFoods(): Promise<void> {
+  if (typeof window === "undefined") return Promise.resolve();
+  refLoading ??= fetch("/api/foods/sgfoodid")
+    .then((r) => (r.ok ? (r.json() as Promise<SgFoodFile>) : null))
+    .then((file) => {
+      if (!file?.foods?.length) return;
+      const { foods, ...meta } = file;
+      refMeta = meta;
+      reference = foods.map(sgToFood);
+      changed();
+    })
+    .catch(() => undefined);
+  return refLoading;
+}
+/** Snapshot metadata (name, accessed date, attribution notice), or null until loaded. */
+export const getReferenceMeta = () => refMeta;
+
 /** Fill the cache from IndexedDB (once). Built-ins are available before this resolves. */
 export function loadFoods(): Promise<void> {
+  void loadReferenceFoods();
   if (loaded) return Promise.resolve();
   loading ??= Promise.all([dbGetCustomFoods(), dbGetOverrides()])
     .then(([c, o]) => {
@@ -91,18 +118,23 @@ if (typeof window !== "undefined") {
   });
 }
 
-/** Built-in dishes (overrides applied) then custom foods. Stable array until something changes. */
+/** Built-in dishes, custom foods, then SG FoodID (overrides applied to built-ins and SG FoodID). Stable until something changes. */
 export function getAllFoods(): FoodRecord[] {
-  snapshot ??= [...getDishes().map((d) => applyOverride(dishToFood(d), overrides.get(d.id))), ...custom];
+  snapshot ??= [
+    ...getDishes().map((d) => applyOverride(dishToFood(d), overrides.get(d.id))),
+    ...custom,
+    ...reference.map((f) => applyOverride(f, overrides.get(f.id))),
+  ];
   return snapshot;
 }
 export function getFood(id: string): FoodRecord | undefined {
-  return getAllFoods().find((f) => f.id === id);
+  byId ??= new Map(getAllFoods().map((f) => [f.id, f]));
+  return byId.get(id);
 }
-/** The untouched built-in record (for "original values" and Reset). */
+/** The untouched built-in or SG FoodID record (for "original values" and Reset). */
 export function getOriginalFood(dishId: string): FoodRecord | undefined {
   const d = getDishes().find((x) => x.id === dishId);
-  return d ? dishToFood(d) : undefined;
+  return d ? dishToFood(d) : reference.find((f) => f.id === dishId);
 }
 export const getCustomFoods = () => custom;
 export const getOverride = (dishId: string) => overrides.get(dishId);
@@ -230,7 +262,16 @@ export function searchAllFoods(query: string, limit = 15, filter?: (f: FoodRecor
     const cur = best.get(r.item.food.id);
     if (!cur || score > cur.score) best.set(r.item.food.id, { food: r.item.food, score });
   }
-  return [...best.values()].sort((a, b) => b.score - a.score).slice(0, limit);
+  let results = [...best.values()];
+  // With ~2,700 foods, loose fuzzy hits ("tart" for "tarik") crowd out real ones. If some foods contain every word
+  // typed, keep those plus near-exact fuzzy hits; otherwise keep everything so typos still find something.
+  const words = q.toLowerCase().split(/\s+/).filter((w) => w.length >= 2);
+  const hasAll = (f: FoodRecord) => {
+    const hay = `${f.name} ${f.aliases.join(" ")}`.toLowerCase();
+    return words.every((w) => hay.includes(w));
+  };
+  if (words.length > 0 && results.some((r) => hasAll(r.food))) results = results.filter((r) => hasAll(r.food) || r.score >= 0.85);
+  return results.sort((a, b) => (hasAll(b.food) ? 1 : 0) - (hasAll(a.food) ? 1 : 0) || b.score - a.score).slice(0, limit);
 }
 
 /** Minimum score for "Use your food: <name>?" (strict: a wrong suggestion is worse than none). */
@@ -242,9 +283,9 @@ export function suggestCustomFood(label: string): FoodRecord | null {
   return top && top.score >= SUGGEST_MIN_SCORE ? top.food : null;
 }
 
-/** Source tag for a food: custom → "custom", edited built-in → "user_edit", built-in → "hpb" (the curated-dish tag). */
+/** Source tag: custom → "custom", edited → "user_edit", SG FoodID → "sgfoodid", built-in → "hpb" (the curated-dish tag). */
 export function foodSource(f: FoodRecord): Source {
-  return f.origin === "custom" ? "custom" : f.edited ? "user_edit" : "hpb";
+  return f.origin === "custom" ? "custom" : f.edited ? "user_edit" : f.origin === "sgfoodid" ? "sgfoodid" : "hpb";
 }
 
 /**
