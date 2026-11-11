@@ -120,9 +120,7 @@ export function createSgIndex(foods: readonly SgFood[]): SgIndex {
     return Math.min(1, dice + bonus);
   };
 
-  return {
-    size: docs.length,
-    match(label, method = "unknown") {
+  function matchOne(label: string, method: CookingMethod): SgMatch | null {
       const q = tokenize(label);
       if (q.length === 0 || docs.length === 0) return null;
       const qDrink = q.some((t) => DRINK_WORDS.has(t));
@@ -137,6 +135,17 @@ export function createSgIndex(foods: readonly SgFood[]): SgIndex {
       // Two different foods scoring almost the same is ambiguity, not a match.
       if (best && scored[1] && best.score - scored[1].score < 0.05) return null;
       return best ? { food: best.d.food, id: sgId(best.d.food.id), score: Math.round(best.score * 100) / 100 } : null;
+    }
+
+  return {
+    size: docs.length,
+    match(label, method = "unknown") {
+      // Model labels often add an explanation in brackets: "Kopi siew dai (coffee with milk, less sugar)".
+      // Try the full label first, then the label without the bracketed parts.
+      const hit = matchOne(label, method);
+      if (hit) return hit;
+      const bare = label.replace(/\([^)]*\)|\[[^\]]*\]/g, " ").replace(/\s+/g, " ").trim();
+      return bare && bare !== label.trim() ? matchOne(bare, method) : null;
     },
     suggest(label, limit, excludeId) {
       if (!label.trim() || docs.length === 0 || limit <= 0) return [];

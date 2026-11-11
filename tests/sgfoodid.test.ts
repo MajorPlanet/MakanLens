@@ -114,3 +114,16 @@ describe("analyse pipeline with SG FoodID", () => {
     expect(r.items[0].source).toBe("ai_estimate");
   });
 });
+
+describe("SG FoodID match: bracketed explanations in model labels", () => {
+  it("retries without the bracketed part", async () => {
+    const { createSgIndex } = await import("@/lib/sgmatch");
+    const idx = createSgIndex([
+      { id: "D1", name: "Kopi siu dai", drink: true, group: "Tea and coffee", per100: { kcal: 40, protein_g: 0.5, carbs_g: 7, fat_g: 1 }, servings: [{ label: "1 cup", grams: 250 }] },
+      { id: "D2", name: "Teh Tarik", drink: true, group: "Tea and coffee", per100: { kcal: 48, protein_g: 1, carbs_g: 8, fat_g: 1.2 }, servings: [{ label: "1 small cup", grams: 150 }] },
+    ]);
+    expect(idx.match("Kopi siew dai (coffee with milk, less sugar)")?.food.name).toBe("Kopi siu dai");
+    expect(idx.match("Teh tarik (pulled milk tea)")?.food.name).toBe("Teh Tarik");
+    expect(idx.match("Orange juice (fresh)")).toBeNull();
+  });
+});
