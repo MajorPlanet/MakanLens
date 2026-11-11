@@ -1,5 +1,5 @@
 // Wire types + client for GET /api/search (api-builder owns the endpoint). Mock fallback behind NEXT_PUBLIC_USE_MOCK.
-import type { Nutrition, Source } from "@/lib/types";
+import type { FoodRecord, Nutrition, Source } from "@/lib/types";
 import { ApiClientError } from "@/lib/client";
 import { searchLocal } from "@/lib/search";
 
@@ -14,6 +14,35 @@ export interface SearchResult {
   per_serving: Nutrition | null;
   servingLabel: string;
   typicalGrams: number | null;
+  /** Set for results from the device (built-in dishes with overrides, and custom foods): log via foodToItem. */
+  localId?: string;
+}
+
+/** A local food (overrides applied, or custom) as a search row. */
+export function foodToSearchResult(f: FoodRecord): SearchResult {
+  return {
+    id: f.id,
+    name: f.name,
+    source: f.origin === "custom" ? "custom" : f.edited ? "user_edit" : "hpb",
+    sourceUrl: f.source.url,
+    dishId: f.origin === "builtin" ? f.id : null,
+    per_100g: f.per_100g,
+    per_serving: f.per_serving,
+    servingLabel: f.serving.label,
+    typicalGrams: f.serving.grams,
+    localId: f.id,
+  };
+}
+
+/**
+ * Local results first, then server results with anything already shown dropped
+ * (same id, same built-in dish, or the same name ignoring case).
+ */
+export function mergeSearchResults(local: SearchResult[], remote: SearchResult[], limit = 20): SearchResult[] {
+  const ids = new Set(local.flatMap((r) => [r.id, r.dishId].filter((x): x is string => !!x)));
+  const names = new Set(local.map((r) => r.name.trim().toLowerCase()));
+  const rest = remote.filter((r) => !ids.has(r.id) && !(r.dishId && ids.has(r.dishId)) && !names.has(r.name.trim().toLowerCase()));
+  return [...local, ...rest].slice(0, limit);
 }
 
 const SOURCES: Source[] = ["hpb", "usda", "off", "label", "custom", "user_edit", "ai_estimate"];

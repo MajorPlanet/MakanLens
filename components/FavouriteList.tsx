@@ -6,6 +6,7 @@ import { defaultSlot, fmtKcal } from "@/components/format";
 import { getFavouriteMeals, logSavedMeal, setFavourite } from "@/lib/storage";
 import type { SavedMeal } from "@/lib/types";
 
+const hasOwn = (m: SavedMeal) => m.items.some((i) => i.source === "custom");
 const mealKcal = (m: SavedMeal) => m.items.reduce((sum, i) => sum + i.nutrition.kcal, 0);
 
 /** Favourites list for the Search screen. One tap logs the meal to the current slot. */
@@ -35,7 +36,10 @@ export default function FavouriteList({ onLogged }: { onLogged?: (name: string) 
                 }}
                 className="min-h-11 min-w-0 flex-1 px-3 py-2 text-left"
               >
-                <span className="block truncate text-sm font-medium">{f.name}</span>
+                <span className="flex items-center gap-2">
+                  <span className="truncate text-sm font-medium">{f.name}</span>
+                  {hasOwn(f) && <span className="shrink-0 rounded-full bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-800 dark:bg-orange-950 dark:text-orange-300">Your food</span>}
+                </span>
                 <span className="block text-xs text-neutral-500 dark:text-neutral-400">{fmtKcal(mealKcal(f))} kcal · tap to log</span>
               </button>
               <button

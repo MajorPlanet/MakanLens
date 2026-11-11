@@ -213,9 +213,9 @@ export default function Home() {
       <GoalCard profile={profile} plan={plan} entries={entries} />
       <MacroCards totals={totals} targets={targets.macros} />
       <WeeklyBudget plan={plan} entries={entries} dailyKcal={targets.base} />
-      <WeekStack days={week} goal={profile.targetKcal} />
+      <WeekStack days={week} goal={targets.base} />
       <BalanceDonut totals={totals} />
-      <InsightCard text={weekInsight(week, profile.targetKcal)} />
+      <InsightCard text={weekInsight(week, targets.base)} />
 
       <div className="mt-4"><ExerciseCard profile={profile} plan={plan} date={todayDate} onChange={setDay} /></div>
 

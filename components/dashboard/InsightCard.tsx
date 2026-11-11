@@ -1,14 +1,18 @@
 import { Lightbulb } from "lucide-react";
 import { ICON } from "@/components/icons";
+import { localDateString } from "@/lib/storage";
 import type { DayMacros } from "./WeekStack";
 
-/** One auto-generated line from this week's local data. */
-export function weekInsight(days: DayMacros[], goal: number): string {
-  const logged = days.filter((d) => d.carbs + d.protein + d.fat > 0);
+/** One auto-generated line from this week's local data. Today is unfinished, so it never counts towards the average. */
+export function weekInsight(days: DayMacros[], goal: number, today: string = localDateString()): string {
+  const total = (d: DayMacros) => d.carbs + d.protein + d.fat;
+  const logged = days.filter((d) => total(d) > 0);
   if (logged.length === 0 || goal <= 0) return "Log your first meal to start seeing weekly insights.";
-  const avg = logged.reduce((s, d) => s + d.carbs + d.protein + d.fat, 0) / logged.length;
+  const done = logged.filter((d) => d.date !== today);
+  if (done.length === 0) return "Good start today. Keep logging and we'll show how your week compares with your goal.";
+  const avg = done.reduce((s, d) => s + total(d), 0) / done.length;
   const pct = Math.round(((avg - goal) / goal) * 100);
-  const n = `${logged.length} logged day${logged.length === 1 ? "" : "s"}`;
+  const n = `${done.length} completed day${done.length === 1 ? "" : "s"}`;
   if (Math.abs(pct) <= 5) return `Nicely on target: you're within ${Math.abs(pct)}% of your calorie goal across ${n}.`;
   return pct < 0
     ? `You're ${-pct}% below your calorie goal on average across ${n} this week.`

@@ -1,6 +1,6 @@
 // SERVER ONLY. The whole analyse pipeline, shared by POST /api/analyse and scripts/eval.ts:
 // N parallel vision runs -> median combine -> lookup (hawker.json -> USDA -> model fallback) -> code maths -> follow-up.
-import { modelOutputSchema, type ModelItem } from "./schemas";
+import { modelOutputSchema, type ModelItem, type UserFood } from "./schemas";
 import { analyseWithVision, currentProvider, MissingApiKeyError, ProviderError } from "./vision";
 import { attachFollowUp, buildFollowUp, followUpSpread, getDishes, itemFromPer100g, matchModelItem } from "./matcher";
 import { combineRuns, itemGrams, type CombinedItem } from "./combine";
@@ -21,7 +21,7 @@ export function visionRuns(): number {
 }
 
 /** One model call with one retry on unparseable / invalid output, inside the shared deadline. Null = invalid output. */
-async function oneRun(args: { image?: string; text?: string }, deadline: number): Promise<ModelItem[] | null> {
+async function oneRun(args: { image?: string; text?: string; userFoods?: UserFood[] }, deadline: number): Promise<ModelItem[] | null> {
   const knownDishes = getDishes().map((d) => ({ id: d.id, name: d.name }));
   for (let attempt = 0; attempt < 2; attempt++) {
     const remaining = deadline - Date.now();
@@ -44,7 +44,16 @@ function fallbackPer100(c: CombinedItem): Nutrition {
   return { kcal, protein_g: m?.protein_g ?? (kcal * 0.2) / 4, carbs_g: m?.carbs_g ?? (kcal * 0.5) / 4, fat_g: m?.fat_g ?? (kcal * 0.3) / 9 };
 }
 
-async function resolveItem(c: CombinedItem, runs: number): Promise<AnalysedItem> {
+async function resolveItem(c: CombinedItem, runs: number, userIds: ReadonlySet<string>): Promise<AnalysedItem> {
+  // A user's own food: keep its id. The client replaces nutrition from local data; here it stays the AI estimate.
+  if (c.known_dish_id && userIds.has(c.known_dish_id) && !getDishes().some((d) => d.id === c.known_dish_id)) {
+    const g = itemGrams(c) > 0 ? itemGrams(c) : DEFAULT_GRAMS;
+    const item = itemFromPer100g({
+      label: c.label, grams: g, gramsLow: c.grams_low, gramsHigh: c.grams_high, method: c.method,
+      confidence: c.confidence, referenceObject: c.reference_object, runs, per100: fallbackPer100(c), source: "ai_estimate",
+    });
+    return { ...item, dishId: c.known_dish_id };
+  }
   const hawker = matchModelItem(c, runs);
   if (hawker) return hawker;
 
@@ -67,7 +76,7 @@ async function resolveItem(c: CombinedItem, runs: number): Promise<AnalysedItem>
 }
 
 /** Run the full pipeline. Throws MissingApiKeyError or ProviderError; non-food returns items: []. */
-export async function analyseMeal(args: { image?: string; text?: string }): Promise<AnalyseResponse> {
+export async function analyseMeal(args: { image?: string; text?: string; userFoods?: UserFood[] }): Promise<AnalyseResponse> {
   const started = Date.now();
   const provider = currentProvider();
   const n = visionRuns();
@@ -84,8 +93,9 @@ export async function analyseMeal(args: { image?: string; text?: string }): Prom
     throw new ProviderError(provider, "Model returned invalid output.");
   }
 
+  const userIds = new Set((args.userFoods ?? []).map((f) => f.id));
   const combined = combineRuns(ok);
-  const items = await Promise.all(combined.map((c) => resolveItem(c, ok.length)));
+  const items = await Promise.all(combined.map((c) => resolveItem(c, ok.length, userIds)));
 
   // At most one follow-up per meal: the one whose options differ most in kcal (and by > 15%).
   let best: { idx: number; followUp: FollowUp; spread: number } | null = null;

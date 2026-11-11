@@ -19,6 +19,24 @@ export function lastDays(entries: LogEntry[], n = 7, today: Date = new Date()): 
   return out;
 }
 
+export interface LoggedAverage { avg: number; count: number; includesToday: boolean }
+
+/**
+ * Average kcal over days that have entries only. Today (unfinished) is excluded unless it is the only logged day.
+ * Returns null when nothing is logged.
+ */
+export function averageLoggedKcal(days: DayTotal[], todayDate: string): LoggedAverage | null {
+  const logged = days.filter((d) => d.kcal > 0);
+  if (logged.length === 0) return null;
+  const done = logged.filter((d) => d.date !== todayDate);
+  const use = done.length > 0 ? done : logged;
+  return {
+    avg: Math.round(use.reduce((s, d) => s + d.kcal, 0) / use.length),
+    count: use.length,
+    includesToday: use.some((d) => d.date === todayDate),
+  };
+}
+
 /** Consecutive logged days ending today (or yesterday if today is empty). */
 export function currentStreak(entries: LogEntry[], today: Date = new Date()): number {
   const dates = new Set(entries.map((e) => e.date));

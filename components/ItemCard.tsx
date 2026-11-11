@@ -1,8 +1,9 @@
 "use client";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { AnalysedItem, CookingMethod, Dish, FollowUp, Nutrition } from "@/lib/types";
-import { applyFollowUpOption, getDish, scaleNutrition, searchDishes, swapDish } from "@/lib/matcher";
+import { applyFollowUpOption, getDish, scaleNutrition, swapDish } from "@/lib/matcher";
 import { dishTypicalGrams, withGrams } from "@/lib/nutrition";
+import { getFood, searchAllFoods, suggestCustomFood, swapToFood, useFoods, CUSTOM_PREFIX, YOUR_FOOD } from "@/lib/foods";
 import { Check, ChevronDown, ChevronUp, ExternalLink, X } from "lucide-react";
 import { fmtKcal, fmtMacro, sourceLabel } from "./format";
 import { ICON } from "./icons";
@@ -25,10 +26,10 @@ const G_STEP = 25;
 
 /** Legacy 0.5–2× portion maths, for items without grams. */
 function withPortion(item: AnalysedItem, portion: number): AnalysedItem {
-  const dish = item.dishId ? getDish(item.dishId) : undefined;
+  const food = item.dishId ? getFood(item.dishId) : undefined;
   let nutrition: Nutrition;
-  if (dish) {
-    nutrition = scaleNutrition(dish.per_serving, portion);
+  if (food) {
+    nutrition = scaleNutrition(food.per_serving, portion);
   } else {
     const k = item.portion > 0 ? portion / item.portion : 1;
     nutrition = {
@@ -84,28 +85,43 @@ export default function ItemCard({
   adjustedGrams?: number | null;
   onUndoAdjust?: () => void;
 }) {
+  const foods = useFoods();
   const [swapping, setSwapping] = useState(false);
   const [query, setQuery] = useState("");
   const dish = item.dishId ? getDish(item.dishId) : undefined;
-  const title = dish?.name ?? item.label;
-  const subtitle = dish && item.label && item.label !== dish.name ? item.label : null;
-  const servingLabel = dish?.serving.label ?? "serving";
+  const food = item.dishId ? getFood(item.dishId) : undefined;
+  const own = food?.origin === "custom" || !!food?.edited;
+  const title = food?.name ?? dish?.name ?? item.label;
+  const subtitle = food && item.label && item.label !== food.name ? item.label : null;
+  const servingLabel = food?.serving.label ?? dish?.serving.label ?? "serving";
+  // "Use your food" suggestion: a close custom food for what the model saw (never applied automatically).
+  const suggestion = useMemo(
+    () => (item.dishId?.startsWith(CUSTOM_PREFIX) ? null : suggestCustomFood(item.label)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- re-run when foods change
+    [item.dishId, item.label, foods],
+  );
   const src = sourceLabelFor(item, dish);
   const badge = confidenceBadge(item.confidence);
 
   const options = query.trim()
-    ? searchDishes(query, 6)
-    : item.candidates.filter((c) => c.dishId !== item.dishId);
+    ? searchAllFoods(query, 8).map((r) => ({ dishId: r.food.id, name: r.food.name, score: r.score }))
+    : [
+        ...(suggestion && suggestion.id !== item.dishId ? [{ dishId: suggestion.id, name: suggestion.name, score: 1 }] : []),
+        ...item.candidates.filter((c) => c.dishId !== item.dishId && c.dishId !== suggestion?.id && !!getFood(c.dishId)),
+      ];
 
   function swap(dishId: string) {
-    if (!getDish(dishId)) return;
-    const next = swapDish(item, dishId);
+    const target = getFood(dishId);
+    if (!target) return;
+    const useLocal = target.origin === "custom" || !!target.edited;
+    if (!useLocal && !getDish(dishId)) return;
+    const next = useLocal ? swapToFood(item, dishId) : swapDish(item, dishId);
     onChange({ ...next, candidates: item.candidates });
     setSwapping(false);
     setQuery("");
   }
 
-  const typical = dish ? dishTypicalGrams(dish) : null;
+  const typical = own ? (food?.serving.grams ?? null) : dish ? dishTypicalGrams(dish) : null;
   const hasGrams = item.grams > 0;
   const [low, high] = item.kcalRange;
   const hasRange = Math.round(high) > Math.round(low);
@@ -258,6 +274,17 @@ export default function ItemCard({
         </div>
       )}
 
+      {suggestion && suggestion.id !== item.dishId && (
+        <button
+          type="button"
+          onClick={() => swap(suggestion.id)}
+          className="mt-3 flex min-h-11 w-full items-center justify-between gap-2 rounded-xl border border-orange-400 bg-orange-50 px-3 py-2 text-left text-sm font-medium dark:border-orange-700 dark:bg-orange-950/40"
+        >
+          <span className="min-w-0 break-words">Use your food: {suggestion.name}?</span>
+          <span className="shrink-0 rounded-full bg-orange-100 px-2 py-1 text-xs text-orange-800 dark:bg-orange-950 dark:text-orange-300">{YOUR_FOOD}</span>
+        </button>
+      )}
+
       <button
         type="button"
         onClick={() => setSwapping((s) => !s)}
@@ -286,7 +313,11 @@ export default function ItemCard({
                   className="flex min-h-11 w-full items-center justify-between rounded-xl px-2 text-left text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800"
                 >
                   <span className="break-words">{c.name}</span>
-                  <span className="ml-2 shrink-0 text-xs text-neutral-500">{Math.round(c.score * 100)}%</span>
+                  {c.dishId.startsWith(CUSTOM_PREFIX) ? (
+                    <span className="ml-2 shrink-0 rounded-full bg-orange-100 px-2 py-1 text-xs font-medium text-orange-800 dark:bg-orange-950 dark:text-orange-300">{YOUR_FOOD}</span>
+                  ) : (
+                    <span className="ml-2 shrink-0 text-xs text-neutral-500">{Math.round(c.score * 100)}%</span>
+                  )}
                 </button>
               </li>
             ))}

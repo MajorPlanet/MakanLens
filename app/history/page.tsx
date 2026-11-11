@@ -2,8 +2,11 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { LogEntry, Profile } from "@/lib/types";
-import { getEntries, getProfile } from "@/lib/storage";
-import { currentStreak, lastDays } from "@/lib/history";
+import { getEntries, getProfile, localDateString } from "@/lib/storage";
+import { averageLoggedKcal, currentStreak, lastDays } from "@/lib/history";
+import { useGoalPlan } from "@/lib/plan";
+import { dayTargets } from "@/lib/targets";
+import WeeklyBudget from "@/components/goal/WeeklyBudget";
 import PageHeader from "@/components/PageHeader";
 import WeekChart from "@/components/WeekChart";
 import { ACCENT_BTN } from "@/components/format";
@@ -23,9 +26,10 @@ export default function HistoryPage() {
   }, []);
   /* eslint-enable react-hooks/set-state-in-effect */
 
-  const target = profile?.targetKcal ?? DEFAULT_TARGET;
+  const plan = useGoalPlan();
+  const target = profile ? dayTargets(profile, 0, plan).base : DEFAULT_TARGET;
   const days = lastDays(entries, 7);
-  const avg = Math.round(days.reduce((s, d) => s + d.kcal, 0) / days.length);
+  const average = averageLoggedKcal(days, localDateString());
   const streak = currentStreak(entries);
 
   return (
@@ -50,10 +54,14 @@ export default function HistoryPage() {
               <p className="font-display text-4xl font-extrabold tabular-nums text-orange-600 dark:text-orange-400">{streak}<span className="ml-1 text-base font-medium">{streak === 1 ? "day" : "days"}</span></p>
             </div>
             <div className="p-4 card">
-              <p className="text-sm text-neutral-500 dark:text-neutral-400">7-day average</p>
-              <p className="font-display text-4xl font-extrabold tabular-nums">{avg}<span className="ml-1 text-base font-medium">kcal</span></p>
+              <p className="text-sm text-neutral-500 dark:text-neutral-400">Average of logged days</p>
+              <p className="font-display text-4xl font-extrabold tabular-nums">{average ? average.avg : "–"}<span className="ml-1 text-base font-medium">kcal</span></p>
+              <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                {average ? `${average.count} ${average.count === 1 ? "day" : "days"}${average.includesToday ? ", today so far" : ", today excluded"}` : "No days logged this week"}
+              </p>
             </div>
           </div>
+          {profile && <div className="-mt-4"><WeeklyBudget plan={plan} entries={entries} dailyKcal={target} /></div>}
           <section className="p-4 card">
             <h2 className="mb-2 text-sm font-semibold">Last 7 days</h2>
             <WeekChart days={days} target={target} />

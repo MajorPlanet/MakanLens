@@ -194,3 +194,37 @@ describe("entriesToCsv", () => {
     expect(cols[10]).toBe("");
   });
 });
+
+import { averageLoggedKcal } from "@/lib/history";
+import { weekInsight } from "@/components/dashboard/InsightCard";
+
+describe("averageLoggedKcal", () => {
+  it("averages only logged days, so one 558 kcal day is not divided by 7", () => {
+    const days = lastDays([entry(0, {}, { kcal: 558 })], 7, TODAY);
+    expect(averageLoggedKcal(days, localDay(0))).toEqual({ avg: 558, count: 1, includesToday: true });
+  });
+  it("excludes today when other days are logged", () => {
+    const days = lastDays([entry(0, {}, { kcal: 200 }), entry(1, {}, { kcal: 1800 }), entry(2, {}, { kcal: 2000 })], 7, TODAY);
+    expect(averageLoggedKcal(days, localDay(0))).toEqual({ avg: 1900, count: 2, includesToday: false });
+  });
+  it("returns null when nothing is logged", () => {
+    expect(averageLoggedKcal(lastDays([], 7, TODAY), localDay(0))).toBeNull();
+  });
+});
+
+describe("weekInsight", () => {
+  const day = (daysAgo: number, kcal: number) => ({ date: localDay(daysAgo), label: "x", carbs: kcal, protein: 0, fat: 0 });
+  it("does not count today and is neutral when only today is logged", () => {
+    const text = weekInsight([day(1, 0), day(0, 500)], 2000, localDay(0));
+    expect(text).not.toMatch(/below|above/);
+    expect(text).toMatch(/Good start/);
+  });
+  it("averages completed days only", () => {
+    const text = weekInsight([day(2, 1000), day(1, 1000), day(0, 100)], 2000, localDay(0));
+    expect(text).toContain("50% below");
+    expect(text).toContain("2 completed days");
+  });
+  it("prompts for a first meal when nothing is logged", () => {
+    expect(weekInsight([day(0, 0)], 2000, localDay(0))).toMatch(/first meal/);
+  });
+});

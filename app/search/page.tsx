@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { AnalysedItem, MealSlot } from "@/lib/types";
 import { logItems } from "@/lib/storage";
@@ -8,7 +8,11 @@ import { nutritionForGrams, roundNutrition } from "@/lib/nutrition";
 import PageHeader from "@/components/PageHeader";
 import SearchSlotPicker from "@/components/SearchSlotPicker";
 import FavouriteList from "@/components/FavouriteList";
-import { searchFoods, type SearchResult } from "@/components/SearchApi";
+import { foodToSearchResult, mergeSearchResults, searchFoods, type SearchResult } from "@/components/SearchApi";
+import NewFoodSheet from "@/components/foods/NewFoodSheet";
+import { foodToItem, getFood, searchAllFoods, useFoods } from "@/lib/foods";
+import { Plus } from "lucide-react";
+import { ICON } from "@/components/icons";
 import { ACCENT_BTN, defaultSlot, fmtKcal, fmtMacro, sourceLabel } from "@/components/format";
 import { getDish } from "@/lib/matcher";
 
@@ -28,10 +32,26 @@ function buildItem(r: SearchResult, amount: number): AnalysedItem | null {
   return { ...base, label: amount === 1 ? r.name : `${r.name} (${amount}× ${r.servingLabel})`, portion: amount, nutrition: n, grams: 0, gramsRange: [0, 0], kcalRange: [n.kcal, n.kcal], per_100g: null };
 }
 
+type Unit = "g" | "srv";
+
+/** Local foods go through foodToItem (overrides and custom foods); server results use buildItem. */
+function buildFor(r: SearchResult, amount: number, unit: Unit): AnalysedItem | null {
+  if (!(amount > 0)) return null;
+  if (r.localId) {
+    const f = getFood(r.localId);
+    if (!f) return null;
+    return unit === "g" && f.per_100g ? foodToItem(f, { grams: amount }) : foodToItem(f, { servings: amount });
+  }
+  return buildItem(r, amount);
+}
+
 export default function SearchPage() {
   const router = useRouter();
   const [q, setQ] = useState("");
-  const [results, setResults] = useState<SearchResult[]>([]);
+  const foods = useFoods();
+  const [remote, setRemote] = useState<SearchResult[]>([]);
+  const [unit, setUnit] = useState<Unit>("g");
+  const [creating, setCreating] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searched, setSearched] = useState(false);
@@ -48,7 +68,7 @@ export default function SearchPage() {
     const term = q.trim();
     const id = ++seq.current;
     if (term.length < 2) {
-      setResults([]);
+      setRemote([]);
       setSearched(false);
       setLoading(false);
       setError(null);
@@ -60,7 +80,7 @@ export default function SearchPage() {
       try {
         const list = await searchFoods(term, ctl.signal);
         if (id !== seq.current) return;
-        setResults(list);
+        setRemote(list);
         setError(null);
         setSearched(true);
       } catch (e) {
@@ -78,15 +98,25 @@ export default function SearchPage() {
   }, [q]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
+  // Device results (built-in dishes with your edits, and your own foods) come first, then the server's.
+  const results = useMemo(() => {
+    const term = q.trim();
+    const local = term.length >= 2 ? searchAllFoods(term, 20).map((r) => foodToSearchResult(r.food)) : [];
+    return mergeSearchResults(local, remote);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- recompute when the food list changes
+  }, [q, remote, foods]);
+
   function open(r: SearchResult) {
     if (openId === r.id) return setOpenId(null);
     setOpenId(r.id);
-    setAmountText(String(r.per_100g ? (r.typicalGrams ? Math.round(r.typicalGrams) : 100) : 1));
+    const u: Unit = r.per_100g ? "g" : "srv";
+    setUnit(u);
+    setAmountText(String(u === "g" ? (r.typicalGrams ? Math.round(r.typicalGrams) : 100) : 1));
     setNotice(null);
   }
 
   function add(r: SearchResult) {
-    const item = buildItem(r, Number(amountText));
+    const item = buildFor(r, Number(amountText), unit);
     if (!item) return;
     logItems([item], slot);
     router.push("/");
@@ -106,7 +136,7 @@ export default function SearchPage() {
         className="h-12 w-full rounded-xl border border-neutral-300 bg-transparent px-4 text-base dark:border-neutral-700"
       />
 
-      {loading && (
+      {loading && results.length === 0 && (
         <ul role="status" aria-label="Searching" className="mt-3 space-y-2">
           {[0, 1, 2, 3].map((i) => (
             <li key={i} className="card flex items-center justify-between p-4">
@@ -116,7 +146,7 @@ export default function SearchPage() {
           ))}
         </ul>
       )}
-      {error && <p role="alert" className="mt-3 rounded-3xl border border-orange-200 bg-orange-50 p-4 text-sm dark:border-orange-900 dark:bg-orange-950/40">{error}</p>}
+      {error && <p role="alert" className="mt-3 rounded-3xl border border-orange-200 bg-orange-50 p-4 text-sm dark:border-orange-900 dark:bg-orange-950/40">{results.length > 0 ? `${error} Showing results from this device.` : error}</p>}
       {searched && !loading && !error && results.length === 0 && (
         <p className="mt-3 rounded-3xl border border-dashed border-neutral-300 p-4 text-sm dark:border-neutral-700">Nothing found for “{q.trim()}”. Try another spelling or a simpler name.</p>
       )}
@@ -126,7 +156,8 @@ export default function SearchPage() {
         <ul className="mt-3 space-y-2">
           {results.map((r) => {
             const isOpen = openId === r.id;
-            const preview = buildItem(r, Number(amountText));
+            const preview = isOpen ? buildFor(r, Number(amountText), unit) : null;
+            const grams = unit === "g" && !!r.per_100g;
             const shown = r.per_100g ?? r.per_serving;
             return (
               <li key={r.id} className="rounded-xl border border-neutral-200 bg-card dark:border-neutral-800">
@@ -137,12 +168,30 @@ export default function SearchPage() {
                       {shown ? `${fmtKcal(shown.kcal)} kcal ${r.per_100g ? "per 100 g" : `per ${r.servingLabel}`}` : ""}
                     </span>
                   </span>
-                  <span className="shrink-0 rounded-full bg-neutral-100 px-2 py-1 text-xs font-medium dark:bg-neutral-800">{tagFor(r).text}</span>
+                  <span className={`shrink-0 rounded-full px-2 py-1 text-xs font-medium ${r.source === "custom" || r.source === "user_edit" ? "bg-orange-100 text-orange-800 dark:bg-orange-950 dark:text-orange-300" : "bg-neutral-100 dark:bg-neutral-800"}`}>{tagFor(r).text}</span>
                 </button>
                 {isOpen && (
                   <div className="space-y-3 border-t border-neutral-200 p-3 dark:border-neutral-800">
                     <div>
-                      <label htmlFor={`amt-${r.id}`} className="mb-1 block text-sm font-medium">{r.per_100g ? "Amount eaten (grams)" : `Servings (${r.servingLabel})`}</label>
+                      {r.localId && r.per_100g && (
+                        <div role="group" aria-label="Amount unit" className="mb-2 grid grid-cols-2 gap-2">
+                          {(["g", "srv"] as const).map((u) => (
+                            <button
+                              key={u}
+                              type="button"
+                              aria-pressed={unit === u}
+                              onClick={() => {
+                                setUnit(u);
+                                setAmountText(String(u === "g" ? (r.typicalGrams ? Math.round(r.typicalGrams) : 100) : 1));
+                              }}
+                              className={`h-11 rounded-xl text-sm font-medium ${unit === u ? "bg-orange-500 text-white" : "border border-neutral-300 dark:border-neutral-700"}`}
+                            >
+                              {u === "g" ? "Grams" : "Servings"}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      <label htmlFor={`amt-${r.id}`} className="mb-1 block text-sm font-medium">{grams ? "Amount eaten (grams)" : `Servings (${r.servingLabel})`}</label>
                       <input
                         id={`amt-${r.id}`}
                         value={amountText}
@@ -150,7 +199,7 @@ export default function SearchPage() {
                         inputMode="decimal"
                         className="h-11 w-full rounded-xl border border-neutral-300 bg-transparent px-3 text-base dark:border-neutral-700"
                       />
-                      {r.per_100g && r.typicalGrams && <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">A standard serving ({r.servingLabel}) is about {Math.round(r.typicalGrams)} g.</p>}
+                      {grams && r.typicalGrams && <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">A standard serving ({r.servingLabel}) is about {Math.round(r.typicalGrams)} g.</p>}
                     </div>
                     {preview && (
                       <p className="text-sm">
@@ -166,6 +215,26 @@ export default function SearchPage() {
             );
           })}
         </ul>
+      )}
+
+      {q.trim().length >= 2 && !loading && (
+        <button type="button" onClick={() => setCreating(true)} className="mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-orange-400 px-3 text-sm font-semibold text-orange-700 dark:border-orange-700 dark:text-orange-300">
+          <Plus {...ICON} aria-hidden /> Can&apos;t find it? Create it
+        </button>
+      )}
+      {creating && (
+        <NewFoodSheet
+          initialName={q.trim()}
+          onClose={() => setCreating(false)}
+          onCreated={(f) => {
+            setCreating(false);
+            setNotice(`Saved “${f.name}” as your food.`);
+            setOpenId(f.id);
+            setUnit(f.per_100g ? "g" : "srv");
+            setAmountText(String(f.per_100g ? Math.round(f.serving.grams ?? 100) : 1));
+            setQ(f.name);
+          }}
+        />
       )}
 
       {q.trim().length < 2 && <FavouriteList onLogged={(n) => { setNotice(`Logged ${n} to today`); }} />}

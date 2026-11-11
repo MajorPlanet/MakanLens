@@ -4,8 +4,36 @@ import { z } from "zod";
 /** 4 MB of base64 text. */
 export const MAX_IMAGE_B64 = 4 * 1024 * 1024;
 
+export const MAX_USER_FOODS = 200;
+const MAX_USER_ALIASES = 10;
+const MAX_USER_TEXT = 80;
+
+/** Strip control chars (incl. newlines), collapse spaces, drop quote/backtick/brace characters, trim, cap length. */
+export function sanitisePromptText(s: string): string {
+  return s.replace(/[\u0000-\u001f\u007f-\u009f\u2028\u2029]/g, " ").replace(/["`{}\\]/g, "").replace(/\s+/g, " ").trim().slice(0, MAX_USER_TEXT);
+}
+
+const cleanStr = z.string().transform(sanitisePromptText);
+
+/** Names only: unknown keys (any nutrition fields) are stripped by zod. Arrays beyond the caps are truncated, not rejected. */
+export const userFoodSchema = z.object({
+  id: z.string().regex(/^[a-z0-9][a-z0-9_-]{0,79}$/i, "invalid food id"),
+  name: cleanStr.pipe(z.string().min(1, "food name required")),
+  aliases: z
+    .array(cleanStr)
+    .transform((a) => a.filter((x) => x.length > 0).slice(0, MAX_USER_ALIASES))
+    .default([]),
+});
+export type UserFood = z.infer<typeof userFoodSchema>;
+
+export const userFoodsSchema = z.preprocess(
+  (v) => (Array.isArray(v) ? v.slice(0, MAX_USER_FOODS) : v),
+  z.array(userFoodSchema),
+);
+
 export const analyseRequestSchema = z
   .object({
+    userFoods: userFoodsSchema.optional(),
     image: z.string().max(MAX_IMAGE_B64, "image too large (max 4 MB)").optional(),
     text: z.string().trim().max(500, "text too long (max 500 chars)").optional(),
   })

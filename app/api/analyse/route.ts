@@ -39,11 +39,11 @@ export async function POST(req: Request) {
   if (!parsed.success) {
     return err({ error: "bad_request", message: parsed.error.issues.map((i) => i.message).join("; ") }, 400);
   }
-  const { image, text } = parsed.data;
+  const { image, text, userFoods } = parsed.data;
   const provider = currentProvider();
 
   try {
-    return Response.json(await analyseMeal({ image, text }));
+    return Response.json(await analyseMeal({ image, text, userFoods }));
   } catch (e) {
     if (e instanceof MissingApiKeyError) {
       console.error(`[analyse] ${e.envVar} is missing. Set ${e.envVar} in .env.local (see CLAUDE.md section 2) and restart the dev server.`);

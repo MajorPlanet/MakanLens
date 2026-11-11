@@ -4,6 +4,7 @@ import type { AnalysedItem, MealSlot } from "@/lib/types";
 import ItemCard from "./ItemCard";
 import { getDish } from "@/lib/matcher";
 import { dishTypicalGrams, withGrams } from "@/lib/nutrition";
+import { getFood } from "@/lib/foods";
 import { getLearnedRatio, recordPortionEdit } from "@/lib/storage";
 import { ACCENT_BTN, SLOTS, defaultSlot, fmtKcal } from "./format";
 
@@ -18,6 +19,8 @@ interface Row {
 }
 
 function typicalFor(item: AnalysedItem): number | null {
+  const f = item.dishId ? getFood(item.dishId) : undefined;
+  if (f && (f.origin === "custom" || f.edited)) return f.serving.grams;
   const d = item.dishId ? getDish(item.dishId) : undefined;
   return d ? dishTypicalGrams(d) : null;
 }

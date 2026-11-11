@@ -1,6 +1,15 @@
 import type { Dish } from "./types";
 
-export function buildPrompt(args: { knownDishes: Pick<Dish, "id" | "name">[]; text?: string }): string {
+export interface PromptUserFood { id: string; name: string; aliases?: string[] }
+
+export function buildPrompt(args: { knownDishes: Pick<Dish, "id" | "name">[]; userFoods?: PromptUserFood[]; text?: string }): string {
+  const builtIn = new Set(args.knownDishes.map((d) => d.id));
+  const mine = (args.userFoods ?? []).filter((f) => !builtIn.has(f.id));
+  const userBlock = mine.length
+    ? `\n\nThe user's OWN foods (id: name, also called ...). If an item is clearly one of these, set "known_dish_id" to that exact id and prefer it over a similar dish above:\n${mine
+        .map((f) => `- ${f.id}: ${f.name}${f.aliases?.length ? ` (also: ${f.aliases.join(", ")})` : ""}`)
+        .join("\n")}`
+    : "";
   const known = args.knownDishes.length
     ? args.knownDishes.map((d) => `- ${d.id}: ${d.name}`).join("\n")
     : "(none)";
@@ -14,7 +23,7 @@ ${input}
 You identify items, estimate their WEIGHT in grams and name the cooking method. You do NOT work out calories: code looks them up. Only give kcal in "fallback_kcal_per_100g" when no known dish fits.
 
 Known dishes (id: name). If an item is the SAME dish, set "known_dish_id" to that exact id. When variants exist, pick the one matching the cooking method (e.g. roasted vs steamed chicken rice). Drink variants matter: "kopi" (condensed milk + sugar) is NOT "kopi-o-kosong" (black, no sugar); kopi C, kopi O, teh, teh tarik, milo are all different. Otherwise use null and a descriptive English label.
-${known}
+${known}${userBlock}
 
 Return ONLY JSON (no prose, no markdown) in exactly this shape:
 {"items":[{"label":string,"known_dish_id":string|null,

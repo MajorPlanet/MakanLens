@@ -107,10 +107,11 @@ export async function analyseWithVision(args: {
   image?: string;
   text?: string;
   knownDishes: Pick<Dish, "id" | "name">[];
+  userFoods?: { id: string; name: string; aliases?: string[] }[];
   timeoutMs?: number;
 }): Promise<unknown> {
   const timeoutMs = args.timeoutMs ?? DEFAULT_TIMEOUT_MS;
-  const prompt = buildPrompt({ knownDishes: args.knownDishes, text: args.text });
+  const prompt = buildPrompt({ knownDishes: args.knownDishes, userFoods: args.userFoods, text: args.text });
   const raw = currentProvider() === "anthropic" ? await anthropic(prompt, timeoutMs, args.image) : await gemini(prompt, timeoutMs, args.image);
   return parseJsonText(raw);
 }

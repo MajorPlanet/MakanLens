@@ -6,6 +6,7 @@ import { getRecentMeals, logSavedMeal, setFavourite } from "@/lib/storage";
 import { defaultSlot, fmtKcal } from "@/components/format";
 import type { SavedMeal } from "@/lib/types";
 
+const hasOwn = (m: SavedMeal) => m.items.some((i) => i.source === "custom");
 const mealKcal = (m: SavedMeal) => m.items.reduce((sum, i) => sum + i.nutrition.kcal, 0);
 
 /** "Log again" strip: 5 most recent meals, one tap re-logs to the current slot, star to favourite. */
@@ -40,7 +41,10 @@ export default function RecentStrip({ onLogged }: { onLogged?: () => void }) {
                 }}
                 className="min-h-11 max-w-44 px-3 py-2 text-left"
               >
-                <span className="block truncate text-sm font-medium">{m.name}</span>
+                <span className="flex items-center gap-1.5">
+                  <span className="truncate text-sm font-medium">{m.name}</span>
+                  {hasOwn(m) && <span className="shrink-0 rounded-full bg-orange-100 px-1.5 py-0.5 text-[11px] font-medium text-orange-800 dark:bg-orange-950 dark:text-orange-300">Your food</span>}
+                </span>
                 <span className="block text-xs text-neutral-500 dark:text-neutral-400">{fmtKcal(mealKcal(m))} kcal · tap to log</span>
               </button>
               <button
